@@ -1,0 +1,395 @@
+#!/usr/bin/env python3
+"""Local video-to-Yautja converter. Run with --help for options."""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from fractions import Fraction
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+from render import Renderer
+
+
+class ConversionError(RuntimeError):
+    pass
+
+
+def stop_process(process):
+    if process.poll() is None:
+        if os.name == 'nt':
+            # Windows package managers can expose launcher shims. Killing only
+            # the launcher leaves its FFmpeg child holding pipes and log files.
+            subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           creationflags=subprocess.CREATE_NO_WINDOW)
+        if process.poll() is None:
+            process.kill()
+    process.wait()
+
+
+def run(command):
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+        try:
+            stdout, stderr = process.communicate()
+        finally:
+            stop_process(process)
+        if process.returncode:
+            raise ConversionError(stderr.decode('utf-8', 'replace')[-6000:])
+        return stdout
+
+
+def binary(name):
+    found = shutil.which(name)
+    if not found:
+        raise ConversionError(f'{name} is missing. Install FFmpeg (including ffprobe), then put both on PATH.')
+    return found
+
+
+def number(value, default=0.):
+    try:
+        result = float(Fraction(str(value)))
+        return result if math.isfinite(result) else default
+    except (ValueError, ZeroDivisionError):
+        return default
+
+
+def probe(path, ffprobe):
+    data = json.loads(run([ffprobe, '-v', 'error', '-show_format', '-show_streams', '-of', 'json', str(path)]))
+    videos = [s for s in data['streams'] if s['codec_type'] == 'video' and not s.get('disposition', {}).get('attached_pic')]
+    if not videos:
+        raise ConversionError('Input has no decodable video stream.')
+    return data, videos[0]
+
+
+def dimensions(stream, max_size):
+    width, height = stream['width'], stream['height']
+    sar = number(stream.get('sample_aspect_ratio', '1').replace(':', '/'), 1.) or 1.
+    width *= sar
+    rotation = number(stream.get('tags', {}).get('rotate', 0))
+    for side in stream.get('side_data_list', []):
+        if 'rotation' in side:
+            rotation = number(side['rotation'])
+    if round(rotation / 90) % 2:
+        width, height = height, width
+    ratio = min(1., max_size / max(width, height))
+    return max(2, round(width * ratio / 2) * 2), max(2, round(height * ratio / 2) * 2)
+
+
+class AudioAnalysis:
+    rate = 8000
+
+    def __init__(self, path, channels, offset=0., threshold=1e-5):
+        self.channels, self.offset = channels, offset
+        self.samples = None
+        size = path.stat().st_size // 4
+        if size and size % channels == 0:
+            self.samples = np.memmap(path, dtype='<f4', mode='r', shape=(size // channels, channels))
+        self.peak = 0.
+        if self.samples is not None:
+            for start in range(0, len(self.samples), self.rate * 60):
+                part = np.nan_to_num(np.asarray(self.samples[start:start + self.rate * 60]), copy=True)
+                self.peak = max(self.peak, float(np.max(np.abs(part), initial=0)))
+        self.silent = self.peak < threshold
+
+    def close(self):
+        if self.samples is not None:
+            self.samples._mmap.close()
+            self.samples = None
+
+    def waveform(self, seconds, window=.6, gain=1., bins=256):
+        count = max(bins, round(window * self.rate))
+        end = round((seconds - self.offset) * self.rate)
+        start = end - count
+        part = np.zeros((count, self.channels), dtype=np.float32)
+        if self.samples is not None:
+            lo, hi = max(0, start), min(len(self.samples), end)
+            if hi > lo:
+                part[lo-start:hi-start] = self.samples[lo:hi]
+        np.nan_to_num(part, copy=False)
+        # Pool extrema across channels; opposite-phase stereo cannot cancel.
+        edges = np.linspace(0, count, bins + 1).astype(int)
+        low = np.array([part[edges[i]:edges[i+1]].min(initial=0) for i in range(bins)])
+        high = np.array([part[edges[i]:edges[i+1]].max(initial=0) for i in range(bins)])
+        normalization = min(8., .9 / max(self.peak, .001)) * gain
+        return np.clip(low * normalization, -1, 1), np.clip(high * normalization, -1, 1)
+
+
+def read_frame(pipe, size):
+    parts, remaining = [], size
+    while remaining:
+        part = pipe.read(remaining)
+        if not part:
+            if parts:
+                raise ConversionError('Video decoder returned a truncated frame.')
+            return None
+        parts.append(part)
+        remaining -= len(part)
+    return b''.join(parts)
+
+
+def audio_filter(rate):
+    # Preserve gaps on the track's relative timeline; the stream-start offset is
+    # handled separately for waveform lookup and final soundtrack placement.
+    return f'asetpts=PTS-STARTPTS,aresample={rate}:async=1:first_pts=0'
+
+
+def convert(args):
+    started = time.monotonic()
+    timings = {}
+    ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
+    source, output = args.input.expanduser().resolve(), args.output.expanduser().resolve()
+    if not source.is_file():
+        raise ConversionError(f'Input does not exist: {source}')
+    if source == output:
+        raise ConversionError('Input and output must be different files.')
+    if output.suffix.lower() != '.mp4':
+        raise ConversionError('Output must end in .mp4 (H.264 video with optional AAC audio).')
+    if output.exists() and not args.overwrite:
+        raise ConversionError('Output already exists. Choose another name or use --overwrite.')
+    data, video = probe(source, ffprobe)
+    audios = [s for s in data['streams'] if s['codec_type'] == 'audio']
+    if args.audio_stream >= len(audios) and args.audio_stream != 0:
+        raise ConversionError('Requested audio stream does not exist.')
+    audio = audios[args.audio_stream] if audios else None
+    width, height = dimensions(video, args.max_size)
+    fps = args.fps or min(60., max(1., number(video.get('avg_frame_rate'), number(video.get('r_frame_rate'), 30.)) or 30.))
+    fps_text = str(Fraction(fps).limit_denominator(1001000))
+    duration = number(video.get('duration'), number(data.get('format', {}).get('duration')))
+    if duration and args.start >= duration:
+        raise ConversionError('--start is at or beyond the end of the video.')
+    container_start = number(data.get('format', {}).get('start_time'))
+    video_start = number(video.get('start_time'), container_start)
+    seek = max(0., args.start + video_start - container_start)
+    time_options = ['-ss', str(seek)] if seek else []
+    length_options = ['-t', str(args.duration)] if args.duration else []
+    # Resample timestamps before scaling: some FFmpeg scale builds discard
+    # the last frame's duration metadata, which would truncate fps output.
+    filters = ['setpts=PTS-STARTPTS', f'fps={fps_text}:eof_action=pass']
+    hdr = video.get('color_transfer') in ('smpte2084', 'arib-std-b67')
+    if hdr:
+        filters += ['zscale=t=linear:npl=100', 'format=gbrpf32le', 'tonemap=hable:desat=0', 'zscale=p=bt709:t=bt709:m=bt709:r=tv']
+    filters += [f'scale={width}:{height}:flags=lanczos', 'setsar=1', 'format=rgb24']
+    output.parent.mkdir(parents=True, exist_ok=True)
+    frames = 0
+    analysis = None
+    mode = 'procedural'
+    tracker = None
+    setup_started = time.monotonic()
+    if args.thermal == 'semantic':
+        from semantic import GroundedSegmenter, SemanticTracker
+        print('Loading cached local segmentation models...', file=sys.stderr, flush=True)
+        tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
+                                  device=args.device, confidence=args.confidence, precision=args.precision), args.detect_interval)
+        print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
+              f'precision: {tracker.detector.precision}; tracking: optical-flow', file=sys.stderr, flush=True)
+    timings['model_setup_seconds'] = time.monotonic() - setup_started
+    with tempfile.TemporaryDirectory(prefix='.yautja-', dir=output.parent) as temp_dir:
+        temp = Path(temp_dir)
+        try:
+            audio_started = time.monotonic()
+            if audio and args.waveform != 'procedural':
+                print('Analyzing audio locally...', file=sys.stderr, flush=True)
+                pcm = temp / 'analysis.f32'
+                # Decode the selected track without downmixing; analysis is disk-backed.
+                run([ffmpeg, '-v', 'error', '-nostdin', '-y', '-i', str(source), '-map', f"0:{audio['index']}",
+                     '-vn', '-af', audio_filter(AudioAnalysis.rate), '-ar', str(AudioAnalysis.rate), '-c:a', 'pcm_f32le', '-f', 'f32le', str(pcm)])
+                analysis = AudioAnalysis(pcm, int(audio.get('channels', 1)), number(audio.get('start_time'), container_start) - video_start)
+                if args.waveform == 'audio' or not analysis.silent:
+                    mode = 'audio'
+            if args.waveform == 'audio' and audio is None:
+                raise ConversionError('--waveform audio requires an audio stream. Use auto for silent-video fallback.')
+            timings['audio_analysis_seconds'] = time.monotonic() - audio_started
+            print(f'{width}x{height} at {fps_text} fps; waveform: {mode}; timecode: {args.timecode}', file=sys.stderr, flush=True)
+            processing_started = time.monotonic()
+            renderer = Renderer(width, height, seed=args.seed, grain=args.grain, glow=args.glow,
+                                show_timecode=args.timecode, timecode_start=args.timecode_start,
+                                thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose)
+            intermediate = temp / 'picture.mp4'
+            decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
+                          *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
+            encode_cmd = [ffmpeg, '-v', 'error', '-nostdin', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
+                          '-s', f'{width}x{height}', '-r', fps_text, '-i', 'pipe:0', '-an', '-c:v', 'libx264',
+                          '-preset', args.preset, '-crf', str(args.crf), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', str(intermediate)]
+            decoder = encoder = None
+            with (temp / 'decode.log').open('w+b') as dec_log, (temp / 'encode.log').open('w+b') as enc_log:
+                try:
+                    decoder = subprocess.Popen(decode_cmd, stdout=subprocess.PIPE, stderr=dec_log)
+                    encoder = subprocess.Popen(encode_cmd, stdin=subprocess.PIPE, stderr=enc_log)
+                    while True:
+                        raw = read_frame(decoder.stdout, width * height * 3)
+                        if raw is None:
+                            break
+                        t = frames / fps
+                        wave = analysis.waveform(args.start + t, args.wave_window, args.wave_gain) if mode == 'audio' else None
+                        frame = Image.frombytes('RGB', (width, height), raw)
+                        subjects = tracker.update(frame, t) if tracker else ()
+                        encoded = renderer.render(frame, t, wave, subjects)
+                        encoder.stdin.write(encoded.tobytes())
+                        frames += 1
+                        if frames % max(1, round(fps * 2)) == 0:
+                            print(f'Converted {frames / fps:.1f}s ({frames} frames)', file=sys.stderr, flush=True)
+                    encoder.stdin.close()
+                    decode_status, encode_status = decoder.wait(), encoder.wait()
+                    if decode_status or encode_status:
+                        dec_log.seek(0); enc_log.seek(0)
+                        raise ConversionError((dec_log.read() + enc_log.read()).decode('utf-8', 'replace')[-6000:])
+                except BrokenPipeError as exc:
+                    enc_log.seek(0)
+                    raise ConversionError('Encoder stopped: ' + enc_log.read().decode('utf-8', 'replace')[-3000:]) from exc
+                finally:
+                    for process in (decoder, encoder):
+                        if process is not None:
+                            stop_process(process)
+                            for pipe in (process.stdin, process.stdout):
+                                if pipe:
+                                    try:
+                                        pipe.close()
+                                    except BrokenPipeError:
+                                        pass
+            if not frames:
+                raise ConversionError('No frames decoded. The source may be unsupported, corrupt, or outside the requested range.')
+            timings['processing_seconds'] = time.monotonic() - processing_started
+            mux_started = time.monotonic()
+            final = intermediate
+            if audio and not args.mute:
+                final = temp / 'result.mp4'
+                # Fill timestamp gaps BEFORE trimming; seeking into a gap and
+                # resetting the next packet's PTS would pull resumed sound early.
+                offset = number(audio.get('start_time'), container_start) - video_start
+                delay = max(0, round((offset - args.start) * 1000))
+                audio_trim = max(0., args.start - offset)
+                run([ffmpeg, '-v', 'error', '-nostdin', '-y', '-i', str(intermediate), '-i', str(source),
+                     '-map', '0:v:0', '-map', f"1:{audio['index']}", '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
+                     '-af', f'{audio_filter(48000)},atrim=start={audio_trim},asetpts=PTS-STARTPTS,adelay={delay}:all=1,apad', '-t', str(frames / fps),
+                     '-map_metadata', '-1', '-movflags', '+faststart', str(final)])
+            timings['audio_mux_seconds'] = time.monotonic() - mux_started
+            # Commit output only after both encoding and audio mux succeed.
+            if output.exists() and not args.overwrite:
+                raise ConversionError('Output appeared during conversion; refusing to overwrite it.')
+            os.replace(final, output)
+            report = {'output': str(output), 'width': width, 'height': height, 'fps': fps, 'frames': frames,
+                      'duration': frames / fps, 'waveform': mode, 'audio_preserved': bool(audio and not args.mute),
+                      'timecode': args.timecode, 'hdr_tonemapped': hdr, 'elapsed_seconds': round(time.monotonic() - started, 2)}
+            report.update(thermal=args.thermal, verbose=args.verbose)
+            from runtime import environment_info
+            report.update(report_version=1, environment=environment_info(),
+                          timings={key: round(value, 3) for key, value in timings.items()},
+                          processing_fps=round(frames / max(timings['processing_seconds'], .001), 3),
+                          settings={key: getattr(args, key) for key in (
+                              'start', 'duration', 'max_size', 'fps', 'crf', 'preset', 'seed', 'grain', 'glow',
+                              'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval',
+                              'sensor_resolution', 'waveform', 'wave_window', 'wave_gain', 'audio_stream', 'mute',
+                              'timecode_start')})
+            if tracker:
+                report['semantic'] = tracker.report()
+                if not tracker.max_subjects:
+                    print('No requested subjects detected; semantic output contains only the cool environment.', file=sys.stderr)
+            print(json.dumps(report, indent=2))
+            return report
+        finally:
+            if analysis:
+                analysis.close()
+
+
+def parser():
+    p = argparse.ArgumentParser(description='Re-skin a local video with a sci-fi thermal-imaging look and an audio-reactive HUD. Optional segmentation and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
+    version = (Path(__file__).resolve().parent.parent / 'VERSION').read_text(encoding='utf-8').strip()
+    p.add_argument('--version', action='version', version=f'Yautja {version}')
+    p.add_argument('input', nargs='?', type=Path)
+    p.add_argument('output', nargs='?', type=Path)
+    p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
+    p.add_argument('--thermal', choices=['classic', 'semantic'], default='classic', help='Classic luminance palette or optional subject-based heat simulation')
+    p.add_argument('--download-models', action='store_true', help='Download pinned Apache-2.0 semantic models once, then exit (no video needed)')
+    p.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto', help='Semantic inference device; auto prefers available CUDA')
+    p.add_argument('--precision', choices=['fp32', 'bf16'], default='fp32', help='Semantic model precision; bf16 is experimental and requires compatible CUDA')
+    p.add_argument('--warm-objects', default='person,bird,cat,dog,horse,sheep,cow,elephant,bear,zebra,giraffe', help='Comma-separated object categories to simulate as warm')
+    p.add_argument('--hot-objects', default='', help='Explicit comma-separated hot categories, e.g. fire; these are artistic overrides')
+    p.add_argument('--confidence', type=float, default=.30, help='Object detection threshold, 0.05-0.95')
+    p.add_argument('--detect-interval', type=float, default=.5, help='Seconds between model detections; masks follow optical flow between them')
+    p.add_argument('--sensor-resolution', type=int, default=256, help='Semantic sensor longest edge, 64-640; smaller is more abstract')
+    p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to semantic subjects (requires --thermal semantic)')
+    p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
+    p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
+    p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
+    p.add_argument('--wave-window', type=float, default=.6, help='Trailing audio window in seconds')
+    p.add_argument('--wave-gain', type=float, default=1., help='Audio waveform gain')
+    p.add_argument('--audio-stream', type=int, default=0, help='Zero-based audio track used for waveform and output')
+    p.add_argument('--mute', action='store_true', help='Omit output audio; waveform can still follow source audio')
+    p.add_argument('--start', type=float, default=0., help='Trim start in seconds, relative to first video frame')
+    p.add_argument('--duration', type=float, help='Limit conversion to this many seconds')
+    p.add_argument('--fps', type=float, help='Output constant frame rate (default: source average, capped at 60)')
+    p.add_argument('--max-size', type=int, default=1920, help='Longest output edge; preserves aspect and never upscales')
+    p.add_argument('--crf', type=int, default=18, help='H.264 quality; lower is higher quality (0-51)')
+    p.add_argument('--preset', choices=['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow'], default='medium')
+    p.add_argument('--grain', type=float, default=.035, help='Red CRT grain strength, 0-0.25')
+    p.add_argument('--glow', type=float, default=.65, help='HUD bloom strength, 0-1')
+    p.add_argument('--seed', type=int, default=42, help='Reproducible procedural waveform and grain seed')
+    p.add_argument('--overwrite', action='store_true', help='Replace an existing output after successful conversion')
+    return p
+
+
+def main(argv=None):
+    p = parser()
+    args = p.parse_args(argv)
+    try:
+        if args.doctor:
+            from runtime import environment_info, semantic_diagnostics
+            from render import load_glyph_font
+            _, chars = load_glyph_font()
+            tools = {name: run([binary(name), '-version']).decode('utf-8', 'replace').splitlines()[0] for name in ['ffmpeg', 'ffprobe']}
+            encoders = run([binary('ffmpeg'), '-v', 'error', '-encoders']).decode('utf-8', 'replace')
+            if 'libx264' not in encoders or ' aac ' not in encoders:
+                raise ConversionError('FFmpeg needs the libx264 and AAC encoders.')
+            semantic = semantic_diagnostics(args.device, args.precision)
+            ready = args.thermal == 'classic' or semantic['ready']
+            print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), **tools,
+                              'environment': environment_info(), 'thermal': args.thermal,
+                              'ready': ready, 'semantic': semantic}, indent=2))
+            return 0 if ready else 1
+        if args.download_models:
+            from semantic import GroundedSegmenter, MODELS
+            model = GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects, device=args.device,
+                                      precision=args.precision, download=True)
+            print(json.dumps({'downloaded': MODELS, 'device': model.device, 'license': 'Apache-2.0'}, indent=2))
+            return 0
+        if not args.input or not args.output:
+            p.error('input and output are required (or use --doctor)')
+        if args.verbose and args.thermal != 'semantic':
+            p.error('--verbose requires --thermal semantic')
+        if args.precision != 'fp32' and args.thermal != 'semantic':
+            p.error('--precision bf16 requires --thermal semantic')
+        checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),
+                  (args.wave_window, .05, 5, '--wave-window'), (args.wave_gain, .01, 20, '--wave-gain'),
+                  (args.max_size, 160, 8192, '--max-size'), (args.crf, 0, 51, '--crf'),
+                  (args.grain, 0, .25, '--grain'), (args.glow, 0, 1, '--glow'), (args.audio_stream, 0, 100, '--audio-stream')]
+        checks += [(args.sensor_resolution, 64, 640, '--sensor-resolution'),
+                   (args.detect_interval, .05, 2, '--detect-interval'), (args.confidence, .05, .95, '--confidence')]
+        if args.fps is not None:
+            checks.append((args.fps, 1, 120, '--fps'))
+        if args.duration is not None:
+            checks.append((args.duration, .001, math.inf, '--duration'))
+        for value, lo, hi, name in checks:
+            if not math.isfinite(value) or not lo <= value <= hi:
+                p.error(f'{name} must be finite and between {lo} and {hi}')
+        convert(args)
+        return 0
+    except (ConversionError, ValueError, OSError) as exc:
+        print(f'Yautja: {exc}', file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print('Yautja: cancelled; temporary output removed.', file=sys.stderr)
+        return 130
+
+
+if __name__ == '__main__':
+    sys.exit(main())

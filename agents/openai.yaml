@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yautja"
+  short_description: "Sci-fi segmentation, re-skinning, and annotation"
+  default_prompt: "Use $yautja to segment and re-skin my video with a sci-fi thermal-imaging look, glyph annotations, and an audio-driven waveform for entertainment."

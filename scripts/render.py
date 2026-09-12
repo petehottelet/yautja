@@ -1,0 +1,397 @@
+"""Deterministic thermal color and Yautja HUD. No browser or network needed."""
+from __future__ import annotations
+
+import hashlib
+import io
+import json
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
+
+STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
+         (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
+         (.79, (255, 157, 12)), (.9, (255, 48, 25)), (1, (255, 249, 209))]
+
+
+
+def noise_sample(indices, seed):
+    # Same integer hash as the original web renderer (modulo 2**32).
+    v = np.asarray(indices).astype(np.uint32) ^ np.uint32(seed & 0xffffffff)
+    v = v * np.uint32(0x45d9f3b)
+    v = (v ^ (v >> 16)) * np.uint32(0x45d9f3b)
+    return (v ^ (v >> 16)).astype(np.float64) / 0xffffffff * 2 - 1
+
+
+def wave_noise(position, seed):
+    index = np.floor(position)
+    fraction = position - index
+    blend = fraction * fraction * (3 - 2 * fraction)
+    a, b = noise_sample(index, seed), noise_sample(index + 1, seed)
+    return a + (b - a) * blend
+
+
+def procedural_wave(time, seed=42, count=256):
+    i = np.arange(count)
+    p = i + time * 42
+    envelope = ((wave_noise(p * .035, seed) + 1) * .5) ** 1.25
+    carrier = np.sin(p * 1.85 + wave_noise(p * .11, seed ^ 0x93ab) * 2) * .72
+    carrier += wave_noise(p * .83, seed ^ 0x5f21) * .28
+    taper = np.minimum(1, np.minimum(i / 10, (count - 1 - i) / 10))
+    return carrier * (.12 + envelope * .88) * taper
+
+
+def timecode(seconds):
+    """Elapsed output time, milliseconds (not SMPTE/drop-frame)."""
+    ms = max(0, round(seconds * 1000))
+    hours, ms = divmod(ms, 3600000)
+    minutes, ms = divmod(ms, 60000)
+    sec, ms = divmod(ms, 1000)
+    return f'{hours:02}:{minutes:02}:{sec:02}.{ms:03}'
+
+
+def lcd_timecode(text, height):
+    """Draw a seven-segment clock from polygons, without a font asset."""
+    segments = ('abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg',
+                'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg')
+    polygons = {}
+    for name, y in (('a', 1), ('g', 10), ('d', 19)):
+        polygons[name] = [(2, y), (3, y-1), (9, y-1), (10, y), (9, y+1), (3, y+1)]
+    for name, x, y0, y1 in (('f', 1, 2.3, 8.7), ('b', 11, 2.3, 8.7),
+                             ('e', 1, 11.3, 17.7), ('c', 11, 11.3, 17.7)):
+        polygons[name] = [(x, y0), (x+1, y0+1), (x+1, y1-1),
+                          (x, y1), (x-1, y1-1), (x-1, y0+1)]
+    ss = 3
+    height = max(6, round(height))
+    scale = height * ss / 20
+    width = max(1, round((sum(7 if c in ':.' else 15 for c in text) - 3) * height / 20))
+    tile = Image.new('RGB', (width * ss, height * ss))
+    draw = ImageDraw.Draw(tile)
+    x = 0
+    for char in text:
+        if char in ':.':
+            # Snap tiny dots to pixels so colons retain a gap at preview sizes.
+            dot_size = max(1, round(height / 10))
+            dot_x = round((x + 2) * height / 20 - dot_size / 2)
+            tops = (round(height * .3), round(height * .65)) if char == ':' else (height - dot_size,)
+            for y in tops:
+                draw.rectangle((dot_x * ss, y * ss, (dot_x + dot_size) * ss - 1,
+                                (y + dot_size) * ss - 1), fill=(255, 118, 98))
+            x += 7
+        else:
+            for name in segments[int(char)]:
+                draw.polygon([((x+px)*scale, py*scale) for px, py in polygons[name]], fill=(255, 118, 98))
+            x += 15
+    tile = tile.resize((width, height), Image.Resampling.LANCZOS)
+    bounds = tile.getbbox()
+    # Trim side bearings only: dots keep their vertical clock alignment.
+    return tile.crop((bounds[0], 0, bounds[2], height)) if bounds else tile
+
+
+def load_glyph_font():
+    """Compile the bundled polygon shapes in memory for antialiased rendering."""
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    selected = {}
+    shapes = json.loads((Path(__file__).resolve().parent.parent / 'assets' / 'glyphs.json').read_text())
+    for item in shapes:
+        char = item['character']
+        pen = TTGlyphPen(None)
+        for contour in item['contours']:
+            pen.moveTo(tuple(contour[0]))
+            for point in contour[1:]:
+                pen.lineTo(tuple(point))
+            pen.closePath()
+        selected[char] = pen.glyph()
+    if not selected:
+        raise ValueError('Bundled character shapes are missing')
+    builder = FontBuilder(1000, isTTF=True)
+    order = ['.notdef', *selected]
+    builder.setupGlyphOrder(order)
+    builder.setupCharacterMap({ord(char): char for char in selected})
+    builder.setupGlyf({'.notdef': TTGlyphPen(None).glyph(), **selected})
+    builder.setupHorizontalMetrics({name: (1000, 0) for name in order})
+    builder.setupHorizontalHeader(ascent=850, descent=-200)
+    builder.setupNameTable({'familyName': 'Yautja HUD', 'styleName': 'Regular', 'uniqueFontIdentifier': 'YautjaHUD'})
+    builder.setupOS2(sTypoAscender=850, sTypoDescender=-200, usWinAscent=1000, usWinDescent=250)
+    builder.setupPost()
+    buffer = io.BytesIO()
+    builder.save(buffer)
+    return buffer.getvalue(), sorted(selected)
+
+
+class Renderer:
+    def __init__(self, width, height, *, seed=42, grain=.035, glow=.65,
+                 show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False):
+        self.width, self.height = width, height
+        self.seed, self.grain, self.glow = seed, grain, glow
+        self.show_timecode, self.timecode_start = show_timecode, timecode_start
+        self.thermal, self.verbose = thermal, verbose
+        self.annotation_positions = {}
+        if thermal == 'semantic':
+            from thermal import HeatField
+            self.heat_field = HeatField(width, height, sensor_resolution)
+        self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
+        self.color = (255, 48, 43)
+        pos = np.arange(256) / 255
+        table = np.stack([np.interp(pos, [s[0] for s in STOPS], [s[1][c] for s in STOPS]) for c in range(3)], axis=1)
+        self.palette = np.uint8(np.clip(table * (1 - (1 - pos[:, None]) ** 4 * .7), 0, 255))
+        self.font_data, self.font_chars = load_glyph_font()
+        self.fonts, self.tiles = {}, {}
+        self.annotation_pool = None
+        self.callout_segments = None
+
+    def glyph(self, value, height, numeral=False):
+        height = max(8, round(height))
+        key = (value, height, numeral)
+        if key in self.tiles:
+            return self.tiles[key]
+        ss = 3
+        tile = Image.new('RGB', (round(height * .85) * ss, height * ss))
+        choices = [c for c in self.font_chars if c.isdigit() == numeral]
+        if choices:
+            if height not in self.fonts:
+                self.fonts[height] = ImageFont.truetype(io.BytesIO(self.font_data), height * ss)
+            font = self.fonts[height]
+            char = choices[value % len(choices)]
+            box = font.getbbox(char)
+            mask = Image.new('RGB', (max(1, box[2] - box[0]), max(1, box[3] - box[1])))
+            ImageDraw.Draw(mask).text((-box[0], -box[1]), char, font=font, fill=self.color)
+            ratio = min(tile.width / mask.width, tile.height / mask.height)
+            mask = mask.resize((max(1, round(mask.width * ratio)), max(1, round(mask.height * ratio))), Image.Resampling.LANCZOS)
+            tile.paste(mask, ((tile.width - mask.width) // 2, (tile.height - mask.height) // 2))
+        else:
+            raise ValueError('Bundled alphabet is incomplete')
+        tile = tile.resize((tile.width // ss, height), Image.Resampling.LANCZOS)
+        self.tiles[key] = tile
+        return tile
+
+    def composite(self, image, overlay, x, y):
+        if self.glow:
+            bloom = overlay.filter(ImageFilter.GaussianBlur(max(.5, self.scale * 2)))
+            bloom = bloom.point(lambda v: round(v * self.glow))
+            overlay = ImageChops.add(overlay, bloom)
+        image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
+
+    def callout_geometry(self):
+        if self.callout_segments is None:
+            shapes = json.loads((Path(__file__).resolve().parent.parent / 'assets' / 'glyphs.json').read_text())
+            # Reuse the broad, nine-segment geometry already bundled in the HUD.
+            self.callout_segments = next(item['contours'] for item in shapes if item['character'] == '9')
+        return self.callout_segments
+
+    def callout_glyph(self, pattern, height):
+        """Dim full outlines behind shaded, illuminated segments."""
+        height = max(8, round(height))
+        key = (pattern, height, 'callout')
+        if key in self.tiles:
+            return self.tiles[key]
+        ss = 3
+        width = round(height * .85)
+        segments = self.callout_geometry()
+        points = np.concatenate(segments)
+        left, bottom = points.min(axis=0)
+        right, top = points.max(axis=0)
+        ratio = min((width - 2) * ss / (right - left), (height - 2) * ss / (top - bottom))
+        ox, oy = (width * ss - (right - left) * ratio) / 2, (height * ss - (top - bottom) * ratio) / 2
+        mask = Image.new('L', (width * ss, height * ss))
+        outlines = Image.new('L', mask.size)
+        fill, edges = ImageDraw.Draw(mask), ImageDraw.Draw(outlines)
+        for i, segment in enumerate(segments):
+            polygon = [((x - left) * ratio + ox, (top - y) * ratio + oy) for x, y in segment]
+            edges.line(polygon + [polygon[0]], fill=58, width=max(1, round(.6 * ss)), joint='curve')
+            if pattern & (1 << i):
+                fill.polygon(polygon, fill=255)
+        gradient = np.linspace(255, 145, mask.height, dtype=np.uint8)[:, None]
+        shading = Image.fromarray(np.broadcast_to(gradient, (mask.height, mask.width)).copy())
+        tile = ImageChops.lighter(outlines, ImageChops.multiply(mask, shading))
+        tile = tile.resize((width, height), Image.Resampling.LANCZOS)
+        self.tiles[key] = tile
+        return tile
+
+    def callout_symbols(self, track_id):
+        """Give each track a stable, varied row of six decorative shapes."""
+        if self.annotation_pool is None:
+            count = len(self.callout_geometry())
+            self.annotation_pool = tuple(pattern for pattern in range(1 << count)
+                                         if 2 <= pattern.bit_count() <= 6)
+        # Deal disjoint rows to consecutive tracks, then reshuffle the next batch.
+        # No frame time or detection order enters the label, so it cannot flicker.
+        batch, row = divmod(max(0, track_id - 1), len(self.annotation_pool) // 6)
+        salt = f'{self.seed}:callouts:{batch}:'.encode('ascii')
+        deck = sorted(self.annotation_pool, key=lambda symbol: hashlib.sha256(salt + str(symbol).encode('ascii')).digest())
+        return tuple(deck[row * 6:row * 6 + 6])
+
+    def annotation_layout(self, subjects):
+        """Place readable labels beside silhouettes with short boundary leaders."""
+        s = self.scale
+        left, top = round(116 * s), round(100 * s)
+        right, bottom = self.width - round(18 * s), self.height - round(18 * s)
+        spacing, gap = max(2, round(3 * s)), max(6, round(14 * s))
+        glyph_size = round(round(44 * .82 * .9 * s) * .83)
+        size = min(max(10, round(glyph_size * .95)), int((right - left - 5 * spacing) / 5.1))
+        step = round(size * .85) + spacing
+        label_w = step * 6 - spacing
+        previous = self.annotation_positions
+        self.annotation_positions = {}
+        if size < 10 or label_w > right - left or size > bottom - top:
+            return []
+
+        # A small occupancy map keeps labels off every subject, including nearby
+        # tracks. Layout history is bounded by the visible labels in this frame.
+        grid_w = min(320, self.width)
+        grid_h = max(1, round(self.height * grid_w / self.width))
+        occupied = np.zeros((grid_h, grid_w), dtype=bool)
+        prepared = []
+        for subject in sorted(subjects, key=lambda sub: sub.track_id):
+            mask = subject.mask > .5
+            rows, cols = np.nonzero(mask)
+            if not len(rows) or subject.opacity <= 0:
+                continue
+            occupied |= np.asarray(Image.fromarray(mask).resize((grid_w, grid_h), Image.Resampling.NEAREST))
+            sx, sy = self.width / mask.shape[1], self.height / mask.shape[0]
+            bounds = (cols.min() * sx, rows.min() * sy, (cols.max() + 1) * sx, (rows.max() + 1) * sy)
+            center = (float(cols.mean()) * sx, float(rows.mean()) * sy)
+            edge = mask.copy()
+            edge[1:-1, 1:-1] &= ~(mask[:-2, 1:-1] & mask[2:, 1:-1] & mask[1:-1, :-2] & mask[1:-1, 2:])
+            ey, ex = np.nonzero(edge)
+            stride = max(1, len(ex) // 512)
+            points = np.column_stack(((ex[::stride] + .5) * sx, (ey[::stride] + .5) * sy))
+            prepared.append((subject, bounds, center, points))
+        integral = np.pad(occupied.astype(np.int32), ((1, 0), (1, 0))).cumsum(0).cumsum(1)
+
+        placed = []
+        for subject, (x0, y0, x1, y1), (cx, cy), points in prepared:
+            preferred_y = y0 + (y1 - y0) * .3
+            candidates = [(x, y0 + (y1 - y0) * fraction - size / 2)
+                          for fraction in (.2, .5, .8) for x in (x1 + gap, x0 - gap - label_w)]
+            candidates += [(x, y) for y in (y0 - gap - size, y1 + gap)
+                           for x in (cx - label_w / 2, x0, x1 - label_w)]
+            predicted = None
+            if subject.track_id in previous:
+                px, py, old_cx, old_cy = previous[subject.track_id]
+                predicted = (px + cx - old_cx, py + cy - old_cy)
+                candidates.insert(0, predicted)
+            best = None
+            for x, y in candidates:
+                x, y = round(np.clip(x, left, right - label_w)), round(np.clip(y, top, bottom - size))
+                rect = (x, y, x + label_w, y + size)
+                if any(x < other['rect'][2] + gap / 2 and x + label_w > other['rect'][0] - gap / 2
+                       and y < other['rect'][3] + gap / 2 and y + size > other['rect'][1] - gap / 2 for other in placed):
+                    continue
+                gx0, gy0 = int(x * grid_w / self.width), int(y * grid_h / self.height)
+                gx1 = min(grid_w, int(np.ceil((x + label_w) * grid_w / self.width)))
+                gy1 = min(grid_h, int(np.ceil((y + size) * grid_h / self.height)))
+                covered = integral[gy1, gx1] - integral[gy0, gx1] - integral[gy1, gx0] + integral[gy0, gx0]
+                if covered > .02 * max(1, (gx1 - gx0) * (gy1 - gy0)):
+                    continue
+                anchors = np.clip(points, (x, y), (x + label_w, y + size))
+                distances = ((anchors - points) ** 2).sum(axis=1)
+                nearest = int(distances.argmin())
+                length_sq = float(distances[nearest])
+                if length_sq > min(72 * s, self.width * .08) ** 2:
+                    continue
+                score = length_sq + .15 * (y + size / 2 - preferred_y) ** 2
+                if predicted is not None:
+                    score += .3 * ((x - predicted[0]) ** 2 + (y - predicted[1]) ** 2)
+                if best is None or score < best[0]:
+                    best = (score, rect, tuple(points[nearest]), tuple(anchors[nearest]))
+            if best is None:
+                continue
+            _, rect, target, anchor = best
+            self.annotation_positions[subject.track_id] = (*rect[:2], cx, cy)
+            placed.append(dict(subject=subject, rect=rect, target=target, anchor=anchor, size=size, step=step))
+            if len(placed) == 8:
+                break
+        return placed
+
+    def annotate(self, image, subjects):
+        s = self.scale
+        layer = Image.new('RGB', image.size)
+        draw = ImageDraw.Draw(layer)
+        for item in self.annotation_layout(subjects):
+            subject, size, step = item['subject'], item['size'], item['step']
+            x, y = item['rect'][:2]
+            cx, cy = item['target']
+            color = tuple(round(v * subject.opacity) for v in (65, 232, 239))
+            draw.line([item['target'], item['anchor']], fill=color, width=max(1, round(1.5 * s)))
+            radius = max(1, round(2 * s))
+            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=color)
+            for i, pattern in enumerate(self.callout_symbols(subject.track_id)):
+                ink = self.callout_glyph(pattern, size)
+                tile = ImageChops.multiply(Image.merge('RGB', (ink,) * 3), Image.new('RGB', ink.size, color))
+                layer.paste(tile, (x + i * step, y))
+        self.composite(image, layer, 0, 0)
+
+    def render(self, frame, time, wave=None, subjects=()):
+        # Both modes are artistic effects, not actual heat measurement.
+        if self.thermal == 'semantic':
+            luma = self.heat_field.build(frame, subjects)
+        else:
+            rgb = np.asarray(frame, dtype=np.uint8)
+            luma = (rgb[..., 0].astype(np.float32) * .2126 + rgb[..., 1] * .7152 + rgb[..., 2] * .0722)
+            luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255).astype(np.uint8)
+        mapped = self.palette[luma].astype(np.float32)
+        if self.grain:
+            rng = np.random.default_rng((self.seed + round(time * 1000)) & 0xffffffff)
+            noise = rng.standard_normal(luma.shape, dtype=np.float32) * (self.grain * 255)
+            mapped += noise[..., None] * np.array([1, .25, .17], dtype=np.float32)
+        # Fine horizontal CRT lines, drawn after sensor synthesis.
+        mapped[::2] *= .94
+        image = Image.fromarray(np.uint8(np.clip(mapped, 0, 255)))
+        s = self.scale
+        panel_w = min(self.width, round(110 * s))
+        panel = Image.new('RGB', (panel_w, self.height))
+        d = ImageDraw.Draw(panel)
+        size = max(10, round(25 * s))
+        gy = max(round(24 * s), round(self.height * .12))
+        top, bottom = gy + size + round(6 * s), round(self.height * .84)
+        center, amp = round(42 * s), 31 * s
+        means = luma.mean(axis=1) / 255
+        stats = [float(luma.mean() / 255), float(luma.max() / 255), float(np.abs(np.diff(luma.astype(np.float32), axis=1)).mean() / 255)]
+        for i, metric in enumerate(stats):
+            panel.paste(self.glyph(round(metric * 71), size), (round((16 + i * 26) * s), gy))
+            row = min(len(means) - 1, round(len(means) * (i + 1) / 4))
+            panel.paste(self.glyph(round(means[row] * 97), size), (round((16 + i * 26) * s), bottom + round(12 * s)))
+        d.line((center, top, center, bottom), fill=(95, 17, 15), width=max(1, round(s)))
+        for i in range(17):
+            y = top + (bottom - top) * i / 16
+            d.line((10 * s, y, (19 if i % 4 == 0 else 14) * s, y), fill=(110, 22, 19))
+        if wave is None:
+            values = procedural_wave(time, self.seed)
+            points = [(center + amp * v, top + (bottom - top) * i / (len(values) - 1)) for i, v in enumerate(values)]
+        else:
+            low, high = wave
+            # Each horizontal excursion is the real minimum/maximum of its audio bin.
+            points = []
+            for i, (lo, hi) in enumerate(zip(low, high)):
+                y = top + (bottom - top) * i / max(1, len(low) - 1)
+                points.extend([(center + amp * lo, y), (center + amp * hi, y)])
+        d.line(points, fill=self.color, width=max(1, round(1.25 * s)))
+        self.composite(image, panel, 0, 0)
+        # Top-right readout. Optional human timecode goes below the alien string.
+        step, pad = round(25 * s), round(16 * s)
+        rw = max(step * 8, round(180 * s))
+        rh = size + (round(27 * s) if self.show_timecode else 0) + round(12 * s)
+        right = Image.new('RGB', (rw, rh))
+        reading = round(stats[0] * 9999)
+        for i in range(8):
+            value = round(stats[i % 3] * 71) if i < 4 else reading // 10 ** (7 - i) % 10
+            right.paste(self.glyph(value, size, i >= 4), (i * step, 0))
+        if self.show_timecode:
+            # Align visible glyph artwork and the clock to one right edge,
+            # excluding the glyph tiles' trailing side bearings.
+            bounds = right.getbbox()
+            if bounds:
+                glyphs = right.crop(bounds)
+                right = Image.new('RGB', (rw, rh))
+                right.paste(glyphs, (rw - glyphs.width, bounds[1]))
+            clock_height = max(6, round(max(9, round(19 * .8 * s)) * .69))
+            clock = lcd_timecode(timecode(time + self.timecode_start), clock_height)
+            if clock.width > rw:
+                clock = clock.resize((rw, max(1, round(clock.height * rw / clock.width))), Image.Resampling.LANCZOS)
+            right.paste(clock, (rw - clock.width, size + round(7 * s)))
+        self.composite(image, right, max(0, self.width - rw - pad), pad)
+        if self.verbose:
+            self.annotate(image, subjects)
+        return image
