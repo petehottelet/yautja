@@ -2,10 +2,12 @@
 
 ## 2.1.0 — pending publication
 
+- Add shared and per-element HUD opacity, including separate target flash opacity when requested. Apply transparency to outlines and glow as well as artwork, preserve existing defaults, and report resolved values. Match waveform, reticle, and timecode red in the Rorschach blur example; add small/large transparency GIFs.
+
 - Add an optional inward reticle outline with adjustable width and independent landing/flash colors. Add HUD-only Gaussian blur with a shared radius and separate controls for every HUD element, including targets and all waveform styles. Keep both effects off by default, preserve sharp zero overrides and black ink, report resolved settings, and include small/large animated comparisons.
 
 - Make Black Hot's default and palette-matched waveform, glyphs, timecode, callouts, and targets black. Draw black HUD ink with alpha compositing, retain explicit color overrides, and refresh its small/large palette GIFs.
-- Use a compact landed target at 39% of the original enclosing radius, with solid-color sides and open corners. Enlarge the initial compact design by 30%, reduce its stroke thickness independently by 25%, narrow its corner gaps by 30%, and remove the dark inner accent. Keep the acquisition sweep, configurable size/colors, and red/white flash; refresh small/large target GIFs.
+- Use a compact landed target at 39% of the original enclosing radius, with solid-color sides and open corners. Enlarge the initial compact design by 30%, reduce its stroke thickness independently by 25%, narrow its corner gaps by 40.5% (30% followed by another 15%), and remove the dark inner accent. Keep the acquisition sweep, configurable size/colors, and red/white flash; refresh small/large target GIFs.
 - Sharpen Rorschach waveform edges using short audio peaks and troughs, retaining the thick mirrored core and shading. Let `--wave-detail` control edge intensity as well as lobe complexity, and refresh all three small/large animated examples.
 - Add three optional audio-reactive Rorschach waveform shapes: filled mirrored lobes, separated inkblots, and hollow pockets. Expose column width, full-height layout, and lobe complexity; keep the aligned thin trace as the default. Include matched small/large animated examples.
 - Add local figure scans with shot-local IDs, thumbnail contact sheets, source verification, and reusable selections for images and videos. Saved tracks support new frame rates, resolutions, and trims; conversion reports identify selected figures that did or did not appear.

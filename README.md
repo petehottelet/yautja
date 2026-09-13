@@ -282,12 +282,25 @@ Add an optional outline with `--target-stroke 5`. Choose one outline color or a 
 | [![Reticle with an optional colored outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-outline.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-outline.gif) | [![Soft target with crisp waveform, callouts, and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-blur.gif) |
 | `--target-stroke 5 --target-stroke-colors "#660b12,#687a8d"` | `--hud-blur-elements "target=8"` |
 
-| Rorschach waveform blur only | Shared HUD blur · sharp timecode |
+| Matched red · Rorschach waveform blur | Shared HUD blur · sharp timecode |
 | --- | --- |
-| [![Soft Rorschach waveform with a sharp reticle and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-wave-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-wave-blur.gif) | [![HUD softened by element while its timecode remains sharp](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-hud-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-hud-blur.gif) |
+| [![Soft Rorschach waveform, sharp reticle, and timecode using the same red](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-wave-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-wave-blur.gif) | [![HUD softened by element while its timecode remains sharp](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-hud-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-hud-blur.gif) |
 | `--wave-style rorschach --wave-width 0.14 --wave-height 1 --hud-blur-elements "waveform=6"` | `--hud-blur 3 --hud-blur-elements "waveform=6,target=5,timecode=0"` |
 
 Click any preview for the large GIF. These comparisons use the same 0–3.25-second clip and target selections as the examples above. Blur keys are `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. Target blur applies to both flash states. These controls work for images and videos, alongside HUD bloom, heat glow, and CRT/VHS effects. `--no-hud` hides them all. [Full controls and examples](skills/yautja/references/targets.md#reticle-stroke-and-independent-hud-blur).
+
+The matched-red Rorschach example additionally uses `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`. Both reticle states use the same red. Custom HUD colors use alpha compositing, avoiding the pink shift that screen blending can introduce over a blue scene.
+
+### HUD transparency
+
+Set `--hud-opacity 0.5` for half-strength HUD artwork, or `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` for separate values. **0 is invisible; 1 keeps full existing visibility** (the default). Omitted elements inherit the shared opacity; explicit values override it. Blur and opacity are independent, and both work for stills and videos.
+
+| Entire HUD · opacity 0.5 | Independent opacity · waveform / target / timecode |
+| --- | --- |
+| [![All HUD artwork at half opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity.gif) | [![Red waveform at 0.3 opacity, target at 0.7, and timecode at 0.9](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-elements.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity-elements.gif) |
+| `--hud-opacity 0.5` | `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` with the matched red Rorschach colors and shape above |
+
+Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. A `target` override controls both states unless `target-flash` is explicitly set. Reticle outlines and glow follow their element's opacity. `--no-hud` still hides everything. Click either GIF for the large version. [Detailed transparency controls](skills/yautja/references/targets.md#hud-transparency).
 
 ### Segmentation setup
 

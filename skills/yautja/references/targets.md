@@ -76,6 +76,24 @@ HUD blur softens transparent artwork before it is placed on the scene. It does n
 
 Conversion reports record resolved per-element radii in `hud_blur_elements`, the outline width in `target_stroke`, its resolved landing/flash colors in `target_stroke_colors`, and reference units in `hud_effect_units`. Effective blur/stroke values become zero with HUD off; `settings` retains the user's requested values.
 
+## HUD transparency
+
+Use `--hud-opacity 0.5` for a shared visibility multiplier. The range is 0–1, with **0 invisible and 1 full existing visibility** (default). This is an opacity value: 0.3 means 30% opacity / 70% transparency. It scales the artwork's existing shading, subject fade, and glow, rather than removing its original styling.
+
+Use `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` for independent overrides. Valid keys are `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. Unspecified keys inherit the shared value. A `target` override also controls the flash unless `target-flash` is explicitly supplied. For example, `target=0.4,target-flash=0.8` makes the flash more opaque. Target opacity includes its outline and glow. Zero hides the selected element entirely, including its glow.
+
+```bash
+# Translucent HUD with a fully visible timecode.
+yautja "clip.mov" "translucent.mp4" --timecode --hud-opacity 0.5 --hud-opacity-elements "timecode=1"
+
+# Independently soften and fade a Rorschach waveform while keeping the target crisp.
+yautja "clip.mov" "faded-wave.mp4" --figures "figures.json" --target S001-F003 --wave-style rorschach --hud-blur-elements "waveform=6" --hud-opacity-elements "waveform=0.3,target=0.7"
+```
+
+Opacity works with any palette, black or custom HUD ink, images, videos, blur, and reticle strokes. It affects HUD artwork only. Disabled elements stay disabled, and `--no-hud` overrides all opacity settings. Zero opacity hides artwork but does not turn off analysis; use `--no-hud` to skip unused HUD analysis entirely. Reports contain the resolved `hud_opacity` and `hud_opacity_elements`; effective values are zero with HUD off while `settings` retains the requested values.
+
+For the same red in the waveform, timecode, and both reticle states, set `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`. Custom ink uses alpha compositing; the standard screen blend can shift red toward pink over a blue background. Soft edges and partially transparent artwork still blend naturally with the scene.
+
 ## Independent heat glow, trails, and CRT controls
 
 For HUD-only softness and target outlines, see [reticle stroke and independent HUD blur](#reticle-stroke-and-independent-hud-blur).

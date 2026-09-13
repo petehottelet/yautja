@@ -20,14 +20,15 @@ from PIL import Image, ImageOps
 from . import __version__
 from .render import Renderer, PALETTES
 from .colors import HUD_THEMES, resolve_colors, hex_color
-from .hud import BLUR_ELEMENTS, hud_blurs
+from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
-                  'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements')
+                  'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
+                  'hud_opacity', 'hud_opacity_elements')
 
 
 def target_selection(args, source):
@@ -54,7 +55,9 @@ def extra_report(renderer, selection, *, static=False):
             'target_stroke_colors': [hex_color(color) for color in outline],
             'hud_blur': renderer.hud_blur if renderer.hud else 0.,
             'hud_blur_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_blurs.items()},
-            'hud_effect_units': 'pixels at 1080px short edge, scaled with output size',
+            'hud_opacity': renderer.hud_opacity if renderer.hud else 0.,
+            'hud_opacity_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_opacities.items()},
+            'hud_effect_units': 'stroke widths and blur radii: pixels at 1080px short edge, scaled with output size',
             'crt_bleed': renderer.display.crt_bleed, 'crt_vertical_lines': renderer.crt_vertical_lines,
             'crt_strength': renderer.crt_strength, 'heat_glow': renderer.heat_glow, 'heat_glow_speed': renderer.heat_glow_speed,
             'wave_style': renderer.wave_style if renderer.hud else 'off',
@@ -493,6 +496,8 @@ def parser():
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
     p.add_argument('--hud-blur', type=float, default=0., help='Gaussian softness for all HUD artwork only, 0-20 reference pixels at a 1080px short edge; default 0 (sharp)')
     p.add_argument('--hud-blur-elements', help='Override blur independently with quoted comma-separated element=radius values, 0-20; explicit 0 keeps an element sharp. Elements: ' + ', '.join(BLUR_ELEMENTS) + '. Target applies to both flash states')
+    p.add_argument('--hud-opacity', type=float, default=1., help='Shared HUD visibility, 0-1: 0 is transparent, 1 keeps full existing visibility (default); includes outlines and glow')
+    p.add_argument('--hud-opacity-elements', help='Independent transparency via quoted comma-separated element=opacity values, 0-1; omitted elements inherit --hud-opacity. Elements: ' + ', '.join(OPACITY_ELEMENTS) + '. Target-flash inherits target unless explicitly set')
     p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
     p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
@@ -559,6 +564,7 @@ def main(argv=None):
         target_colors(args.target_colors)
         parse_stroke_colors(args.target_stroke_colors)
         hud_blurs(args.hud_blur, args.hud_blur_elements)
+        hud_opacities(args.hud_opacity, args.hud_opacity_elements)
         if args.list_figures and (args.figures or args.target):
             p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
         if args.hud and bool(args.target) != bool(args.figures):

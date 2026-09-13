@@ -29,15 +29,19 @@ def parse_stroke_colors(value):
 
 class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
-    def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.):
+    def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.,
+                 opacity=1., flash_opacity=None):
+        flash_opacity = opacity if flash_opacity is None else flash_opacity
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
                                        (flash_rate, 0, 3, 'target-flash-rate'),
                                        (scale, .25, 3, 'target-scale'), (stroke, 0, 12, 'target-stroke'),
-                                       (blur, 0, 20, 'target blur')):
+                                       (blur, 0, 20, 'target blur'), (opacity, 0, 1, 'target opacity'),
+                                       (flash_opacity, 0, 1, 'target flash opacity')):
             if not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f'--{flag} must be between {low} and {high}')
         self.acquire, self.flash_rate, self.scale = acquire, flash_rate, scale
         self.stroke, self.blur = stroke, blur
+        self.opacity, self.flash_opacity = opacity, flash_opacity
         self.stroke_colors = parse_stroke_colors(stroke_colors)
         self.active = {}
         self.last_time = None
@@ -81,7 +85,7 @@ class TargetOverlay:
             elapsed = max(0., age - self.acquire - .18)
             flash = progress == 1 and elapsed > 0 and self.flash_rate > 0 and int(elapsed * self.flash_rate * 2) % 2 == 1
             color = colors[int(flash)]
-            opacity = round(255 * float(item.get('opacity', 1.)))
+            opacity = round(255 * float(item.get('opacity', 1.)) * (self.flash_opacity if flash else self.opacity))
             for index in range(3):
                 a, b = points[index], points[(index + 1) % 3]
                 direction = (b - a) / max(1., np.linalg.norm(b - a))
@@ -91,7 +95,7 @@ class TargetOverlay:
                 offset = -inward * (1 - ease) * max(width, height) * .25
                 # Terminate each blade well before the vertex: three clearly
                 # open corners, including the white flash and its soft glow.
-                gap = .70 * min(radius * .30, max(.8, radius * .24))
+                gap = .595 * min(radius * .30, max(.8, radius * .24))
                 # Parallel cuts at the 60-degree corners keep the gap open
                 # through the entire stroke, rather than pinching shut inside.
                 cutback = gap + thickness * math.sqrt(3)

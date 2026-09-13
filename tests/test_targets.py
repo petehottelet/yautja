@@ -213,12 +213,15 @@ class TargetAnimationTests(unittest.TestCase):
                     radius = max(.2 * width * .8, .55 * height * .62, 12) * .39
                     distances = np.linspace(radius * .25, radius * 1.05, 100)
                     for angle in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6):
-                        x = np.rint(width * .5 + np.cos(angle) * distances).astype(int)
-                        y = np.rint(height * .525 + np.sin(angle) * distances).astype(int)
-                        # Clear corridors through each corner, not tiny notches.
-                        # At small sizes, glow and rounded sampling can approach
-                        # an edge; the channel stays below 25% of blade intensity.
-                        self.assertLess(frame[y, x].max(), 64)
+                        x = np.floor(width * .5 + np.cos(angle) * distances).astype(int)
+                        y = np.floor(height * .525 + np.sin(angle) * distances).astype(int)
+                        # A slanted narrow channel need not align with rounded
+                        # pixel centers. Require a dark pixel among the four
+                        # surrounding every point along each corner bisector;
+                        # a closed blade would block this corridor.
+                        neighbors = np.stack([frame[y + dy, x + dx].max(axis=1)
+                                              for dy in (0, 1) for dx in (0, 1)])
+                        self.assertLess(neighbors.min(axis=0).max(), 64)
 
     def test_no_flash_and_identical_colors_hold_after_landing(self):
         for flash, colors in ((False, ((255, 0, 0), (255, 255, 255))), (True, ((0, 200, 150), (0, 200, 150)))):

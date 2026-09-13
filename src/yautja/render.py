@@ -15,7 +15,7 @@ from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .waveform import WAVE_STYLES, inkblot_mask
-from .hud import HudPanel, hud_blurs
+from .hud import HudPanel, hud_blurs, hud_opacities
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -204,7 +204,8 @@ class Renderer:
                  target_colors=None, target_acquire=.8, target_flash=True, target_flash_rate=1.5, target_scale=1.,
                  motion_blur=0., crt_bleed=0., crt_vertical_lines=False, crt_strength=.12,
                  heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
-                 target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None):
+                 target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None,
+                 hud_opacity=1., hud_opacity_elements=None):
         self.width, self.height = width, height
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
@@ -225,10 +226,13 @@ class Renderer:
             self.hud_colors['target'], self.hud_colors['target-flash'] = self.target_color_override
         self.hud_blur = hud_blur
         self.hud_blurs = hud_blurs(hud_blur, hud_blur_elements)
+        self.hud_opacity = hud_opacity
+        self.hud_opacities = hud_opacities(hud_opacity, hud_opacity_elements)
         self.hud_blur_pixels = {key: value * min(width, height) / 1080 for key, value in self.hud_blurs.items()}
         self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale,
                                             stroke=target_stroke, stroke_colors=target_stroke_colors,
-                                            blur=self.hud_blurs['target'])
+                                            blur=self.hud_blurs['target'], opacity=self.hud_opacities['target'],
+                                            flash_opacity=self.hud_opacities['target-flash'])
         self.target_flash = target_flash
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
@@ -309,7 +313,7 @@ class Renderer:
         image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
 
     def hud_panel(self, size, *elements):
-        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements)
+        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities)
 
     def composite_panel(self, image, panel, x, y):
         artwork, pad = panel.finish()

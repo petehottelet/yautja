@@ -1,4 +1,4 @@
-"""Independent HUD softness, applied to artwork before scene composition."""
+"""Independent HUD softness and opacity, applied before scene composition."""
 import math
 
 from PIL import Image, ImageChops, ImageFilter
@@ -6,30 +6,43 @@ from PIL import Image, ImageChops, ImageFilter
 from .colors import HUD_DEFAULTS
 
 BLUR_ELEMENTS = tuple(key for key in HUD_DEFAULTS if key != 'target-flash')
+OPACITY_ELEMENTS = tuple(HUD_DEFAULTS)
 
 
-def hud_blurs(amount=0., elements=None):
-    """Resolve the shared radius and explicit element overrides, in reference px."""
-    if not math.isfinite(amount) or not 0 <= amount <= 20:
-        raise ValueError('--hud-blur must be finite and between 0 and 20')
-    result = dict.fromkeys(BLUR_ELEMENTS, float(amount))
+def element_values(amount, elements, keys, flag, upper):
+    if not math.isfinite(amount) or not 0 <= amount <= upper:
+        raise ValueError(f'--{flag} must be finite and between 0 and {upper}')
+    result = dict.fromkeys(keys, float(amount))
     seen = set()
     if elements is not None:
         for entry in elements.split(','):
             key, separator, value = entry.partition('=')
             key = key.strip()
             if not separator or key not in result:
-                raise ValueError('--hud-blur-elements needs element=radius assignments; choose ' + ', '.join(result))
+                raise ValueError(f'--{flag}-elements needs element=value assignments; choose ' + ', '.join(result))
             if key in seen:
-                raise ValueError('Duplicate HUD blur element: ' + key)
+                raise ValueError(f'Duplicate {flag} element: ' + key)
             seen.add(key)
             try:
                 value = float(value)
             except ValueError:
-                raise ValueError('HUD blur radius must be a number: ' + key) from None
-            if not math.isfinite(value) or not 0 <= value <= 20:
-                raise ValueError('HUD blur radius must be finite and between 0 and 20: ' + key)
+                raise ValueError(f'{flag} value must be a number: ' + key) from None
+            if not math.isfinite(value) or not 0 <= value <= upper:
+                raise ValueError(f'{flag} value must be finite and between 0 and {upper}: ' + key)
             result[key] = value
+    return result, seen
+
+
+def hud_blurs(amount=0., elements=None):
+    """Resolve the shared radius and explicit element overrides, in reference px."""
+    return element_values(amount, elements, BLUR_ELEMENTS, 'hud-blur', 20)[0]
+
+
+def hud_opacities(amount=1., elements=None):
+    """A target override also controls its flash unless flash is set explicitly."""
+    result, seen = element_values(amount, elements, OPACITY_ELEMENTS, 'hud-opacity', 1)
+    if 'target-flash' not in seen:
+        result['target-flash'] = result['target']
     return result
 
 
@@ -42,12 +55,26 @@ def blur_layer(image, radius):
     return working.filter(ImageFilter.GaussianBlur(radius)).convert(mode)
 
 
+def opacity_layer(image, amount):
+    if amount == 1:
+        return image
+    if amount == 0:
+        return Image.new(image.mode, image.size)
+    if image.mode == 'RGBA':
+        result = image.copy()
+        result.putalpha(image.getchannel('A').point(lambda a: round(a * amount)))
+        return result
+    # Screen-blended artwork uses black as transparency, so scale its light.
+    return image.point(lambda value: round(value * amount))
+
+
 class HudPanel:
-    """Keep the original shared canvas when sharp; split only softened panels."""
-    def __init__(self, mode, size, radii, elements):
+    """Keep the original canvas unless elements need separate appearance controls."""
+    def __init__(self, mode, size, radii, elements, opacities):
         self.mode, self.size = mode, size
         self.radii = {key: radii[key] for key in elements}
-        self.separate = any(self.radii.values())
+        self.opacities = {key: opacities[key] for key in elements}
+        self.separate = any(self.radii.values()) or any(value != 1 for value in self.opacities.values())
         self.layers = {}
 
     def layer(self, element):
@@ -70,5 +97,6 @@ class HudPanel:
             layer = Image.new(self.mode, size)
             layer.paste(artwork, (pad, pad))
             layer = blur_layer(layer, self.radii[key])
+            layer = opacity_layer(layer, self.opacities[key])
             result = Image.alpha_composite(result, layer) if self.mode == 'RGBA' else ImageChops.screen(result, layer)
         return result, pad

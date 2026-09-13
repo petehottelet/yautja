@@ -94,6 +94,8 @@ default; `--hud` restores it. This works for both images and videos.
 
 Use `--hud-blur 3` to soften HUD artwork, or `--hud-blur-elements "waveform=6,target=4,timecode=0"` to control elements independently. Each radius is 0–20; explicit 0 keeps an element sharp and omitted elements inherit `--hud-blur` (default 0). Target blur covers both flash states. Blur and target stroke widths use pixels at a 1080px short edge, scaled to the output. Blur is applied to the HUD layers before scene composition, independently of heat glow, HUD bloom, and whole-frame CRT/VHS effects. See [all element keys and examples](references/targets.md#reticle-stroke-and-independent-hud-blur).
 
+For transparency, use `--hud-opacity 0.5` or independent overrides such as `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"`. Values are 0–1: 0 invisible, 1 full existing visibility (default). Omitted elements inherit the shared value. A `target` override also controls its flash and outline; use `target-flash` for a separate flash opacity. Blur, color, and opacity remain independent. See [all transparency controls](references/targets.md#hud-transparency). To match waveform, reticle, and timecode red, use `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`; custom alpha compositing avoids screen blending's pink shift over blue backgrounds.
+
 Keep Black Hot's black HUD, Abyss's muted cyan, or the standard red/cyan HUD for other palettes unless the user chooses another theme. `--hud-theme muted-cyan` also works with any palette. Use
 `--hud-theme palette` to coordinate every HUD element with the selected thermal
 palette, such as `--palette green-phosphor --hud-theme palette` for greens.

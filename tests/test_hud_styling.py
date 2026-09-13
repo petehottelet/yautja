@@ -146,13 +146,18 @@ class HudStylingTests(unittest.TestCase):
             with patch('sys.stdout', new_callable=io.StringIO) as report:
                 self.assertEqual(main([str(source), str(output), '--timecode', '--hud-blur', '2',
                     '--hud-blur-elements', 'waveform=5,timecode=0,target=8',
-                    '--target-stroke', '4', '--target-stroke-colors', '#123456,#abcdef']), 0)
+                    '--target-stroke', '4', '--target-stroke-colors', '#123456,#abcdef',
+                    '--hud-opacity', '.7', '--hud-opacity-elements', 'waveform=.3,target=.5,timecode=1']), 0)
             data = json.loads(report.getvalue())
             self.assertEqual(data['hud_blur_elements']['timecode'], 0)
             self.assertEqual(data['hud_blur_elements']['readout'], 2)
             self.assertEqual(data['hud_blur_elements']['target'], 8)
             self.assertEqual(data['target_stroke_colors'], ['#123456', '#abcdef'])
             self.assertEqual(data['settings']['target_stroke'], 4)
+            self.assertEqual(data['hud_opacity_elements']['waveform'], .3)
+            self.assertEqual(data['hud_opacity_elements']['readout'], .7)
+            self.assertEqual(data['hud_opacity_elements']['target-flash'], .5)
+            self.assertEqual(data['settings']['hud_opacity'], .7)
             with Image.open(output) as image:
                 image.verify()
 
@@ -165,10 +170,13 @@ class HudStylingTests(unittest.TestCase):
                             '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', str(source)], check=True)
             with patch('sys.stdout', new_callable=io.StringIO) as report, patch('sys.stderr', new_callable=io.StringIO):
                 self.assertEqual(main([str(source), str(output), '--hud-blur', '2',
-                                       '--hud-blur-elements', 'waveform=5,timecode=0', '--target-stroke']), 0)
+                                       '--hud-blur-elements', 'waveform=5,timecode=0', '--target-stroke',
+                                       '--hud-opacity', '.6', '--hud-opacity-elements', 'waveform=.25']), 0)
             data = json.loads(report.getvalue())
             self.assertEqual(data['frames'], 6)
             self.assertTrue(data['audio_preserved'])
             self.assertEqual(data['hud_blur_elements']['waveform'], 5)
             self.assertEqual(data['target_stroke'], 2)
+            self.assertEqual(data['hud_opacity_elements']['waveform'], .25)
+            self.assertEqual(data['hud_opacity_elements']['timecode'], .6)
             subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-i', str(output), '-f', 'null', '-'], check=True, capture_output=True)
