@@ -494,7 +494,7 @@ def parser():
     p.add_argument('--target-acquire', type=float, default=.8, help='Seconds for the three target blades to assemble, 0.1-5')
     p.add_argument('--target-flash', action=argparse.BooleanOptionalAction, default=True, help='Alternate target colors after landing; --no-target-flash keeps the landing color')
     p.add_argument('--target-flash-rate', type=float, default=1.5, help='Target flash cycles per second, 0-3; 0 holds the landing color')
-    p.add_argument('--target-scale', type=float, default=1., help='Target size relative to the selected figure, 0.25-3')
+    p.add_argument('--target-scale', type=float, default=1., help='Size multiplier for the compact reticle centered on the selected figure, 0.25-3; default 1')
     p.add_argument('--motion-blur', type=float, default=0., help='Temporal motion trails/persistence strength, 0-1; 0 disables. Video only; stills have no preceding frames')
     p.add_argument('--crt-bleed', type=float, default=0., help='Horizontal phosphor color spread, 0-1; independent of VHS and CRT lines')
     p.add_argument('--crt-vertical-lines', '--vertical-crt-lines', dest='crt_vertical_lines', action=argparse.BooleanOptionalAction, default=False, help='Vertical CRT columns across image and HUD; combine with horizontal --crt-lines')

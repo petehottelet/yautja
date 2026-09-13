@@ -2,6 +2,7 @@
 
 ## 2.1.0 — pending publication
 
+- Reduce the landed target radius by 70%, retain heavier sides at the smaller size, and open all three corners through the full stroke. Keep the acquisition sweep, configurable size/colors, and red/white flash; refresh small/large target GIFs.
 - Sharpen Rorschach waveform edges using short audio peaks and troughs, retaining the thick mirrored core and shading. Let `--wave-detail` control edge intensity as well as lobe complexity, and refresh all three small/large animated examples.
 - Add three optional audio-reactive Rorschach waveform shapes: filled mirrored lobes, separated inkblots, and hollow pockets. Expose column width, full-height layout, and lobe complexity; keep the aligned thin trace as the default. Include matched small/large animated examples.
 - Add local figure scans with shot-local IDs, thumbnail contact sheets, source verification, and reusable selections for images and videos. Saved tracks support new frame rates, resolutions, and trims; conversion reports identify selected figures that did or did not appear.

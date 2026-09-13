@@ -53,12 +53,15 @@ class TargetOverlay:
             x0, y0, x1, y1 = item['bbox']
             cx, cy = (x0 + x1) * width / 2, (y0 + y1) * height / 2
             radius = max((x1 - x0) * width * .8, (y1 - y0) * height * .62, 12) * self.scale
-            radius = min(radius, max(width, height) * .65)
+            # Lock onto the figure's center with a compact reticle, rather than
+            # enclosing its full silhouette. Keep the broad acquisition sweep.
+            radius = min(radius, max(width, height) * .65) * .30
             radius += (max(width, height) * .75 - radius) * (1 - ease)
             angle = -.17 * (1 - ease)
             points = np.array([(math.cos(a + angle), math.sin(a + angle))
                                for a in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6)]) * radius
-            thickness = max(1.5, min(width, height) / 150) + radius * .055 + (1 - ease) * min(width, height) * .08
+            thickness = min(radius * .30, max(1.5, min(width, height) / 150) + radius * .24
+                            + (1 - ease) * min(width, height) * .08)
             elapsed = max(0., age - self.acquire - .18)
             flash = progress == 1 and elapsed > 0 and self.flash_rate > 0 and int(elapsed * self.flash_rate * 2) % 2 == 1
             color = colors[int(flash)]
@@ -70,10 +73,15 @@ class TargetOverlay:
                 if np.dot(inward, -(a + b) / 2) < 0:
                     inward = -inward
                 offset = -inward * (1 - ease) * max(width, height) * .25
-                gap = max(1., radius * .04)
+                # Terminate each blade well before the vertex: three clearly
+                # open corners, including the white flash and its soft glow.
+                gap = min(radius * .30, max(.8, radius * .24))
+                # Parallel cuts at the 60-degree corners keep the gap open
+                # through the entire stroke, rather than pinching shut inside.
+                cutback = gap + thickness * math.sqrt(3)
                 vertices = np.array([a + direction * gap, b - direction * gap,
-                                     b - direction * (gap + thickness * 1.15) + inward * thickness,
-                                     a + direction * (gap + thickness * 1.15) + inward * thickness])
+                                     b - direction * cutback + inward * thickness,
+                                     a + direction * cutback + inward * thickness])
                 vertices += np.array([cx, cy]) + offset
                 draw.polygon([tuple(point * 2) for point in vertices], fill=(*color, opacity))
                 # A subtle darker inner bevel follows the selected ink color.

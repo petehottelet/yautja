@@ -29,12 +29,12 @@ Using a saved catalog with Classic needs only the base runtime. Selecting a segm
 
 ## Target animation and color
 
-Three beveled blades contract and assemble around the selected bounding box, land in red, then alternate between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
+Three beveled blades contract into a compact reticle centered on the selected bounding box, with heavy sides and a clear gap through each corner. The landed radius is 30% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
 
 | Control | Default and range |
 | --- | --- |
 | `--target-acquire 0.8` | Assembly duration in seconds; 0.1–5 |
-| `--target-scale 1` | Triangle size relative to the detected box; 0.25–3 |
+| `--target-scale 1` | Multiplier for the compact reticle centered on the detected box; 0.25–3 |
 | `--target-colors "#ff302b,#ffffff"` | Primary/landing and flash color, in that order; RGB hex pair |
 | `--target-flash` / `--no-target-flash` | Flashing on by default for videos; off holds the primary color |
 | `--target-flash-rate 1.5` | Full red/white cycles per second; 0–3; 0 disables flashing |

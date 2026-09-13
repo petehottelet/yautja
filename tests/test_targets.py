@@ -2,6 +2,7 @@
 import copy
 import io
 import json
+import math
 from pathlib import Path
 import shutil
 import subprocess
@@ -181,6 +182,44 @@ class TargetAnimationTests(unittest.TestCase):
         self.assertEqual(frames[3][..., 1].max(), 0)
         self.assertGreater(frames[-1][..., 1].max(), 200)
         self.assertEqual(overlay.seen, {'S001-F001'})
+
+    def test_landed_reticle_is_compact_with_heavy_sides(self):
+        # Visible bounds and center-side thickness from the previous geometry,
+        # measured on the same selected box against black (ink threshold 64).
+        for width, height, old_width, old_height, old_stroke in (
+                (320, 180, 104, 91, 6), (480, 270, 156, 135, 8), (960, 540, 312, 270, 15)):
+            with self.subTest(size=(width, height)):
+                image = Image.new('RGB', (width, height))
+                ink = np.asarray(TargetOverlay().draw(image, 0, self.targets,
+                                    ((255, 255, 255),) * 2, static=True))[..., 0] > 64
+                rows, columns = np.nonzero(ink)
+                visible_width = columns.max() - columns.min() + 1
+                self.assertLessEqual(visible_width, old_width * .30)
+                self.assertLessEqual(rows.max() - rows.min() + 1, old_height * .30)
+                stroke = np.count_nonzero(ink[round(height * .525):, round(width * .5)])
+                self.assertGreaterEqual(stroke, old_stroke)
+                self.assertGreater(stroke / visible_width, .18)
+
+    def test_all_three_corner_channels_remain_open_during_white_flash(self):
+        for width, height in ((320, 180), (480, 270), (960, 540)):
+            overlay = TargetOverlay()
+            image = Image.new('RGB', (width, height))
+            for time in (0, .3, .6, .9, 1.2, 1.4):
+                frame = np.asarray(overlay.draw(image, time, self.targets,
+                                      ((255, 0, 0), (255, 255, 255)), shot='S001'))
+                if time not in (.9, 1.4):
+                    continue
+                with self.subTest(size=(width, height), time=time):
+                    self.assertGreater(frame[..., 0].max(), 200)
+                    self.assertEqual(frame[..., 1].max() > 200, time == 1.4)
+                    radius = max(.2 * width * .8, .55 * height * .62, 12) * .3
+                    distances = np.linspace(radius * .25, radius * 1.05, 100)
+                    for angle in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6):
+                        x = np.rint(width * .5 + np.cos(angle) * distances).astype(int)
+                        y = np.rint(height * .525 + np.sin(angle) * distances).astype(int)
+                        # Clear corridors through each corner, including glow
+                        # and downsampling, not just tiny notches at the tips.
+                        self.assertLess(frame[y, x].max(), 32)
 
     def test_no_flash_and_identical_colors_hold_after_landing(self):
         for flash, colors in ((False, ((255, 0, 0), (255, 255, 255))), (True, ((0, 200, 150), (0, 200, 150)))):
