@@ -10,6 +10,8 @@ The following upstream licenses were checked on 2026-09-11. Model revisions are 
 | --- | --- | --- |
 | Grounding DINO tiny weights/configuration | Apache-2.0 | [Publisher model card](https://huggingface.co/IDEA-Research/grounding-dino-tiny/blob/a2bb814dd30d776dcf7e30523b00659f4f141c71/README.md), [upstream code license](https://github.com/IDEA-Research/GroundingDINO/blob/main/LICENSE) |
 | SAM 2.1 Hiera tiny weights/configuration | Apache-2.0 | [Publisher model card](https://huggingface.co/facebook/sam2.1-hiera-tiny/blob/de431c4043854a71d8101e17995dfe596bf101a5/README.md), [upstream licensing statement](https://github.com/facebookresearch/sam2#license) |
+| ViTPose base simple weights/configuration (checked 2026-09-12) | Apache-2.0 | [Publisher model card at the pinned revision](https://huggingface.co/usyd-community/vitpose-base-simple/blob/a93ac0c67e0b7e2c55287d21d4c460c8f3c54d45/README.md) |
+| SciPy (1.17.1 validated for the pose preview) | BSD-3-Clause | [Versioned license](https://github.com/scipy/scipy/blob/v1.17.1/LICENSE.txt) |
 | Transformers 4.57.6 | Apache-2.0 | [Upstream license](https://github.com/huggingface/transformers/blob/v4.57.6/LICENSE) |
 | PyTorch 2.6.0 / torchvision 0.21.0 (phase 1 comparison) | BSD-3-Clause | [PyTorch versioned license](https://github.com/pytorch/pytorch/blob/v2.6.0/LICENSE), [torchvision versioned license](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE) |
 | OpenCV 4.10+ | Apache-2.0 | [Upstream license](https://github.com/opencv/opencv/blob/4.x/LICENSE) |

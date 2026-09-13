@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local video-to-Yautja converter. Run with --help for options."""
+"""Local image/video-to-Yautja converter. Run with --help for options."""
 from __future__ import annotations
 
 import argparse
@@ -15,9 +15,10 @@ from fractions import Fraction
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
-from render import Renderer
+from render import Renderer, PALETTES
+from thermal import THERMAL_MODES, resolve_thermal
 
 
 class ConversionError(RuntimeError):
@@ -143,19 +144,130 @@ def audio_filter(rate):
     return f'asetpts=PTS-STARTPTS,aresample={rate}:async=1:first_pts=0'
 
 
-def convert(args):
-    started = time.monotonic()
-    timings = {}
-    ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
+def media_kind(args):
+    if args.media != 'auto':
+        return args.media
+    if ((args.input and args.input.suffix.lower() in ('.jpg', '.jpeg', '.png')) or
+            (args.output and args.output.suffix.lower() == '.png')):
+        return 'image'
+    return 'video'
+
+
+def output_paths(args, suffix):
     source, output = args.input.expanduser().resolve(), args.output.expanduser().resolve()
     if not source.is_file():
         raise ConversionError(f'Input does not exist: {source}')
     if source == output:
         raise ConversionError('Input and output must be different files.')
-    if output.suffix.lower() != '.mp4':
-        raise ConversionError('Output must end in .mp4 (H.264 video with optional AAC audio).')
+    if output.suffix.lower() != suffix:
+        raise ConversionError(f'Output must end in {suffix} for this media type.')
     if output.exists() and not args.overwrite:
         raise ConversionError('Output already exists. Choose another name or use --overwrite.')
+    return source, output
+
+
+def semantic_tracker(args):
+    if args.thermal == 'classic':
+        return None
+    from semantic import GroundedSegmenter, SemanticTracker
+    print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
+    tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
+                              device=args.device, confidence=args.confidence, precision=args.precision,
+                              surfaces=resolve_thermal(args.thermal) in ('cinematic', 'detailed')), args.detect_interval)
+    print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
+          f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
+    return tracker
+
+
+def convert_image(args):
+    started = time.monotonic()
+    source, output = output_paths(args, '.png')
+    video_options = {'start': 0., 'duration': None, 'fps': None, 'audio_stream': 0,
+                     'mute': False, 'wave_window': .6, 'wave_gain': 1.,
+                     'crf': 18, 'preset': 'medium', 'detect_interval': .5}
+    invalid = ['--' + key.replace('_', '-') for key, default in video_options.items()
+               if getattr(args, key) != default]
+    if args.waveform == 'audio':
+        invalid.append('--waveform audio')
+    if invalid:
+        raise ConversionError('Still images do not use video timing or audio options: ' + ', '.join(invalid))
+    try:
+        with Image.open(source, formats=['JPEG', 'PNG']) as original:
+            if getattr(original, 'n_frames', 1) != 1:
+                raise ConversionError('Animated PNG is not a still image. Use video mode or provide a single frame.')
+            input_format = original.format
+            oriented = ImageOps.exif_transpose(original)
+            transparency = 'A' in oriented.getbands() or 'transparency' in oriented.info
+            if transparency:
+                rgba = oriented.convert('RGBA')
+                frame = Image.alpha_composite(Image.new('RGBA', rgba.size, (0, 0, 0, 255)), rgba).convert('RGB')
+            else:
+                frame = oriented.convert('RGB')
+            frame.thumbnail((args.max_size, args.max_size), Image.Resampling.LANCZOS)
+            frame.info.clear()
+    except (OSError, Image.DecompressionBombError) as exc:
+        raise ConversionError(f'Cannot read a still JPEG or PNG image: {exc}') from exc
+    if min(frame.size) < 2:
+        raise ConversionError('Image width and height must each be at least 2 pixels.')
+    timings = {'image_decode_seconds': time.monotonic() - started}
+    setup_started = time.monotonic()
+    tracker = semantic_tracker(args)
+    timings['model_setup_seconds'] = time.monotonic() - setup_started
+    processing_started = time.monotonic()
+    width, height = frame.size
+    subjects = tracker.update(frame, 0.) if tracker else ()
+    renderer = Renderer(width, height, seed=args.seed, grain=args.grain, glow=args.glow,
+                        show_timecode=args.timecode, timecode_start=args.timecode_start,
+                        thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose,
+                        sensor_texture=args.sensor_texture, palette=args.palette,
+                        pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs)
+    rendered = renderer.render(frame, 0., subjects=subjects)
+    rendered.info.clear()
+    timings['processing_seconds'] = time.monotonic() - processing_started
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.yautja-', dir=output.parent) as temp_dir:
+        temporary = Path(temp_dir) / 'result.png'
+        rendered.save(temporary, format='PNG')
+        with Image.open(temporary) as check:
+            check.verify()
+        if output.exists() and not args.overwrite:
+            raise ConversionError('Output appeared during conversion; refusing to overwrite it.')
+        os.replace(temporary, output)
+    from runtime import environment_info
+    report = {'report_version': 1, 'media_type': 'image', 'input_format': input_format,
+              'output': str(output), 'output_format': 'PNG', 'width': width, 'height': height,
+              'frames': 1, 'waveform': 'procedural-static', 'audio_preserved': False,
+              'timecode': args.timecode, 'thermal': args.thermal, 'verbose': args.verbose,
+              'sensor_texture': args.sensor_texture, 'palette': renderer.palette_name,
+              'grain': renderer.grain, 'pixelation': renderer.pixelation, 'scanlines': renderer.scanlines,
+              'crt_lines': renderer.scanlines, 'vhs': renderer.vhs,
+              'transparency_flattened': transparency,
+              'elapsed_seconds': round(time.monotonic() - started, 2),
+              'environment': environment_info(),
+              'timings': {key: round(value, 3) for key, value in timings.items()},
+              'settings': {key: getattr(args, key) for key in (
+                  'max_size', 'seed', 'grain', 'glow', 'device', 'precision', 'warm_objects',
+                  'hot_objects', 'confidence', 'sensor_resolution', 'timecode_start', 'sensor_texture', 'palette',
+                  'pixelation', 'scanlines', 'vhs')}}
+    if tracker:
+        report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
+        if not subjects:
+            print('No requested subjects detected; semantic output contains only the cool environment.', file=sys.stderr)
+    print(json.dumps(report, indent=2))
+    return report
+
+
+def convert(args):
+    if media_kind(args) == 'image':
+        return convert_image(args)
+    return convert_video(args)
+
+
+def convert_video(args):
+    started = time.monotonic()
+    timings = {}
+    source, output = output_paths(args, '.mp4')
+    ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
     data, video = probe(source, ffprobe)
     audios = [s for s in data['streams'] if s['codec_type'] == 'audio']
     if args.audio_stream >= len(audios) and args.audio_stream != 0:
@@ -183,15 +295,8 @@ def convert(args):
     frames = 0
     analysis = None
     mode = 'procedural'
-    tracker = None
     setup_started = time.monotonic()
-    if args.thermal == 'semantic':
-        from semantic import GroundedSegmenter, SemanticTracker
-        print('Loading cached local segmentation models...', file=sys.stderr, flush=True)
-        tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
-                                  device=args.device, confidence=args.confidence, precision=args.precision), args.detect_interval)
-        print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
-              f'precision: {tracker.detector.precision}; tracking: optical-flow', file=sys.stderr, flush=True)
+    tracker = semantic_tracker(args)
     timings['model_setup_seconds'] = time.monotonic() - setup_started
     with tempfile.TemporaryDirectory(prefix='.yautja-', dir=output.parent) as temp_dir:
         temp = Path(temp_dir)
@@ -213,7 +318,9 @@ def convert(args):
             processing_started = time.monotonic()
             renderer = Renderer(width, height, seed=args.seed, grain=args.grain, glow=args.glow,
                                 show_timecode=args.timecode, timecode_start=args.timecode_start,
-                                thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose)
+                                thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose,
+                                sensor_texture=args.sensor_texture, palette=args.palette,
+                                pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs)
             intermediate = temp / 'picture.mp4'
             decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
                           *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
@@ -277,10 +384,13 @@ def convert(args):
             if output.exists() and not args.overwrite:
                 raise ConversionError('Output appeared during conversion; refusing to overwrite it.')
             os.replace(final, output)
-            report = {'output': str(output), 'width': width, 'height': height, 'fps': fps, 'frames': frames,
+            report = {'media_type': 'video', 'output': str(output), 'width': width, 'height': height, 'fps': fps, 'frames': frames,
                       'duration': frames / fps, 'waveform': mode, 'audio_preserved': bool(audio and not args.mute),
                       'timecode': args.timecode, 'hdr_tonemapped': hdr, 'elapsed_seconds': round(time.monotonic() - started, 2)}
-            report.update(thermal=args.thermal, verbose=args.verbose)
+            report.update(thermal=args.thermal, verbose=args.verbose,
+                          sensor_texture=args.sensor_texture, palette=renderer.palette_name,
+                          grain=renderer.grain, pixelation=renderer.pixelation, scanlines=renderer.scanlines,
+                          crt_lines=renderer.scanlines, vhs=renderer.vhs)
             from runtime import environment_info
             report.update(report_version=1, environment=environment_info(),
                           timings={key: round(value, 3) for key, value in timings.items()},
@@ -289,7 +399,7 @@ def convert(args):
                               'start', 'duration', 'max_size', 'fps', 'crf', 'preset', 'seed', 'grain', 'glow',
                               'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval',
                               'sensor_resolution', 'waveform', 'wave_window', 'wave_gain', 'audio_stream', 'mute',
-                              'timecode_start')})
+                              'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs')})
             if tracker:
                 report['semantic'] = tracker.report()
                 if not tracker.max_subjects:
@@ -302,22 +412,28 @@ def convert(args):
 
 
 def parser():
-    p = argparse.ArgumentParser(description='Re-skin a local video with a sci-fi thermal-imaging look and an audio-reactive HUD. Optional segmentation and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
+    p = argparse.ArgumentParser(description='Re-skin a local image or video with a sci-fi thermal-imaging look and HUD. Optional segmentation, anatomy-guided coloring, and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
     version = (Path(__file__).resolve().parent.parent / 'VERSION').read_text(encoding='utf-8').strip()
     p.add_argument('--version', action='version', version=f'Yautja {version}')
-    p.add_argument('input', nargs='?', type=Path)
-    p.add_argument('output', nargs='?', type=Path)
+    p.add_argument('input', nargs='?', type=Path, help='Local JPEG/PNG image or video')
+    p.add_argument('output', nargs='?', type=Path, help='PNG for a still image; MP4 for a video')
+    p.add_argument('--media', choices=['auto', 'image', 'video'], default='auto', help='Auto selects images for JPEG/PNG input or PNG output; use image with --doctor to skip FFmpeg checks')
     p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
-    p.add_argument('--thermal', choices=['classic', 'semantic'], default='classic', help='Classic luminance palette or optional subject-based heat simulation')
-    p.add_argument('--download-models', action='store_true', help='Download pinned Apache-2.0 semantic models once, then exit (no video needed)')
+    p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Three segmented looks: silhouette (soft), cinematic (broad surface patches), detailed (skin/clothing/gear). Classic is the lightweight luminance filter; old semantic/realistic names remain aliases')
+    p.add_argument('--palette', choices=['auto', *PALETTES], default='yautja', help='Original Yautja colors in every mode by default; auto is also Yautja. Palettes are independent of thermal style')
+    p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
+    p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
+    p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; default off unless sensor texture is enabled')
+    p.add_argument('--vhs', action=argparse.BooleanOptionalAction, default=False, help='VHS-style color bleed, horizontal wobble, tape noise, and tracking defects; default off')
+    p.add_argument('--download-models', action='store_true', help='Download pinned Apache-2.0 semantic models once, then exit (no input needed)')
     p.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto', help='Semantic inference device; auto prefers available CUDA')
     p.add_argument('--precision', choices=['fp32', 'bf16'], default='fp32', help='Semantic model precision; bf16 is experimental and requires compatible CUDA')
     p.add_argument('--warm-objects', default='person,bird,cat,dog,horse,sheep,cow,elephant,bear,zebra,giraffe', help='Comma-separated object categories to simulate as warm')
     p.add_argument('--hot-objects', default='', help='Explicit comma-separated hot categories, e.g. fire; these are artistic overrides')
     p.add_argument('--confidence', type=float, default=.30, help='Object detection threshold, 0.05-0.95')
     p.add_argument('--detect-interval', type=float, default=.5, help='Seconds between model detections; masks follow optical flow between them')
-    p.add_argument('--sensor-resolution', type=int, default=256, help='Semantic sensor longest edge, 64-640; smaller is more abstract')
-    p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to semantic subjects (requires --thermal semantic)')
+    p.add_argument('--sensor-resolution', type=int, default=256, help='Heat-field and optional texture grid longest edge, 64-640; smaller is more abstract')
+    p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to subjects (requires silhouette, cinematic, or detailed mode)')
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
@@ -331,7 +447,7 @@ def parser():
     p.add_argument('--max-size', type=int, default=1920, help='Longest output edge; preserves aspect and never upscales')
     p.add_argument('--crf', type=int, default=18, help='H.264 quality; lower is higher quality (0-51)')
     p.add_argument('--preset', choices=['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow'], default='medium')
-    p.add_argument('--grain', type=float, default=.035, help='Red CRT grain strength, 0-0.25')
+    p.add_argument('--grain', nargs='?', type=float, const=.035, help='Optional grain strength, 0-0.25 (bare flag: 0.035); 0 disables. Default off unless sensor texture is enabled')
     p.add_argument('--glow', type=float, default=.65, help='HUD bloom strength, 0-1')
     p.add_argument('--seed', type=int, default=42, help='Reproducible procedural waveform and grain seed')
     p.add_argument('--overwrite', action='store_true', help='Replace an existing output after successful conversion')
@@ -346,13 +462,16 @@ def main(argv=None):
             from runtime import environment_info, semantic_diagnostics
             from render import load_glyph_font
             _, chars = load_glyph_font()
-            tools = {name: run([binary(name), '-version']).decode('utf-8', 'replace').splitlines()[0] for name in ['ffmpeg', 'ffprobe']}
-            encoders = run([binary('ffmpeg'), '-v', 'error', '-encoders']).decode('utf-8', 'replace')
-            if 'libx264' not in encoders or ' aac ' not in encoders:
-                raise ConversionError('FFmpeg needs the libx264 and AAC encoders.')
+            media = media_kind(args)
+            tools = {}
+            if media == 'video':
+                tools = {name: run([binary(name), '-version']).decode('utf-8', 'replace').splitlines()[0] for name in ['ffmpeg', 'ffprobe']}
+                encoders = run([binary('ffmpeg'), '-v', 'error', '-encoders']).decode('utf-8', 'replace')
+                if 'libx264' not in encoders or ' aac ' not in encoders:
+                    raise ConversionError('FFmpeg needs the libx264 and AAC encoders.')
             semantic = semantic_diagnostics(args.device, args.precision)
             ready = args.thermal == 'classic' or semantic['ready']
-            print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), **tools,
+            print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), 'media_type': media, **tools,
                               'environment': environment_info(), 'thermal': args.thermal,
                               'ready': ready, 'semantic': semantic}, indent=2))
             return 0 if ready else 1
@@ -364,14 +483,18 @@ def main(argv=None):
             return 0
         if not args.input or not args.output:
             p.error('input and output are required (or use --doctor)')
-        if args.verbose and args.thermal != 'semantic':
-            p.error('--verbose requires --thermal semantic')
-        if args.precision != 'fp32' and args.thermal != 'semantic':
-            p.error('--precision bf16 requires --thermal semantic')
+        if args.verbose and args.thermal == 'classic':
+            p.error('--verbose requires --thermal silhouette, cinematic, or detailed')
+        if args.precision != 'fp32' and args.thermal == 'classic':
+            p.error('--precision bf16 requires --thermal silhouette, cinematic, or detailed')
         checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),
                   (args.wave_window, .05, 5, '--wave-window'), (args.wave_gain, .01, 20, '--wave-gain'),
                   (args.max_size, 160, 8192, '--max-size'), (args.crf, 0, 51, '--crf'),
-                  (args.grain, 0, .25, '--grain'), (args.glow, 0, 1, '--glow'), (args.audio_stream, 0, 100, '--audio-stream')]
+                  (args.glow, 0, 1, '--glow'), (args.audio_stream, 0, 100, '--audio-stream')]
+        if args.grain is not None:
+            checks.append((args.grain, 0, .25, '--grain'))
+        if args.pixelation is not None and args.pixelation != 0:
+            checks.append((args.pixelation, 32, 640, '--pixelation'))
         checks += [(args.sensor_resolution, 64, 640, '--sensor-resolution'),
                    (args.detect_interval, .05, 2, '--detect-interval'), (args.confidence, .05, .95, '--confidence')]
         if args.fps is not None:

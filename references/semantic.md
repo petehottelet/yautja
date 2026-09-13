@@ -1,6 +1,10 @@
 # Segmentation and thermal-style re-skinning
 
-The optional semantic mode detects subjects with Grounding DINO tiny, segments their silhouettes with SAM 2.1 tiny, and re-skins them with algorithmically generated color fields for a sci-fi thermal-imaging look. It keeps vegetation and scenery cool, even when they are bright. Body interiors use smooth, object-relative color regions rather than facial features or clothing texture. Seeded grain adds some random variation. This effect is for entertainment only; neither model measures temperature, clothing insulation, engine state, or whether an object is alive.
+All three segmented thermal looks detect subjects with Grounding DINO tiny, segment their silhouettes with SAM 2.1 tiny, and estimate 17 human body landmarks with ViTPose base simple. Silhouette (`--thermal silhouette`, formerly `semantic`) uses broad head, torso, arm, wrist, and leg regions for a soft, blobby heat field. Seeded variation follows body and limb axes without copying facial or clothing texture. Uncertain landmarks and nonhuman subjects use a mask-based fallback. Vegetation and scenery stay cool, even when bright. This is an entertainment effect; the models do not measure temperature, clothing insulation, engine state, or whether an object is alive.
+
+Detailed (`--thermal detailed`, formerly `realistic`) adds a second detection/segmentation pass inside each person crop, using the same cached Grounding DINO and SAM models. It assigns separate synthetic warmth to detected faces, hands, hair, garments, shoes, and carried equipment. Exposed skin appears brighter, garments vary more gently, and equipment can appear cooler. Only garment regions use normalized, coarse source shading to suggest folds; photographic facial detail is not copied. It keeps more scenery structure and reduces glowing silhouette borders. These are visual priors, not recovered infrared data or measured material properties.
+
+Cinematic (`--thermal cinematic`) is the middle ground: it softens the same surface regions into broad patches, blends them with anatomy-guided warmth, and uses moderate scenery detail and edge softness. Small equipment/skin boundaries are less pronounced than Detailed. It does not copy source garment or facial texture. All styles use the original Yautja palette by default; the legacy mode names remain exact aliases, and `auto` also selects Yautja.
 
 ## Setup and use
 
@@ -10,9 +14,10 @@ Keep the lightweight environment if you only need classic mode. For semantic mod
 python -m pip install -r requirements-semantic.txt
 python scripts/yautja.py --download-models
 python scripts/yautja.py "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
+python scripts/yautja.py "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
 ```
 
-Use your environment's Python executable for these commands. The explicit download command fetches about 850 MB of pinned model weights and configuration from Hugging Face into its standard cache. It requires network access once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The archive does not include weights, Python packages, or FFmpeg. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
+Use your environment's Python executable for these commands. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose adds about 344 MB to the earlier semantic setup; existing installations should reinstall the semantic requirements (including SciPy) and run `--download-models` once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The archive does not include weights, Python packages, or FFmpeg. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
 
 `--device auto` selects CUDA if available, otherwise CPU. A CUDA-capable card also needs CUDA-enabled PyTorch; CPU-only PyTorch will use CPU even if a GPU is installed. Install a compatible PyTorch/torchvision pair using the [official PyTorch installer](https://pytorch.org/get-started/locally/). Start with a five-second sample. CPU processing is substantially slower than classic mode.
 
@@ -23,7 +28,7 @@ python scripts/yautja.py --doctor
 python scripts/yautja.py --doctor --thermal semantic --device cuda
 ```
 
-Doctor reports the executable, environment, package versions and import failures, CUDA build, selected device and reason, GPU name/VRAM, and required files from both pinned model snapshots. A selected CUDA device must complete a small tensor operation. It never downloads weights or performs model inference; `ready` means the prerequisites passed, not that weight integrity or a real model render has been verified. Missing or broken optional ML packages remain nonfatal for the default classic check. A semantic check exits with status 1 if prerequisites fail.
+Doctor reports the executable, environment, package versions and import failures, CUDA build, selected device and reason, GPU name/VRAM, and required files from all three pinned model snapshots. A selected CUDA device must complete a small tensor operation. It never downloads weights or performs model inference; `ready` means the prerequisites passed, not that weight integrity or a real model render has been verified. Missing or broken optional ML packages remain nonfatal for the default classic check. A semantic check exits with status 1 if prerequisites fail.
 
 Conversions print the actual device and selection reason. An explicit CUDA request never retries inference on CPU. Memory or driver failures preserve the protected output and remove conversion scratch files. `--verbose` continues to control glyph annotations.
 
@@ -50,13 +55,26 @@ The JSON conversion report includes actual PyTorch/device/precision information,
 | Option | Purpose |
 | --- | --- |
 | `--thermal classic` | Original lightweight luminance effect; still the default |
-| `--thermal semantic` | Subject masks and a low-resolution heat field |
+| `--thermal silhouette` | Soft, anatomy-guided warmth; alias: `semantic` |
+| `--thermal cinematic` | Broad surface patches between Silhouette and Detailed |
+| `--thermal detailed` | Separate skin, clothing, and gear; alias: `realistic` |
+| `--palette yautja` | Original colors, default for every style; `auto` is an alias |
+| `--palette ironbow` | Purple/red/orange through yellow-white |
+| `--palette redline` | Near-black, vivid blue, dominant red, and restrained pink highlights |
+| `--palette virtualboy` | Red/black only, including all glyphs and the HUD |
+| `--palette green-phosphor` / `--palette amber-phosphor` | Green or amber display colors |
+| `--palette white-hot` / `--palette black-hot` | Grayscale with simulated warm areas light or dark |
+| `--sensor-texture` / `--no-sensor-texture` | Combined preset: grain, pixels, scanlines, and quantization; default off |
+| `--grain` / `--grain 0.02` | Independent noise, bare flag 0.035; 0 disables |
+| `--pixelation` / `--pixelation 80` | Independent chunky pixels; bare flag longest edge 96, range 32–640; 0 disables |
+| `--crt-lines` / `--no-crt-lines` | Horizontal CRT lines over the finished image and HUD; `--scanlines` is an alias |
+| `--vhs` / `--no-vhs` | Analog color bleed, wobble, tape noise, dropouts, and tracking defects |
 | `--sensor-resolution 160` | More abstraction; default 256, range 64–640 on the longest edge |
 | `--warm-objects "person,dog,bird"` | Categories to simulate as warm |
 | `--hot-objects "fire"` | Explicit artistic hot-object overrides; empty by default |
 | `--confidence 0.4` | Stricter detection; may miss small or obscured subjects |
 | `--detect-interval 0.25` | More frequent detection at a higher computational cost; default 0.5 seconds |
-| `--verbose` | Cyan leaders and varied, stable six-symbol labels per track; requires semantic mode |
+| `--verbose` | Cyan leaders and varied, stable six-symbol labels per track; works with all three segmented looks |
 | `--device cpu` / `--device cuda` | Select the inference device explicitly |
 | `--precision fp32` / `--precision bf16` | Full precision by default; experimental bfloat16 requires supported CUDA |
 
@@ -66,9 +84,15 @@ Warm defaults are people, birds, cats, dogs, horses, sheep, cows, elephants, bea
 
 Detection and SAM image segmentation run periodically at up to 640 pixels on the longest edge. Backward optical flow moves masks on intervening frames. Matched, aligned masks are lightly blended; missed detections fade and expire. Coarse image changes trigger immediate re-detection at cuts. Memory usage is bounded by the current frame, model memory, and active masks; no whole-video frame cache is built.
 
+ViTPose runs on the detected person regions at the same detection cadence. Landmarks move with optical flow between updates, and reliable matched estimates are lightly smoothed. Head landmarks collapse into one broad region; individual eyes, noses, and mouths are never drawn. Wrist locations approximate hand regions. Colors are clipped to each visible silhouette and fade with the track. Low-confidence joints are omitted, and anatomical region strengths ramp up with confidence. Seeded variation stays attached to the estimated torso and limb axes instead of changing randomly each frame. Pose errors, cropped bodies, and ID changes can still move or reset the pattern; this is not a persistent heat simulation or a material classifier.
+
 This uses SAM's image predictor with our optical-flow tracker, not SAM's video-memory predictor. Occlusion, crossings, abrupt camera motion, low contrast, and subtle cuts can still cause missed masks or ID changes. At most 16 detections are segmented per detection frame. `--detect-interval 0.1` can improve fast action at significant cost. Scene-cut detection can also reset on a large exposure change.
 
-Person masks can include held objects, backpacks, and clothing, which then share the simulated body field. This first implementation does not estimate material-specific insulation or separate exposed skin from clothing. The bundled checkpoint describes a SAM video configuration; Transformers may print a model-type warning when loading its compatible SAM image component. The pinned image inference path was verified on the demo clip.
+In Silhouette, held objects, backpacks, and clothing inside person masks share the body field. Cinematic and Detailed instead propose up to 12 surface regions per person at each detection refresh, reject low-confidence or implausibly large masks and masks mostly outside the owner, and clip accepted regions to that person. Equipment and eyewear can override warm skin; larger silhouettes are a foreground approximation when people overlap. Surface masks follow optical flow and matched updates are smoothed. Regions absent from a fresh detection revert to the anatomy fallback. Small hands, eyewear, distant subjects, ambiguous garments, and crossings can still be missed or misclassified, and colors can change at detection refreshes. There is no depth reconstruction, insulation estimate, or persistent heat simulation. Extra inference makes these two modes slower as the number of people increases; they do not need another model download beyond the three-model setup.
+
+All display effects are independent of segmentation and palette, and default off. `--grain` adds seeded fixed-pattern and time-varying noise without adding a pixel grid or scanlines. `--pixelation` downsamples the heat field and enlarges it with nearest-neighbor sampling; smaller grids make chunkier blocks without changing subject masks or heat-field resolution. `--scanlines` adds a subtle alternating-row treatment. The combined `--sensor-texture` preset supplies grain 0.035, pixels at `--sensor-resolution`, scanlines, and light intensity quantization. Explicit grain, pixelation, or scanline options override those preset components. Turning the preset off leaves explicit individual effects intact; disable all of them for a completely clean result. These controls never change detection, tracking, audio, glyph selection, or timecode, and work for both stills and videos. Reports include resolved `grain`, `pixelation`, `scanlines`/`crt_lines`, and `vhs` values as well as requested settings. CRT lines affect the finished picture and HUD. Optional `--vhs` adds time-varying analog color bleed, wobble, noise, dropouts, and tracking defects to that same final display without altering segmentation or audio. It remains independent of the sensor-texture preset.
+
+The bundled checkpoint describes a SAM video configuration; Transformers may print a model-type warning when loading its compatible SAM image component. The pinned image inference path was verified on the demo clip.
 
 Verbose labels use six distinct decorative patterns built from the bundled broad, nine-segment geometry. Dim outlines preserve the complete shape, while selected segments receive shaded cyan highlights and the HUD's glow. A seeded shuffle assigns separate groups of patterns to consecutive track IDs, reducing repetition across nearby targets. Each track keeps its combination as it moves, independent of frame time or detection order; `--seed` changes the combinations. The symbols are fictional readouts, not a translation, literal numeric ID, or thermometer. Glyph rows sit beside each silhouette, with short connectors to its boundary. Labels follow track motion, reserve space for the main HUD, avoid subjects and other labels, and fade with lost tracks. Up to eight labels are shown; a label is omitted when there is no nearby clear space. Track IDs identify detections within a shot, not individual people; no face recognition is performed.
 

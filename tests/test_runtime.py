@@ -56,7 +56,11 @@ class DiagnosticsTests(unittest.TestCase):
                 result = model_cache_status()
                 self.assertEqual(result['detector']['missing_files'], ['tokenizer.json'])
                 self.assertEqual(result['segmenter']['missing_files'], ['model.safetensors'])
-                self.assertTrue(all(not m['cached'] for m in result.values()))
+                self.assertFalse(result['detector']['cached'])
+                self.assertFalse(result['segmenter']['cached'])
+                self.assertTrue(result['pose']['cached'])
+                (root / 'pose' / 'preprocessor_config.json').unlink()
+                self.assertEqual(model_cache_status()['pose']['missing_files'], ['preprocessor_config.json'])
 
     def test_auto_explains_cpu_and_explicit_cuda_never_falls_back(self):
         torch = fake_torch()

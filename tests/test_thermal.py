@@ -28,7 +28,9 @@ class HeatTests(unittest.TestCase):
         frame = np.full((180, 320, 3), 255, dtype=np.uint8)
         frame[30:150, 60:130] = 0
         heat = HeatField(320, 180).build(Image.fromarray(frame), [subject()])
-        self.assertGreater(heat[65:130, 80:110].min(), 175)
+        # Cooler simulated surface patches still read distinctly warmer than
+        # the brightest unsegmented environment.
+        self.assertGreater(int(heat[65:130, 80:110].min()) - int(heat[:, 170:].max()), 50)
         self.assertLess(heat[:, 170:].max(), 100)
 
     def test_no_detection_does_not_invent_hot_objects(self):
@@ -60,6 +62,69 @@ class HeatTests(unittest.TestCase):
             result = HeatField(*size, resolution=160).build(Image.new('RGB', size), [])
             self.assertEqual(result.shape, size[::-1])
             self.assertEqual(result.dtype, np.uint8)
+
+    def posed_person(self):
+        person = subject(x=70, y=10, width=170, height=220, shape=(240, 320))
+        points = [(150, 35), (146, 31), (154, 31), (138, 35), (162, 35),
+                  (125, 65), (175, 65), (105, 108), (195, 108), (92, 135), (208, 135),
+                  (130, 132), (170, 132), (128, 177), (172, 177), (125, 213), (175, 213)]
+        person.keypoints = np.column_stack((points, np.full(17, .95))).astype(np.float32)
+        person.track_id = 7
+        return person
+
+    def test_anatomical_head_and_wrists_are_warmer_than_torso(self):
+        person = self.posed_person()
+        heat = HeatField(320, 240, resolution=320).build(Image.new('RGB', (320, 240)), [person])
+        torso = float(heat[85:115, 138:162].mean())
+        self.assertGreater(float(heat[25:40, 143:157].mean()), torso + 20)
+        self.assertGreater(float(heat[130:140, 88:98].mean()), torso + 12)
+
+    def test_anatomy_follows_joint_positions_instead_of_bounding_box(self):
+        person = self.posed_person()
+        field = HeatField(320, 240, resolution=320)
+        frame = Image.new('RGB', (320, 240))
+        before = field.build(frame, [person])
+        person.keypoints[9, :2] = [80, 90]
+        after = field.build(frame, [person])
+        self.assertGreater(int(after[88, 78]), int(before[88, 78]) + 15)
+        self.assertLess(int(after[137, 91]), int(before[137, 91]) - 15)
+
+    def test_pose_heat_translates_without_flicker_and_varies_per_person(self):
+        person = self.posed_person()
+        field = HeatField(320, 240, resolution=320)
+        frame = Image.new('RGB', (320, 240))
+        first = field.build(frame, [person])
+        np.testing.assert_array_equal(first, field.build(frame, [person]))
+        person.mask = np.roll(person.mask, 10, axis=1)
+        person.keypoints[:, 0] += 10
+        moved = field.build(frame, [person])
+        np.testing.assert_array_equal(first[:, 30:290], moved[:, 40:300])
+        person.track_id += 1
+        changed = field.build(frame, [person])
+        self.assertGreater(float(np.abs(changed[70:130, 140:180].astype(float) -
+                                           moved[70:130, 140:180]).mean()), 2)
+
+    def test_uncertain_pose_and_nonhuman_subjects_use_safe_fallback(self):
+        field = HeatField(320, 240, resolution=320)
+        frame = Image.new('RGB', (320, 240))
+        person = self.posed_person()
+        person.keypoints[:, 2] = .1
+        uncertain = field.build(frame, [person])
+        person.keypoints = None
+        np.testing.assert_array_equal(uncertain, field.build(frame, [person]))
+        person = self.posed_person()
+        person.label = 'dog'
+        animal = field.build(frame, [person])
+        person.keypoints = None
+        np.testing.assert_array_equal(animal, field.build(frame, [person]))
+
+    def test_pose_coloring_never_restores_source_face_or_fabric_texture(self):
+        person = self.posed_person()
+        field = HeatField(320, 240, resolution=320)
+        black = Image.new('RGB', (320, 240))
+        pixels = np.random.default_rng(5).integers(0, 256, (240, 320, 3), dtype=np.uint8)
+        a, b = field.build(black, [person]), field.build(Image.fromarray(pixels), [person])
+        np.testing.assert_array_equal(a[25:215, 90:220], b[25:215, 90:220])
 
     def test_annotations_are_deterministic_and_out_of_main_hud(self):
         frame = Image.new('RGB', (640, 360))
@@ -190,6 +255,35 @@ class TrackingTests(unittest.TestCase):
         first = tracker.update(frame, 0)[0].track_id
         dog = next(t for t in tracker.update(frame, .5) if t.label == 'dog')
         self.assertNotEqual(first, dog.track_id)
+
+    def test_joint_landmarks_follow_optical_flow_and_reset_at_cuts(self):
+        one, two = subject(), subject()
+        one.keypoints = np.tile(np.array([90., 60., .95], dtype=np.float32), (17, 1))
+        pixels = np.random.default_rng(3).integers(20, 160, (180, 320), dtype=np.uint8)
+        tracker = SemanticTracker(FakeDetector([[one], [two]]), interval=1.)
+        first = tracker.update(Image.fromarray(pixels).convert('RGB'), 0)[0]
+        moved = tracker.update(Image.fromarray(np.roll(pixels, 4, axis=1)).convert('RGB'), .1)[0]
+        self.assertAlmostEqual(float(moved.keypoints[0, 0]), 94, delta=.5)
+        self.assertAlmostEqual(float(moved.keypoints[0, 1]), 60, delta=.5)
+        reset = tracker.update(Image.new('RGB', (320, 180), 'white'), .2)[0]
+        self.assertNotEqual(first.track_id, reset.track_id)
+        self.assertIsNone(reset.keypoints)
+
+    def test_pose_refresh_does_not_keep_joints_that_are_no_longer_confident(self):
+        one, two = subject(), subject()
+        one.keypoints = np.tile(np.array([90., 60., .95], dtype=np.float32), (17, 1))
+        two.keypoints = one.keypoints.copy()
+        two.keypoints[:, :2] += 4
+        two.keypoints[9] = [0, 0, .1]
+        tracker = SemanticTracker(FakeDetector([[one], [two]]), interval=.5)
+        frame = Image.new('RGB', (320, 180), (50, 50, 50))
+        initial = tracker.update(frame, 0)[0]
+        refreshed = tracker.update(frame, .5)[0]
+        self.assertEqual(initial.track_id, refreshed.track_id)
+        self.assertLess(refreshed.keypoints[9, 2], .3)
+        np.testing.assert_array_equal(refreshed.keypoints[9, :2], [0, 0])
+        self.assertGreater(refreshed.keypoints[5, 0], 90)
+        self.assertLess(refreshed.keypoints[5, 0], 94)
 
 
 class ArgumentTests(unittest.TestCase):

@@ -9,10 +9,76 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
+from thermal import resolve_thermal
+
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
          (.79, (255, 157, 12)), (.9, (255, 48, 25)), (1, (255, 249, 209))]
 
+IRONBOW = [(0, (2, 0, 10)), (.18, (12, 15, 70)), (.30, (55, 18, 140)),
+           (.45, (145, 20, 135)), (.60, (225, 45, 65)), (.73, (252, 132, 25)),
+           (.86, (255, 220, 48)), (.96, (255, 250, 171)), (1, (255, 255, 240))]
+
+PALETTES = {
+    'yautja': STOPS,
+    'ironbow': IRONBOW,
+    'redline': [(0, (8, 9, 11)), (.20, (8, 9, 11)), (.27, (12, 16, 30)),
+                (.32, (13, 50, 137)), (.43, (25, 92, 235)), (.52, (36, 110, 248)),
+                (.555, (15, 19, 28)), (.60, (85, 17, 12)), (.68, (175, 24, 16)),
+                (.78, (225, 35, 29)), (.89, (236, 48, 64)), (1, (242, 75, 119))],
+    'green-phosphor': [(0, (0, 2, 0)), (.25, (0, 35, 9)), (.5, (16, 100, 30)),
+                       (.75, (81, 194, 75)), (1, (210, 255, 184))],
+    'amber-phosphor': [(0, (3, 1, 0)), (.25, (48, 17, 0)), (.5, (130, 61, 5)),
+                       (.75, (222, 145, 35)), (1, (255, 239, 170))],
+    'white-hot': [(0, (0, 0, 0)), (1, (255, 255, 255))],
+    'black-hot': [(0, (255, 255, 255)), (1, (0, 0, 0))],
+    'virtualboy': [(0, (0, 0, 0)), (.2, (20, 0, 0)), (.45, (80, 0, 0)),
+                    (.7, (170, 0, 0)), (1, (255, 0, 0))],
+}
+
+
+def vhs_frame(image, time, seed):
+    """Seeded tape-style bandwidth loss, chroma bleed, wobble, and dropouts."""
+    rgb = np.asarray(image, dtype=np.float32)
+    height, width = rgb.shape[:2]
+    scale = width / 640
+    rng = np.random.default_rng((seed * 1009 + round(time * 24) + 0x564853) & 0xffffffff)
+    y = .299 * rgb[..., 0] + .587 * rgb[..., 1] + .114 * rgb[..., 2]
+    u, v = .492 * (rgb[..., 2] - y), .877 * (rgb[..., 0] - y)
+
+    def bandwidth(channel, columns):
+        return np.asarray(Image.fromarray(channel).resize((max(1, min(width, columns)), height), Image.Resampling.BOX)
+                          .resize((width, height), Image.Resampling.BILINEAR))
+
+    y = .55 * y + .45 * bandwidth(y, 260)
+    u, v = bandwidth(u, max(1, width // 8)), bandwidth(v, max(1, width // 8))
+    # Chroma trails right without wrapping the opposite edge into the frame.
+    delay = max(1, round(scale * 2))
+    u = u[:, np.clip(np.arange(width) - delay, 0, width - 1)]
+    v = v[:, np.clip(np.arange(width) - delay * 2, 0, width - 1)]
+    y = y * (1 + .012 * np.sin(time * 5.3)) + rng.normal(0, .8, y.shape)
+    rgb = np.stack((y + v / .877, y - .39465 * u - .5806 * v, y + u / .492), axis=2)
+    rows = np.arange(height)
+    knots = np.linspace(0, max(1, height - 1), min(height, 24))
+    drift = np.interp(rows, knots, rng.normal(0, .55, len(knots)))
+    shifts = scale * (drift + .6 * np.sin(rows / max(1, height) * 20 + time * 4.1))
+    band = max(1, round(height * .018))
+    band_y = min(height - band, round(height * (.95 + .015 * np.sin(time * 2.7))))
+    shifts[band_y:band_y + band] += scale * (4 + 2 * np.sin(time * 13))
+    sample_x = np.clip(np.arange(width)[None, :] - shifts[:, None], 0, width - 1)
+    left = sample_x.astype(np.int32)
+    fraction = (sample_x - left)[..., None]
+    rgb = (rgb[rows[:, None], left] * (1 - fraction) +
+           rgb[rows[:, None], np.minimum(left + 1, width - 1)] * fraction)
+    rgb[band_y:band_y + band] += rng.normal(0, 9, (band, width, 1))
+    # Short, occasional signal dropouts rather than a permanent overlay scratch.
+    if rng.random() < .45:
+        length = max(1, round(width * rng.uniform(.08, .24)))
+        x = int(rng.integers(0, max(1, width - length + 1)))
+        row = int(rng.integers(0, height))
+        patch = rgb[row:row + max(1, round(height / 360)), x:x + length]
+        patch[:] = patch * .65 + 225 * .35
+    return Image.fromarray(np.uint8(np.clip(rgb, 0, 255)))
 
 
 def noise_sample(indices, seed):
@@ -121,21 +187,34 @@ def load_glyph_font():
 
 
 class Renderer:
-    def __init__(self, width, height, *, seed=42, grain=.035, glow=.65,
-                 show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False):
+    def __init__(self, width, height, *, seed=42, grain=None, glow=.65,
+                 show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
+                 sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False):
         self.width, self.height = width, height
-        self.seed, self.grain, self.glow = seed, grain, glow
+        self.seed, self.glow = seed, glow
+        self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
+        self.pixelation = (sensor_resolution if sensor_texture else 0) if pixelation is None else pixelation
+        self.scanlines = sensor_texture if scanlines is None else scanlines
+        self.vhs = vhs
         self.show_timecode, self.timecode_start = show_timecode, timecode_start
-        self.thermal, self.verbose = thermal, verbose
+        self.thermal, self.verbose = resolve_thermal(thermal), verbose
+        self.sensor_texture, self.sensor_resolution = sensor_texture, sensor_resolution
+        self.palette_name = 'yautja' if palette == 'auto' else palette
+        if self.palette_name not in PALETTES:
+            raise ValueError('Unknown thermal palette: ' + self.palette_name)
         self.annotation_positions = {}
-        if thermal == 'semantic':
-            from thermal import HeatField
-            self.heat_field = HeatField(width, height, sensor_resolution)
+        if self.thermal != 'classic':
+            from thermal import HeatField, CinematicHeatField, SurfaceHeatField
+            field = {'silhouette': HeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField}[self.thermal]
+            self.heat_field = field(width, height, sensor_resolution, seed=seed)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
         self.color = (255, 48, 43)
         pos = np.arange(256) / 255
-        table = np.stack([np.interp(pos, [s[0] for s in STOPS], [s[1][c] for s in STOPS]) for c in range(3)], axis=1)
-        self.palette = np.uint8(np.clip(table * (1 - (1 - pos[:, None]) ** 4 * .7), 0, 255))
+        stops = PALETTES[self.palette_name]
+        table = np.stack([np.interp(pos, [s[0] for s in stops], [s[1][c] for s in stops]) for c in range(3)], axis=1)
+        if self.palette_name in ('yautja', 'ironbow'):
+            table *= 1 - (1 - pos[:, None]) ** 4 * .7
+        self.palette = np.uint8(np.clip(table, 0, 255))
         self.font_data, self.font_chars = load_glyph_font()
         self.fonts, self.tiles = {}, {}
         self.annotation_pool = None
@@ -324,20 +403,35 @@ class Renderer:
         self.composite(image, layer, 0, 0)
 
     def render(self, frame, time, wave=None, subjects=()):
-        # Both modes are artistic effects, not actual heat measurement.
-        if self.thermal == 'semantic':
+        # All modes are artistic effects, not actual heat measurement.
+        if self.thermal != 'classic':
             luma = self.heat_field.build(frame, subjects)
         else:
             rgb = np.asarray(frame, dtype=np.uint8)
             luma = (rgb[..., 0].astype(np.float32) * .2126 + rgb[..., 1] * .7152 + rgb[..., 2] * .0722)
             luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255).astype(np.uint8)
+        return self.render_field(luma, time, wave=wave, subjects=subjects)
+
+    def render_field(self, luma, time, wave=None, subjects=()):
+        """Color an existing scalar heat field; useful for matched style galleries."""
+        if luma.shape != (self.height, self.width) or luma.dtype != np.uint8:
+            raise ValueError('Heat field must be a uint8 image matching the renderer dimensions')
+        # Texture is a display treatment; it must not change the HUD readouts.
+        readout_luma = luma
+        if self.pixelation or self.grain or self.sensor_texture:
+            from thermal import sensor_size
+            size = sensor_size(self.width, self.height, self.pixelation) if self.pixelation else (self.width, self.height)
+            samples = np.asarray(Image.fromarray(luma).resize(size, Image.Resampling.BOX), dtype=np.float32)
+            if self.grain:
+                fixed = np.random.default_rng(self.seed & 0xffffffff).standard_normal(samples.shape, dtype=np.float32)
+                rng = np.random.default_rng((self.seed + round(time * 1000)) & 0xffffffff)
+                noise = fixed * .30 + rng.standard_normal(samples.shape, dtype=np.float32) * .70
+                samples += noise * self.grain * 255
+            if self.sensor_texture:
+                samples = np.rint(samples / 2) * 2
+            samples = np.clip(samples, 0, 255).astype(np.uint8)
+            luma = np.asarray(Image.fromarray(samples).resize((self.width, self.height), Image.Resampling.NEAREST))
         mapped = self.palette[luma].astype(np.float32)
-        if self.grain:
-            rng = np.random.default_rng((self.seed + round(time * 1000)) & 0xffffffff)
-            noise = rng.standard_normal(luma.shape, dtype=np.float32) * (self.grain * 255)
-            mapped += noise[..., None] * np.array([1, .25, .17], dtype=np.float32)
-        # Fine horizontal CRT lines, drawn after sensor synthesis.
-        mapped[::2] *= .94
         image = Image.fromarray(np.uint8(np.clip(mapped, 0, 255)))
         s = self.scale
         panel_w = min(self.width, round(110 * s))
@@ -347,8 +441,8 @@ class Renderer:
         gy = max(round(24 * s), round(self.height * .12))
         top, bottom = gy + size + round(6 * s), round(self.height * .84)
         center, amp = round(42 * s), 31 * s
-        means = luma.mean(axis=1) / 255
-        stats = [float(luma.mean() / 255), float(luma.max() / 255), float(np.abs(np.diff(luma.astype(np.float32), axis=1)).mean() / 255)]
+        means = readout_luma.mean(axis=1) / 255
+        stats = [float(readout_luma.mean() / 255), float(readout_luma.max() / 255), float(np.abs(np.diff(readout_luma.astype(np.float32), axis=1)).mean() / 255)]
         for i, metric in enumerate(stats):
             panel.paste(self.glyph(round(metric * 71), size), (round((16 + i * 26) * s), gy))
             row = min(len(means) - 1, round(len(means) * (i + 1) / 4))
@@ -394,4 +488,17 @@ class Renderer:
         self.composite(image, right, max(0, self.width - rw - pad), pad)
         if self.verbose:
             self.annotate(image, subjects)
+        # Tape/CRT treatments affect the final display, including the HUD.
+        if self.vhs:
+            image = vhs_frame(image, time, self.seed)
+        if self.scanlines:
+            pixels = np.asarray(image, dtype=np.float32).copy()
+            pixels[::2] *= .88
+            image = Image.fromarray(np.uint8(pixels))
+        if self.palette_name == 'virtualboy':
+            # This palette is strictly red-only, including glyphs and defects.
+            pixels = np.asarray(image).copy()
+            pixels[..., 0] = pixels.max(axis=2)
+            pixels[..., 1:] = 0
+            image = Image.fromarray(pixels)
         return image

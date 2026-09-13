@@ -8,6 +8,7 @@ import sys
 MODELS = {
     'detector': ('IDEA-Research/grounding-dino-tiny', 'a2bb814dd30d776dcf7e30523b00659f4f141c71'),
     'segmenter': ('facebook/sam2.1-hiera-tiny', 'de431c4043854a71d8101e17995dfe596bf101a5'),
+    'pose': ('usyd-community/vitpose-base-simple', 'a93ac0c67e0b7e2c55287d21d4c460c8f3c54d45'),
 }
 # Files used by these exact, unsharded snapshots and their processors. Directory
 # presence alone can mean an interrupted download; check every required file.
@@ -16,8 +17,9 @@ MODEL_FILES = {
                  'tokenizer.json', 'tokenizer_config.json', 'special_tokens_map.json',
                  'added_tokens.json', 'vocab.txt'),
     'segmenter': ('config.json', 'model.safetensors', 'preprocessor_config.json', 'processor_config.json'),
+    'pose': ('config.json', 'model.safetensors', 'preprocessor_config.json'),
 }
-PACKAGES = ('torch', 'torchvision', 'transformers', 'opencv-python-headless',
+PACKAGES = ('torch', 'torchvision', 'transformers', 'opencv-python-headless', 'scipy',
             'huggingface-hub', 'safetensors', 'numpy', 'Pillow', 'fonttools')
 
 
@@ -97,13 +99,14 @@ def model_cache_status():
 def semantic_diagnostics(requested='auto', precision='fp32'):
     errors, dependencies = [], {}
     torch = None
-    for name in ('torch', 'torchvision', 'transformers', 'cv2', 'huggingface_hub', 'safetensors'):
+    for name in ('torch', 'torchvision', 'transformers', 'cv2', 'scipy', 'huggingface_hub', 'safetensors'):
         try:
             module = import_module(name)
             if name == 'torch':
                 torch = module
             if name == 'transformers':
-                for symbol in ('AutoProcessor', 'AutoModelForZeroShotObjectDetection', 'Sam2Processor', 'Sam2Model'):
+                for symbol in ('AutoProcessor', 'AutoModelForZeroShotObjectDetection', 'Sam2Processor', 'Sam2Model',
+                               'VitPoseForPoseEstimation'):
                     getattr(module, symbol)
             dependencies[name] = {'importable': True, 'version': getattr(module, '__version__', None)}
         except Exception as exc:
