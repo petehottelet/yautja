@@ -10,7 +10,7 @@ SPECTRUM = [(position, parse_hex(color)) for position, color in (
     (.45, '#26A5AC'), (.56, '#62B84E'), (.64, '#D9C742'), (.72, '#F26427'),
     (.80, '#FF303A'), (.91, '#FF65AB'), (1., '#E6D8DD'))]
 
-LOOK_PRESETS = {'thermal-spectrum-reference-v1': {
+LOOK_PRESETS = {'hottropic': {
     'thermal': 'cinematic', 'palette': 'thermal-spectrum', 'thermal_levels': 12,
     'thermal_band_softness': .65, 'thermal_black_point': .2, 'thermal_white_point': .9,
     'thermal_gamma': 1.1, 'thermal_softness': .8, 'sensor_resolution': 192,
@@ -18,23 +18,54 @@ LOOK_PRESETS = {'thermal-spectrum-reference-v1': {
     'vhs': False, 'seed': 42, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
     'crt_vertical_lines': False,
 }}
+PRESET_LABELS = {
+    'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
+    'redline': 'Redline', 'virtualboy': 'Virtual Boy', 'green-phosphor': 'Green Phosphor',
+    'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
+    'thermal-spectrum': 'Thermal Spectrum',
+}
+LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}
+                     for name in PRESET_LABELS if name != 'hottropic'})
+PRESET_ALIASES = {'thermal-spectrum-reference-v1': 'hottropic'}
+LOOK_PRESETS.update({alias: dict(LOOK_PRESETS[name]) for alias, name in PRESET_ALIASES.items()})
 LEVEL_OPTIONS = ('thermal_levels', 'thermal_band_softness', 'thermal_black_point',
                  'thermal_white_point', 'thermal_gamma', 'thermal_softness')
 
 
-def resolve_look(name, overrides):
-    if name is not None and name not in LOOK_PRESETS:
+def normalize_preset(name):
+    name = name.strip().lower()
+    if name not in LOOK_PRESETS:
         raise ValueError('Unknown look preset: ' + str(name))
-    result = dict(LOOK_PRESETS.get(name, {}))
+    return name
+
+
+def merge_look(base, overrides):
+    result = dict(base)
+    if 'palette' in overrides and overrides['palette'] != result.get('palette'):
+        result.pop('palette_colors', None)
+        result.pop('random_colors', None)
+    if 'hud_theme' in overrides and overrides['hud_theme'] != result.get('hud_theme'):
+        result.pop('hud_colors', None)
+        result.pop('random_colors', None)
+    if overrides.get('wave_style') == 'trace':
+        result.pop('wave_width', None)
+        result.pop('wave_height', None)
     if overrides.get('thermal_levels') == 0 and 'thermal_band_softness' not in overrides:
         result.pop('thermal_band_softness', None)
     if overrides.get('sensor_texture'):
         for key in ('grain', 'pixelation', 'scanlines'):
             result.pop(key, None)
     if overrides.get('random_colors'):
-        result.pop('palette', None)
+        for key in ('palette', 'palette_colors', 'hud_theme', 'hud_colors'):
+            result.pop(key, None)
     result.update(overrides)
     return result
+
+
+def resolve_look(name, overrides):
+    if name is not None:
+        name = normalize_preset(name)
+    return merge_look(LOOK_PRESETS.get(name, {}), overrides)
 
 
 def blur_scalar(values, radius):

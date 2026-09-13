@@ -13,6 +13,8 @@ import numpy as np
 from PIL import Image
 
 from yautja.render import Renderer, PALETTES
+from yautja.looks import resolve_look
+from yautja.presets import load_preset
 from yautja.figures import TargetSelection
 from yautja.semantic import GroundedSegmenter, SemanticTracker
 from yautja.cli import (AudioAnalysis, ConversionError, audio_filter, binary, dimensions,
@@ -23,7 +25,7 @@ def variants():
     result = {f'style-{style}': {'thermal': style} for style in ('low-detail', 'cinematic', 'detailed', 'very-detailed')}
     for palette in PALETTES:
         if palette != 'yautja':
-            result[f'palette-{palette}'] = {'thermal': 'cinematic', 'palette': palette}
+            result[f'palette-{palette}'] = {'look_preset': palette}
     for name, options in {
         'grain': {'grain': .06}, 'pixelation': {'pixelation': 80},
         'crt-lines': {'scanlines': True}, 'sensor-texture': {'sensor_texture': True},
@@ -35,7 +37,7 @@ def variants():
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
-        'look-thermal-spectrum-reference-v1': {'look_preset': 'thermal-spectrum-reference-v1'},
+        'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
@@ -71,6 +73,10 @@ def variants():
                                'wave_width': .14, 'wave_height': 1.}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow')},
     })
+    custom = load_preset(Path(__file__).resolve().parents[1] / 'skills/yautja/assets/presets/tropic-glow.json')
+    options = resolve_look(custom.get('base'), custom['settings'])
+    options['show_timecode'] = options.pop('timecode')
+    result['preset-tropic-glow'] = options
     return result
 
 
@@ -122,7 +128,7 @@ def main():
     tracker = SemanticTracker(GroundedSegmenter(device=args.device, surfaces=True))
     renderers = {name: Renderer(*( (large_width, large_height) if name.startswith('large/') else
                                   (width, height) if name == 'hero' else (gif_width, gif_height)),
-                                verbose=True, show_timecode=True, **options)
+                                **{'verbose': True, 'show_timecode': True, **options})
                  for name, options in settings.items()}
     def field_key(renderer):
         return renderer.thermal, renderer.sensor_resolution, renderer.transfer.levels is None

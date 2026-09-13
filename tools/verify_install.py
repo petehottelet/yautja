@@ -77,6 +77,13 @@ def check_runtime(python, env, cwd, prefix):
     assert effects['wave_style'] == 'rorschach-hollow' and effects['wave_height'] == 1
     assert effects['thermal_levels'] == 6 and effects['thermal_band_softness'] == .3
     assert effects['target_shape'] == 'square-mil'
+    presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
+    assert any(p['id'] == 'hottropic' and p['name'] == 'HotTropic' for p in presets['presets'])
+    run(['yautja', '--look-preset', 'hottropic', '--thermal', 'classic',
+         '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)
+    preset = json.loads(run(['yautja', 'photo.jpg', 'preset.png', '--preset-file', 'saved-look.json'], cwd, image_env))
+    assert preset['preset_name'] == 'Saved HotTropic' and preset['preset_kind'] == 'custom'
+    assert preset['thermal_levels'] == 12 and preset['hud'] is False
     print(f'Passed isolated install and image/video conversion: {prefix.name}')
 
 

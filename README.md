@@ -109,37 +109,56 @@ All four use anatomy-guided fallback when estimates are uncertain. Cinematic, De
 
 Existing commands still work: `--thermal silhouette` and `--thermal semantic` now select Low Detail, and `--thermal realistic` remains an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
 
-### Thermal Spectrum — Reference 12
+### Presets - HotTropic
 
-The named recipe uses eleven positioned colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 representative thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture. Twelve is the reproducible recipe setting; the compressed reference does not establish an exact original level count.
+This preset uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture.
 
-| Reference 12 · complete preset | Thermal Spectrum · palette only |
+| HotTropic · complete preset | Thermal Spectrum · palette only |
 | --- | --- |
-| [![Thermal Spectrum Reference 12: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-thermal-spectrum-reference-v1.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-thermal-spectrum-reference-v1.gif) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
-| `--look-preset thermal-spectrum-reference-v1` | `--palette thermal-spectrum` |
+| [![HotTropic: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-thermal-spectrum-reference-v1.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-thermal-spectrum-reference-v1.gif) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
+| `--look-preset hottropic` | `--palette thermal-spectrum` |
 
 Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--thermal-levels 0` for continuous color, and `--thermal-band-softness 0` for hard bands. Soft transitions and optional glow add intermediate visible colors; twelve representative levels does not limit a GIF to twelve RGB colors. Explicit options override the recipe regardless of argument order. For example, add `--hud --thermal very-detailed` to use its colors and levels with more source detail and overlays. [Exact recipe and grading controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
-### Color palettes
+### Create your own presets
 
-**Yautja is the default for every look.** The new palettes are optional. All examples below use Cinematic with identical segmentation and no added texture.
+A **preset** saves a combination of colors, thermal detail, levels, HUD styling, and effects. A **palette** is the color ramp inside it. Every existing palette now has a Cinematic starter preset, and HotTropic is a complete look. The old `thermal-spectrum-reference-v1` name still works.
+
+List the built-ins, customize one, and save your version:
+
+```bash
+yautja --list-presets
+yautja --look-preset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
+```
+
+Saving needs no source or models. Share the JSON file with another person or agent, then override individual choices when using it, such as `--heat-glow 0.2`. Existing saves require `--overwrite`. Presets remember visual settings; choose input/output files, target figures, and encoding per conversion.
+
+| Tropic Glow · a custom HotTropic preset |
+| --- |
+| [![Tropic Glow: HotTropic with coordinated HUD colors and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif) |
+| [Editable JSON preset](skills/yautja/assets/presets/tropic-glow.json) · [Creation, schema, and sharing guide](skills/yautja/references/presets.md) |
+
+### Palette presets
+
+**Yautja remains the default palette.** Each starter below selects Cinematic plus its named colors; optional timecode and subject callouts are enabled in these previews. All use identical segmentation and no added texture. Use `--palette NAME` to change only the colors within any preset. The existing encoder `--preset` option remains separate.
 
 | Redline · red, blue, and black | Virtual Boy · red only |
 | --- | --- |
 | [![Redline palette: near-black shadows, vivid blue cooler regions, and dominant red warmth with restrained pink highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-redline.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-redline.gif) | [![Virtual Boy palette: the scene and HUD rendered entirely in shades of red and black](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-virtualboy.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-virtualboy.gif) |
-| `--palette redline` | `--palette virtualboy` |
+| `--look-preset redline` | `--look-preset virtualboy` |
 
 Redline gives the movie-style red/blue/black treatment, with broad red warmth and small pink highlights. Virtual Boy uses only red and black, including the glyphs, waveform, and timecode, unless you explicitly choose custom or random HUD colors.
 
 | Yautja · original/default | Ironbow | Green Phosphor |
 | --- | --- | --- |
 | [![Original Yautja palette: cool blue and cyan through yellow and red](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Ironbow palette: purple, orange, and yellow-white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-ironbow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-ironbow.gif) | [![Green Phosphor palette: a monochrome green night-vision style](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-green-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-green-phosphor.gif) |
-| `--palette yautja` | `--palette ironbow` | `--palette green-phosphor` |
+| `--look-preset yautja` | `--look-preset ironbow` | `--look-preset green-phosphor` |
 
 | Amber Phosphor | White Hot | Black Hot |
 | --- | --- | --- |
 | [![Amber Phosphor palette: warm amber display colors](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-amber-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: lighter warm regions with a white waveform and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-white-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-white-hot.gif) | [![Black Hot palette: simulated warm regions appear darker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-black-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-black-hot.gif) |
-| `--palette amber-phosphor` | `--palette white-hot` | `--palette black-hot` |
+| `--look-preset amber-phosphor` | `--look-preset white-hot` | `--look-preset black-hot` |
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
 
@@ -150,7 +169,7 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 | Abyss · clean | Abyss · heat glow |
 | --- | --- |
 | [![Abyss palette with muted cyan HUD and no glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-abyss.gif) | [![Abyss palette with moving glow on the hot regions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/glow-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/glow-abyss.gif) |
-| `--palette abyss` | `--palette abyss --heat-glow 0.75` |
+| `--look-preset abyss` | `--look-preset abyss --heat-glow 0.75` |
 
 `--hud-theme muted-cyan` makes the same subdued HUD available with any palette. Selecting `--hud-theme palette` instead matches its colors to that palette's ramp.
 

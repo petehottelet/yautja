@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0 — 2026-09-13
+
+- Name the eleven-color, twelve-level reference look HotTropic; preserve its exact appearance and the `thermal-spectrum-reference-v1` alias.
+- Add a Cinematic starter preset for every existing palette and JSON preset discovery through `--list-presets`. Keep palettes independently adjustable and preserve the encoder's `--preset` option.
+- Add local JSON preset loading, named visual-setting exports, built-in inheritance, and explicit CLI overrides. Validate data-only schemas and protect existing saves; omit source-specific selections, paths, and output/runtime settings.
+- Document creation and sharing, ship an editable Tropic Glow example with the skill, and include matched small/large animated previews. Raise the skill's minimum runtime to 2.3.
+
 ## 2.2.1 — 2026-09-13
 
 - Make White Hot's default and palette-matched waveform, glyphs, timecode, callouts, and both target states white. Preserve explicit HUD and target color overrides and refresh its small/large palette GIFs.

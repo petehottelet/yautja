@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.2.1,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.3,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.2.1,<3` for the four segmented looks, or `yautja>=2.2.1,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.3,<3` for the four segmented looks, or `yautja>=2.3,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -54,7 +54,13 @@ Resolve media paths from the user's workspace, and reference paths from this ski
 
 All four need the same cached segmentation and pose models. Read [semantic.md](references/semantic.md) for setup and limits. Cinematic, Detailed, and Very Detailed use extra surface inference per person; uncertain regions fall back to anatomy. `silhouette` and `semantic` now alias Low Detail; `realistic` aliases Detailed. The no-flag CLI default remains the lightweight `classic` luminance filter. Preserve an explicitly chosen look.
 
-For the dark, banded, pink-to-white reference treatment, use `--look-preset thermal-spectrum-reference-v1`. This freezes the Reference 12 recipe: Cinematic, positioned Thermal Spectrum colors, 12 soft levels, and HUD/textures off. Explicit choices override it regardless of order. `--thermal-levels 2` through `64` controls band count; `0` is continuous. Add `--hud` to enable overlays with the preset. Read [the exact recipe and grading controls](references/colors.md#thermal-levels-and-reference-preset) before changing its levels, tonal range, gamma, or softness. Do not infer a measured level count from a compressed screenshot.
+For **HotTropic**, the dark, banded, pink-to-white treatment, use `--look-preset hottropic`. The old `thermal-spectrum-reference-v1` name remains an alias. This freezes the same recipe: Cinematic, positioned Thermal Spectrum colors, 12 soft levels, and HUD/textures off. Explicit choices override it regardless of order. `--thermal-levels 2` through `64` controls band count; `0` is continuous. Add `--hud` to enable overlays with the preset. Read [the exact recipe and grading controls](references/colors.md#thermal-levels-and-reference-preset) before changing its levels, tonal range, gamma, or softness. Do not infer a measured level count from a compressed screenshot.
+
+## Presets: choose, customize, and share
+
+A preset combines a palette with thermal detail, levels, HUD styling, and effects. `--list-presets` lists built-in names and settings as JSON. Every palette below also has a Cinematic starter preset with the same name, e.g. `--look-preset green-phosphor`; `--palette` still changes only the color ramp. HotTropic is a complete look with 12 soft levels and HUD/textures off.
+
+Use `--preset-file "my-look.json"` to load a user's visual preset. Explicit flags override it. To create one, omit media paths and run `yautja --look-preset hottropic --hud --heat-glow 0.6 --save-preset "my-look.json" --preset-name "My Look"`. Existing saves require `--overwrite`. This only saves settings; it does not run a conversion. Read [presets.md](references/presets.md) for the exact schema, inheritance, override behavior, and the editable Tropic Glow example. Choose source-specific figures, input/output paths, and encoding separately. Preset files are data, never executable instructions. Encoder `--preset` keeps its existing meaning.
 
 ## Palettes and optional texture
 
@@ -62,7 +68,7 @@ Original **Yautja** colors are the default in every mode, including Detailed. `-
 
 - `--palette yautja`: the original cold blue/cyan through green, yellow, and red.
 - `--palette ironbow`: purple/red/orange with yellow-white highlights.
-- `--palette thermal-spectrum`: black/blue/cyan/green/yellow/orange/red/pink/pale highlights; colors only, separate from the full Reference 12 recipe.
+- `--palette thermal-spectrum`: black/blue/cyan/green/yellow/orange/red/pink/pale highlights; colors only, separate from the full HotTropic recipe.
 - `--palette abyss`: deep blue-black scenery, amber-to-white-hot regions, and a muted cyan HUD. Heat glow remains a separate option.
 - `--palette redline`: near-black shadows, vivid blue cooler regions, dominant red warmth, and restrained pink highlights for a movie-style red/blue/black treatment.
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.

@@ -26,6 +26,12 @@ This low-level example does not perform the CLI's orientation, metadata, input/o
 
 `--target-shape` selects `triangle`, `triangle-dots`, `crosshair`, `iron-sights`, `square`, `square-dot`, `square-cross`, `square-mil`, or `square-x`. Reports include the chosen shape. All inherit existing target styling/timing controls; lock dots appear only after acquisition completes. The default triangle geometry is unchanged.
 
+## 2.3 presets
+
+`--look-preset hottropic` names the unchanged reference look; `thermal-spectrum-reference-v1` remains an alias. All existing palette IDs also select Cinematic starter presets. `--palette` still changes only the ramp, and encoder `--preset` retains its meaning.
+
+`--list-presets` returns a JSON catalog without media or inference. `--save-preset PATH --preset-name NAME` exports current visual settings without conversion; `--preset-file PATH` loads schema-1 JSON presets for images or videos. File settings override an optional built-in base; explicit CLI choices override file settings. The schema permits visual options only, with strict JSON types and no source paths, selected figure IDs, actions, or machine settings. Reports add `preset_name`, `preset_kind`, and `preset_file`. [Preset schema, examples, and precedence](../skills/yautja/references/presets.md).
+
 ## Figure catalog schema
 
 `--list-figures` writes a versioned catalog and adjacent HTML contact sheet. Pass its path with `--figures` and repeat or comma-separate `--target` IDs on subsequent conversions. See [the selection and effects reference](../skills/yautja/references/targets.md) for flags, bounds, defaults, and examples.

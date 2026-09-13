@@ -23,7 +23,9 @@ from .colors import HUD_THEMES, resolve_colors, hex_color
 from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
-from .looks import LOOK_PRESETS, LEVEL_OPTIONS, ThermalTransfer, resolve_look
+from .looks import (LOOK_PRESETS, PRESET_LABELS, PRESET_ALIASES, LEVEL_OPTIONS,
+                    ThermalTransfer, resolve_look, merge_look, normalize_preset)
+from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
@@ -68,6 +70,11 @@ def extra_report(renderer, selection, *, static=False):
             'wave_width': renderer.wave_width if renderer.hud and renderer.wave_style != 'trace' else None,
             'wave_height': renderer.wave_height if renderer.hud and renderer.wave_style != 'trace' else None,
             'wave_detail': renderer.wave_detail if renderer.hud and renderer.wave_style != 'trace' else None}
+
+
+def preset_report(args):
+    return {'preset_name': args.preset_name, 'preset_kind': args.preset_kind,
+            'preset_file': str(args.preset_file.resolve()) if args.preset_file else None}
 
 
 class ConversionError(RuntimeError):
@@ -310,6 +317,7 @@ def convert_image(args):
                   'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')}}
     report.update(renderer.colors.report())
     report.update(extra_report(renderer, selection, static=True))
+    report.update(preset_report(args))
     report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
     report['settings']['target'] = args.target
     if tracker:
@@ -471,6 +479,7 @@ def convert_video(args):
                               'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')})
             report.update(renderer.colors.report())
             report.update(extra_report(renderer, selection))
+            report.update(preset_report(args))
             report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
             report['settings']['target'] = args.target
             if tracker:
@@ -488,11 +497,27 @@ class LookParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
         tokens = list(sys.argv[1:] if args is None else args)
         result = super().parse_args(tokens, namespace)
-        if result.look_preset:
-            explicit = {self._option_string_actions[token.split('=', 1)[0]].dest
-                        for token in tokens if token.split('=', 1)[0] in self._option_string_actions}
-            overrides = {key: getattr(result, key) for key in explicit if key != 'look_preset'}
-            vars(result).update(resolve_look(result.look_preset, overrides))
+        explicit = {self._option_string_actions[token.split('=', 1)[0]].dest
+                    for token in tokens[:tokens.index('--') if '--' in tokens else len(tokens)]
+                    if token.split('=', 1)[0] in self._option_string_actions}
+        overrides = {key: getattr(result, key) for key in explicit if key in VISUAL_OPTIONS}
+        result.preset_explicit = explicit
+        result.preset_name = None
+        result.preset_kind = None
+        try:
+            if result.preset_file:
+                data = load_preset(result.preset_file)
+                settings = validate_settings(data['settings'], self)
+                base = resolve_look(data.get('base'), settings)
+                vars(result).update(merge_look(base, overrides))
+                result.preset_name, result.preset_kind = data['name'], 'custom'
+            elif result.look_preset:
+                vars(result).update(resolve_look(result.look_preset, overrides))
+                canonical = PRESET_ALIASES.get(result.look_preset, result.look_preset)
+                result.preset_name = PRESET_LABELS[canonical]
+                result.preset_kind = 'look' if canonical == 'hottropic' else 'palette'
+        except (ValueError, OSError) as exc:
+            self.error(str(exc))
         return result
 
 
@@ -507,14 +532,20 @@ def parser():
     p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Four segmented looks: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Classic is the lightweight luminance filter; semantic/realistic aliases remain supported')
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
-    p.add_argument('--look-preset', choices=LOOK_PRESETS, help='Named visual recipe; explicit options override it regardless of argument order. Separate from encoder --preset')
+    source = p.add_mutually_exclusive_group()
+    source.add_argument('--look-preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
+    management = p.add_mutually_exclusive_group()
+    management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
+    management.add_argument('--save-preset', type=Path, help='Save the chosen visual settings to a .json preset, then exit; omit media paths')
+    p.add_argument('--preset-name', dest='save_preset_name', help='Display name for --save-preset (default: filename stem)')
     p.add_argument('--thermal-levels', type=int, help='Representative thermal levels: 2–64, or 0 for continuous. Omitted retains legacy grading')
     p.add_argument('--thermal-band-softness', type=float, help='Transition width between levels, 0–1; 0 gives hard bands, default 0.35 with explicit levels')
     p.add_argument('--thermal-black-point', type=float, default=0., help='Synthetic warmth mapped to black/cold end, 0–0.95; requires thermal levels or a look preset')
     p.add_argument('--thermal-white-point', type=float, default=1., help='Synthetic warmth mapped to hot end, 0.05–1; must exceed black point by 0.01')
     p.add_argument('--thermal-gamma', type=float, default=1., help='Thermal response exponent, 0.25–4; above 1 darkens intermediate warmth')
     p.add_argument('--thermal-softness', type=float, default=0., help='Scalar Gaussian softness, 0–8 pixels at a 1920px longest edge; separate from band transitions and glow')
-    p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
+    p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (white for White Hot, black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
     p.add_argument('--hud-blur', type=float, default=0., help='Gaussian softness for all HUD artwork only, 0-20 reference pixels at a 1080px short edge; default 0 (sharp)')
@@ -579,6 +610,20 @@ def parser():
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
+    if args.save_preset_name is not None and not args.save_preset:
+        p.error('--preset-name requires --save-preset')
+    if args.list_presets or args.save_preset:
+        if any((args.input, args.output, args.doctor, args.download_models, args.list_figures,
+                args.figures, args.target)):
+            p.error('Preset listing/saving is a separate operation; omit media paths and scan/runtime actions')
+        allowed = {'list_presets'} if args.list_presets else set(VISUAL_OPTIONS) | {
+            'save_preset', 'save_preset_name', 'look_preset', 'preset_file', 'overwrite'}
+        unsupported = args.preset_explicit - allowed
+        if unsupported:
+            p.error('These options are not saved in visual presets: ' + ', '.join(sorted(unsupported)))
+    if args.list_presets:
+        print(json.dumps(catalog(), indent=2))
+        return 0
     try:
         ThermalTransfer(**{key: getattr(args, key) for key in LEVEL_OPTIONS})
     except ValueError as exc:
@@ -620,7 +665,7 @@ def main(argv=None):
                                       precision=args.precision, download=True)
             print(json.dumps({'downloaded': MODELS, 'device': model.device, 'license': 'Apache-2.0'}, indent=2))
             return 0
-        if not args.input or (not args.output and not args.list_figures):
+        if not args.save_preset and (not args.input or (not args.output and not args.list_figures)):
             p.error('input and output are required (or use --doctor)')
         if args.hud and args.verbose and args.thermal == 'classic':
             p.error('--verbose requires --thermal low-detail, cinematic, detailed, or very-detailed')
@@ -653,7 +698,12 @@ def main(argv=None):
         for value, lo, hi, name in checks:
             if not math.isfinite(value) or not lo <= value <= hi:
                 p.error(f'{name} must be finite and between {lo} and {hi}')
-        if args.list_figures:
+        if args.save_preset:
+            settings = {key: getattr(args, key) for key in VISUAL_OPTIONS}
+            name = args.save_preset.stem if args.save_preset_name is None else args.save_preset_name
+            print(json.dumps(save_preset(args.save_preset, name,
+                                         settings, overwrite=args.overwrite), indent=2))
+        elif args.list_figures:
             from .figures import scan
             scan(args)
         else:
