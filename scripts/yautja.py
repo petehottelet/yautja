@@ -188,7 +188,7 @@ def convert_image(args):
                      'crf': 18, 'preset': 'medium', 'detect_interval': .5}
     invalid = ['--' + key.replace('_', '-') for key, default in video_options.items()
                if getattr(args, key) != default]
-    if args.waveform == 'audio':
+    if args.hud and args.waveform == 'audio':
         invalid.append('--waveform audio')
     if invalid:
         raise ConversionError('Still images do not use video timing or audio options: ' + ', '.join(invalid))
@@ -223,7 +223,7 @@ def convert_image(args):
                         sensor_texture=args.sensor_texture, palette=args.palette,
                         pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                         palette_colors=args.palette_colors, hud_theme=args.hud_theme,
-                        hud_colors=args.hud_colors, random_colors=args.random_colors)
+                        hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud)
     rendered = renderer.render(frame, 0., subjects=subjects)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
@@ -239,8 +239,8 @@ def convert_image(args):
     from runtime import environment_info
     report = {'report_version': 1, 'media_type': 'image', 'input_format': input_format,
               'output': str(output), 'output_format': 'PNG', 'width': width, 'height': height,
-              'frames': 1, 'waveform': 'procedural-static', 'audio_preserved': False,
-              'timecode': args.timecode, 'thermal': args.thermal, 'verbose': args.verbose,
+              'frames': 1, 'waveform': 'procedural-static' if args.hud else 'off', 'audio_preserved': False,
+              'hud': renderer.hud, 'timecode': renderer.show_timecode, 'thermal': args.thermal, 'verbose': renderer.verbose,
               'sensor_texture': args.sensor_texture, 'palette': renderer.palette_name,
               'grain': renderer.grain, 'pixelation': renderer.pixelation, 'scanlines': renderer.scanlines,
               'crt_lines': renderer.scanlines, 'vhs': renderer.vhs,
@@ -251,7 +251,7 @@ def convert_image(args):
               'settings': {key: getattr(args, key) for key in (
                   'max_size', 'seed', 'grain', 'glow', 'device', 'precision', 'warm_objects',
                   'hot_objects', 'confidence', 'sensor_resolution', 'timecode_start', 'sensor_texture', 'palette',
-                  'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors')}}
+                  'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')}}
     report.update(renderer.colors.report())
     if tracker:
         report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
@@ -298,7 +298,7 @@ def convert_video(args):
     output.parent.mkdir(parents=True, exist_ok=True)
     frames = 0
     analysis = None
-    mode = 'procedural'
+    mode = 'procedural' if args.hud else 'off'
     setup_started = time.monotonic()
     tracker = semantic_tracker(args)
     timings['model_setup_seconds'] = time.monotonic() - setup_started
@@ -306,7 +306,7 @@ def convert_video(args):
         temp = Path(temp_dir)
         try:
             audio_started = time.monotonic()
-            if audio and args.waveform != 'procedural':
+            if args.hud and audio and args.waveform != 'procedural':
                 print('Analyzing audio locally...', file=sys.stderr, flush=True)
                 pcm = temp / 'analysis.f32'
                 # Decode the selected track without downmixing; analysis is disk-backed.
@@ -315,10 +315,10 @@ def convert_video(args):
                 analysis = AudioAnalysis(pcm, int(audio.get('channels', 1)), number(audio.get('start_time'), container_start) - video_start)
                 if args.waveform == 'audio' or not analysis.silent:
                     mode = 'audio'
-            if args.waveform == 'audio' and audio is None:
+            if args.hud and args.waveform == 'audio' and audio is None:
                 raise ConversionError('--waveform audio requires an audio stream. Use auto for silent-video fallback.')
             timings['audio_analysis_seconds'] = time.monotonic() - audio_started
-            print(f'{width}x{height} at {fps_text} fps; waveform: {mode}; timecode: {args.timecode}', file=sys.stderr, flush=True)
+            print(f'{width}x{height} at {fps_text} fps; waveform: {mode}; timecode: {args.hud and args.timecode}', file=sys.stderr, flush=True)
             processing_started = time.monotonic()
             renderer = Renderer(width, height, seed=args.seed, grain=args.grain, glow=args.glow,
                                 show_timecode=args.timecode, timecode_start=args.timecode_start,
@@ -326,7 +326,7 @@ def convert_video(args):
                                 sensor_texture=args.sensor_texture, palette=args.palette,
                                 pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                                 palette_colors=args.palette_colors, hud_theme=args.hud_theme,
-                                hud_colors=args.hud_colors, random_colors=args.random_colors)
+                                hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud)
             intermediate = temp / 'picture.mp4'
             decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
                           *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
@@ -392,8 +392,8 @@ def convert_video(args):
             os.replace(final, output)
             report = {'media_type': 'video', 'output': str(output), 'width': width, 'height': height, 'fps': fps, 'frames': frames,
                       'duration': frames / fps, 'waveform': mode, 'audio_preserved': bool(audio and not args.mute),
-                      'timecode': args.timecode, 'hdr_tonemapped': hdr, 'elapsed_seconds': round(time.monotonic() - started, 2)}
-            report.update(thermal=args.thermal, verbose=args.verbose,
+                      'hud': renderer.hud, 'timecode': renderer.show_timecode, 'hdr_tonemapped': hdr, 'elapsed_seconds': round(time.monotonic() - started, 2)}
+            report.update(thermal=args.thermal, verbose=renderer.verbose,
                           sensor_texture=args.sensor_texture, palette=renderer.palette_name,
                           grain=renderer.grain, pixelation=renderer.pixelation, scanlines=renderer.scanlines,
                           crt_lines=renderer.scanlines, vhs=renderer.vhs)
@@ -406,7 +406,7 @@ def convert_video(args):
                               'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval',
                               'sensor_resolution', 'waveform', 'wave_window', 'wave_gain', 'audio_stream', 'mute',
                               'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs',
-                              'palette_colors', 'hud_theme', 'hud_colors', 'random_colors')})
+                              'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')})
             report.update(renderer.colors.report())
             if tracker:
                 report['semantic'] = tracker.report()
@@ -431,6 +431,7 @@ def parser():
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (default), palette-matched, custom element colors, or seeded random')
+    p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers. Unspecified elements keep standard colors')
     p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
@@ -499,7 +500,7 @@ def main(argv=None):
             return 0
         if not args.input or not args.output:
             p.error('input and output are required (or use --doctor)')
-        if args.verbose and args.thermal == 'classic':
+        if args.hud and args.verbose and args.thermal == 'classic':
             p.error('--verbose requires --thermal silhouette, cinematic, or detailed')
         if args.precision != 'fp32' and args.thermal == 'classic':
             p.error('--precision bf16 requires --thermal silhouette, cinematic, or detailed')

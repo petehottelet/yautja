@@ -4,6 +4,11 @@ These controls work with every thermal look, still images, and videos. They chan
 color only; segmentation, glyph selection, waveform data, and timecode values stay
 the same. Omit them to keep the existing red/cyan HUD and original Yautja palette.
 
+`--no-hud` hides every overlay, regardless of the chosen HUD colors, timecode, or
+annotation settings. Thermal colors, textures, and video sound remain active.
+Use `--hud` to restore overlays. Reports distinguish effective `hud`, `timecode`,
+`verbose`, and `waveform` values from the requested settings.
+
 ## Match the HUD to the selected palette
 
 ```bash

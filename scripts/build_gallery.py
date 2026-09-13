@@ -30,6 +30,7 @@ def variants():
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
+        'hud-off': {'thermal': 'cinematic', 'hud': False},
         'colors-matched-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette'},
         'colors-matched-ironbow': {'thermal': 'cinematic', 'palette': 'ironbow', 'hud_theme': 'palette'},
         'colors-custom': {'thermal': 'cinematic', 'palette': 'custom',

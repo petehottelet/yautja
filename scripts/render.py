@@ -191,15 +191,16 @@ class Renderer:
     def __init__(self, width, height, *, seed=42, grain=None, glow=.65,
                  show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
                  sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False,
-                 palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False):
+                 palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True):
         self.width, self.height = width, height
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
         self.pixelation = (sensor_resolution if sensor_texture else 0) if pixelation is None else pixelation
         self.scanlines = sensor_texture if scanlines is None else scanlines
         self.vhs = vhs
-        self.show_timecode, self.timecode_start = show_timecode, timecode_start
-        self.thermal, self.verbose = resolve_thermal(thermal), verbose
+        self.hud = bool(hud)
+        self.show_timecode, self.timecode_start = bool(hud and show_timecode), timecode_start
+        self.thermal, self.verbose = resolve_thermal(thermal), bool(hud and verbose)
         self.sensor_texture, self.sensor_resolution = sensor_texture, sensor_resolution
         self.colors = resolve_colors(PALETTES, palette=palette, palette_colors=palette_colors,
                                      hud_theme=hud_theme, hud_colors=hud_colors,
@@ -215,7 +216,7 @@ class Renderer:
             self.heat_field = field(width, height, sensor_resolution, seed=seed)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
         self.color = self.hud_colors['waveform']
-        self.font_data, self.font_chars = load_glyph_font()
+        self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
         self.fonts, self.tiles = {}, {}
         self.annotation_pool = None
         self.callout_segments = None
@@ -452,6 +453,11 @@ class Renderer:
             luma = np.asarray(Image.fromarray(samples).resize((self.width, self.height), Image.Resampling.NEAREST))
         mapped = self.palette[luma].astype(np.float32)
         image = Image.fromarray(np.uint8(np.clip(mapped, 0, 255)))
+        if self.hud:
+            self.draw_hud(image, readout_luma, time, wave, subjects)
+        return self.display_effects(image, time)
+
+    def draw_hud(self, image, readout_luma, time, wave=None, subjects=()):
         s = self.scale
         panel_w = min(self.width, round(110 * s))
         panel = Image.new(self.overlay_mode, (panel_w, self.height))
@@ -507,6 +513,8 @@ class Renderer:
         self.composite(image, right, max(0, self.width - rw - pad), pad)
         if self.verbose:
             self.annotate(image, subjects)
+
+    def display_effects(self, image, time):
         # Tape/CRT treatments affect the final display, including the HUD.
         if self.vhs:
             image = vhs_frame(image, time, self.seed)
@@ -514,7 +522,7 @@ class Renderer:
             pixels = np.asarray(image, dtype=np.float32).copy()
             pixels[::2] *= .88
             image = Image.fromarray(np.uint8(pixels))
-        if self.palette_name == 'virtualboy' and self.hud_theme in ('standard', 'palette'):
+        if self.palette_name == 'virtualboy' and (not self.hud or self.hud_theme in ('standard', 'palette')):
             # This palette is strictly red-only, including glyphs and defects.
             pixels = np.asarray(image).copy()
             pixels[..., 0] = pixels.max(axis=2)

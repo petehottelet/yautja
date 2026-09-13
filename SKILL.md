@@ -62,6 +62,12 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 
 ## HUD and custom colors
 
+Use `--no-hud` when the user wants only the thermal image: it hides the entire
+waveform, scale, glyphs, timecode, callouts, leaders, and target markers, even if
+`--timecode` or `--verbose` is also supplied. Thermal style, colors, textures, and
+the video soundtrack remain active. Waveform analysis is skipped. HUD is on by
+default; `--hud` restores it. This works for both images and videos.
+
 Keep the standard red/cyan HUD unless the user chooses another theme. Use
 `--hud-theme palette` to coordinate every HUD element with the selected thermal
 palette, such as `--palette green-phosphor --hud-theme palette` for greens.

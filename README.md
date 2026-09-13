@@ -127,6 +127,20 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
 
+### Turn the HUD off
+
+Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, glyphs, timecode, callouts, connector lines, and target markers—even when `--timecode` or `--verbose` is also supplied. Thermal style, palette, textures, and the video soundtrack stay active. HUD is on by default; `--hud` turns it back on.
+
+| HUD on · default | HUD off |
+| --- | --- |
+| [![Cinematic thermal output with the full HUD and annotations](assets/examples/style-cinematic.gif)](assets/examples/large/style-cinematic.gif) | [![Cinematic thermal output with every HUD overlay hidden](assets/examples/hud-off.gif)](assets/examples/large/hud-off.gif) |
+| Default HUD, with `--verbose --timecode` for annotations and clock | `--no-hud` |
+
+```bash
+python scripts/yautja.py "clip.mov" "thermal-only.mp4" --thermal cinematic --no-hud
+python scripts/yautja.py "photo.jpg" "thermal-only.png" --palette green-phosphor --no-hud
+```
+
 ### HUD colors, custom palettes, and random colors
 
 Keep the standard red/cyan HUD, or use **`--hud-theme palette`** to match its waveform, glyphs, clock, callouts, and scale to the selected palette. These controls work with images and videos and every thermal look.
@@ -253,6 +267,7 @@ Use the same installation method for updates. The copier replaces only the known
 | `--vhs` / `--no-vhs` | Toggle analog tape styling and defects |
 | `--sensor-texture` / `--no-sensor-texture` | Toggle the combined preset; individual effects override its defaults |
 | `--palette green-phosphor` | Choose a palette independently of thermal detail |
+| `--no-hud` / `--hud` | Hide or restore the entire HUD; keep thermal effects and sound |
 | `--hud-theme palette` | Match every HUD element to the thermal palette |
 | `--palette custom --palette-colors "#000,#03f,#f20"` | Define an evenly spaced cold-to-hot hex ramp |
 | `--hud-theme custom --hud-colors "waveform=#0f8,timecode=#fff"` | Assign colors to individual HUD elements |
