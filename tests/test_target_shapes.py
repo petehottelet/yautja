@@ -41,7 +41,8 @@ class TargetShapeTests(unittest.TestCase):
             np.testing.assert_array_equal(np.asarray(a), np.asarray(b))
         a = np.asarray(base.draw(background, .81, self.targets, self.colors))
         b = np.asarray(dots.draw(background, .81, self.targets, self.colors))
-        self.assertGreater(np.count_nonzero(b[..., 0] > a[..., 0] + 10), 30)
+        added = b[..., 0].astype(np.int16) - a[..., 0].astype(np.int16)
+        self.assertGreater(np.count_nonzero(added > 10), 30)
         base.draw(background, 1., [], self.colors)
         dots.draw(background, 1., [], self.colors)
         np.testing.assert_array_equal(np.asarray(base.draw(background, 1.1, self.targets, self.colors)),
