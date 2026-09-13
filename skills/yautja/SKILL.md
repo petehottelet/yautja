@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.1,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.2,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.1,<3` for the three segmented looks, or `yautja>=2.1,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.2,<3` for the four segmented looks, or `yautja>=2.2,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -43,15 +43,18 @@ Resolve media paths from the user's workspace, and reference paths from this ski
 3. For expensive videos, first render a representative five-second sample using `--start 10 --duration 5`; inspect a frame and verify the audio. Then render the full requested video. A preview alone does not complete a full-video request.
 4. Check the exit status and JSON report. For video, probe video/audio duration and dimensions and inspect a frame with visible HUD. For a still, open the PNG and check orientation, subject colors, and glyph placement. Deliver the final PNG or MP4. Report any relevant conversion limitation rather than silently changing the request.
 
-## Three thermal looks
+## Four thermal looks
 
 | User's request | Setting | Result |
 | --- | --- | --- |
-| Soft, blobby, older semantic look | `--thermal silhouette` | Smooth anatomy-guided warmth and an abstract background |
+| Least detail, soft blobs | `--thermal low-detail` | Broad heat silhouettes with strongly subdued anatomy and soft boundaries |
 | Middle ground, cinematic, movie-like heat patches | `--thermal cinematic` | Broad skin/gear regions blended with anatomy, soft boundaries, and moderate scenery detail |
 | More detailed thermal-style surfaces | `--thermal detailed` | Distinct skin, clothing, hair, and equipment, with restrained garment shading |
+| Recognizable visible facial features and fabric texture | `--thermal very-detailed` | Adds local source contrast inside segmented regions; retains only detail present in the input |
 
-All three need the same cached segmentation and pose models. Read [semantic.md](references/semantic.md) for setup and limits. Cinematic and Detailed use extra surface inference per person; uncertain regions fall back to anatomy. The old `semantic` and `realistic` names remain aliases for Silhouette and Detailed. The no-flag CLI default remains the lightweight `classic` luminance filter, which does not segment subjects. Prefer Cinematic when the user asks for the new middle ground; preserve an explicitly chosen look.
+All four need the same cached segmentation and pose models. Read [semantic.md](references/semantic.md) for setup and limits. Cinematic, Detailed, and Very Detailed use extra surface inference per person; uncertain regions fall back to anatomy. `silhouette` and `semantic` now alias Low Detail; `realistic` aliases Detailed. The no-flag CLI default remains the lightweight `classic` luminance filter. Preserve an explicitly chosen look.
+
+For the dark, banded, pink-to-white reference treatment, use `--look-preset thermal-spectrum-reference-v1`. This freezes the Reference 12 recipe: Cinematic, positioned Thermal Spectrum colors, 12 soft levels, and HUD/textures off. Explicit choices override it regardless of order. `--thermal-levels 2` through `64` controls band count; `0` is continuous. Add `--hud` to enable overlays with the preset. Read [the exact recipe and grading controls](references/colors.md#thermal-levels-and-reference-preset) before changing its levels, tonal range, gamma, or softness. Do not infer a measured level count from a compressed screenshot.
 
 ## Palettes and optional texture
 
@@ -59,6 +62,7 @@ Original **Yautja** colors are the default in every mode, including Detailed. `-
 
 - `--palette yautja`: the original cold blue/cyan through green, yellow, and red.
 - `--palette ironbow`: purple/red/orange with yellow-white highlights.
+- `--palette thermal-spectrum`: black/blue/cyan/green/yellow/orange/red/pink/pale highlights; colors only, separate from the full Reference 12 recipe.
 - `--palette abyss`: deep blue-black scenery, amber-to-white-hot regions, and a muted cyan HUD. Heat glow remains a separate option.
 - `--palette redline`: near-black shadows, vivid blue cooler regions, dominant red warmth, and restrained pink highlights for a movie-style red/blue/black treatment.
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.
@@ -75,6 +79,8 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 ## Figure selection and optional glow
 
 For a figure list or a selected tracking triangle, read [targets.md](references/targets.md). First scan with `yautja "clip.mov" "figures.json" --list-figures` using cached semantic models, then inspect the generated contact sheet. Resolve the user's chosen figure to its shot-local ID and render with `--figures "figures.json" --target S001-F003`. Reuse that catalog for later color/effect changes. IDs are detected tracks, not identities. Check `targets_seen` and `targets_unseen` in the conversion report.
+
+Choose `--target-shape triangle-dots` for three center dots appearing on lock, `crosshair` for a circular sight, `iron-sights` for rear/front posts, or `square`, `square-dot`, `square-cross`, `square-mil`, and `square-x` for bracketed designs. All shapes share colors, flash, stroke, blur, opacity, and acquisition settings; `triangle` remains the default. See the target reference for geometry and lock behavior.
 
 The three-blade triangle contracts into a compact reticle at the selected figure's center, with solid-color sides and narrow, open corners. It lands in red, then flashes red/white by default; Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
 
@@ -115,7 +121,7 @@ the user wants to reuse a result.
 
 For a thick, mirrored, nearly full-height waveform, use `--wave-style rorschach` (filled), `rorschach-split` (separated lobes), or `rorschach-hollow` (dark pockets). The default remains `trace`. Set Rorschach width/height with `--wave-width 0.14 --wave-height 1` as fractions of the frame. Use `--wave-detail` from 0–1 for smoother contours at 0 or sharper audio-driven edge spikes and more intricate lobes toward 1 (default 0.6). The waveform uses its existing audio/procedural source and color; it replaces only the left trace, scale, and flanking glyph rows. Read [waveform details](references/targets.md#rorschach-waveforms) for ranges and examples.
 
-- Segmentation uses the `semantic` extra and the explicit `--download-models` command once. Conversions use cached weights only. `--verbose` attaches glyph annotations in all three segmented looks. Keep model dependencies under their own licenses as documented in [dependencies.md](references/dependencies.md).
+- Segmentation uses the `semantic` extra and the explicit `--download-models` command once. Conversions use cached weights only. `--verbose` attaches glyph annotations in all four segmented looks. Keep model dependencies under their own licenses as documented in [dependencies.md](references/dependencies.md).
 - For an update or version check, use `yautja --version` and [the same-environment update instructions](references/runtime.md#updates). Keep conversion runs on the installed version unless an update is requested or necessary for the task. Future skill features must raise the minimum compatible minor version or be explicitly gated on CLI support.
 - `--waveform auto` uses the selected audio track. No audio, or a fully silent track, uses the original coherent procedural waveform. Quiet pauses within audible tracks correctly become flat, not random. `--waveform procedural` forces the fallback; `--waveform audio` requires a track, including intentional silence.
 - Audio remains in the MP4 by default. `--mute` removes the soundtrack while still permitting audio-driven animation. `--audio-stream 1` selects the second audio track for both sound and waveform.

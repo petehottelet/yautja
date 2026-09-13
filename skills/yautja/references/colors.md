@@ -99,3 +99,43 @@ Random palette stops are evenly spaced, so their reported hex values can be
 reused directly as a custom palette. Invalid hex, unknown or duplicate HUD keys,
 missing custom values, and conflicting color options fail before media processing
 or model setup.
+## Thermal levels and reference preset
+
+Available in Yautja 2.2+. `--look-preset thermal-spectrum-reference-v1` applies the frozen **Thermal Spectrum — Reference 12** recipe. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
+
+| Position | RGB |
+| --- | --- |
+| 0 | `#000000` |
+| 0.06 | `#081328` |
+| 0.20 | `#173B82` |
+| 0.33 | `#176DAD` |
+| 0.45 | `#26A5AC` |
+| 0.56 | `#62B84E` |
+| 0.64 | `#D9C742` |
+| 0.72 | `#F26427` |
+| 0.80 | `#FF303A` |
+| 0.91 | `#FF65AB` |
+| 1 | `#E6D8DD` |
+
+`--palette thermal-spectrum` selects only these colors and does not change the thermal mode, levels, or HUD. The preset is a reproducible treatment of the supplied visual reference; its 12-level setting is not a measurement of that compressed image.
+
+| Control | Range / behavior |
+| --- | --- |
+| `--thermal-levels N` | 2–64 representative values including both endpoints; 0 continuous; omitted preserves legacy grading |
+| `--thermal-band-softness S` | 0–1 transition width; 0 hard bands, default 0.35 when levels are set; requires N ≥ 2 |
+| `--thermal-black-point B` | 0–0.95; normalized synthetic warmth mapped to the cold end |
+| `--thermal-white-point W` | 0.05–1; at least 0.01 above B |
+| `--thermal-gamma G` | 0.25–4; 1 neutral, above 1 darkens intermediate values |
+| `--thermal-softness R` | 0–8 Gaussian pixels at a 1920px longest edge, scaled to output resolution |
+
+Grading controls require explicit levels (including 0) or a look preset. Spatial softness, band softness, heat glow, and HUD blur are independent. The transfer spatially softens the float field, normalizes between black and white points, applies gamma, applies requested pixelation/grain, then quantizes and maps colors. Explicit levels bypass Cinematic's old mild bands and sensor texture's fixed quantizer. HUD readouts receive the underlying field, before grading; changing level count does not change detection or the model setup. With level controls and the look preset omitted, the existing grading path remains unchanged. Soft bands, glow, and later display effects introduce intermediate RGB values; N counts representative thermal values, not all colors in the final image.
+
+Explicit options override a preset regardless of order. `--thermal-levels 0` clears inherited band softness; explicitly combining continuous mode with band softness is an error. `--sensor-texture` enables its usual grain/pixels/horizontal-line defaults over the clean preset; explicit individual texture flags win. `--hud` enables overlays. Encoder `--preset` remains separate.
+
+```bash
+yautja "clip.mov" "reference.mp4" --look-preset thermal-spectrum-reference-v1
+yautja "photo.jpg" "six-levels.png" --look-preset thermal-spectrum-reference-v1 --thermal-levels 6 --thermal-band-softness 0
+yautja "clip.mov" "features.mp4" --look-preset thermal-spectrum-reference-v1 --thermal very-detailed --thermal-levels 0 --hud
+```
+
+JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, or `banded`), all six grading values, scalar softness units, and resolved positioned palette colors. Preset values are immutable; a future visual revision should receive another name/version.

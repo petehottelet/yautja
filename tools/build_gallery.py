@@ -20,7 +20,7 @@ from yautja.cli import (AudioAnalysis, ConversionError, audio_filter, binary, di
 
 
 def variants():
-    result = {f'style-{style}': {'thermal': style} for style in ('silhouette', 'cinematic', 'detailed')}
+    result = {f'style-{style}': {'thermal': style} for style in ('low-detail', 'cinematic', 'detailed', 'very-detailed')}
     for palette in PALETTES:
         if palette != 'yautja':
             result[f'palette-{palette}'] = {'thermal': 'cinematic', 'palette': palette}
@@ -35,6 +35,9 @@ def variants():
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
+        'look-thermal-spectrum-reference-v1': {'look_preset': 'thermal-spectrum-reference-v1'},
+        **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
+           for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
         'colors-matched-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette'},
         'colors-matched-ironbow': {'thermal': 'cinematic', 'palette': 'ironbow', 'hud_theme': 'palette'},
@@ -121,7 +124,12 @@ def main():
                                   (width, height) if name == 'hero' else (gif_width, gif_height)),
                                 verbose=True, show_timecode=True, **options)
                  for name, options in settings.items()}
-    fields = {mode: Renderer(width, height, thermal=mode).heat_field for mode in {r.thermal for r in renderers.values()}}
+    def field_key(renderer):
+        return renderer.thermal, renderer.sensor_resolution, renderer.transfer.levels is None
+
+    fields = {field_key(r): Renderer(width, height, thermal=r.thermal, sensor_resolution=r.sensor_resolution,
+                                    thermal_levels=None if r.transfer.levels is None else 0).heat_field
+              for r in renderers.values()}
     results = {}
     with tempfile.TemporaryDirectory(prefix='.yautja-gallery-', dir=destination) as directory:
         temp = Path(directory)
@@ -161,7 +169,7 @@ def main():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
                             targets, shot = selected.at(args.start + time) if selected and name.removeprefix('large/').startswith('target-') else ([], tracker.scene_cuts + 1)
-                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), renderer.thermal)], time, wave, subjects,
+                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), field_key(renderer))], time, wave, subjects,
                                                           targets=targets, shot_id=shot)
                             image.save(temp / name / f'{count:04d}.png')
                             if name == 'hero' and count == 0:
@@ -193,7 +201,8 @@ def main():
                         raise ConversionError('GIF timing check failed: ' + name)
                     results[name] = {'frames': check.n_frames, 'seconds': duration / 1000,
                                      'size': list(check.size), 'bytes': gif.stat().st_size,
-                                     'settings': settings[name], 'colors': renderers[name].colors.report()}
+                                     'settings': settings[name], 'colors': renderers[name].colors.report(),
+                                     'thermal_transfer': renderers[name].transfer.report()}
                     if name.removeprefix('large/').startswith('target-'):
                         if not renderers[name].target_overlay.seen:
                             raise ConversionError('No selected targets appeared in the gallery range: ' + name)

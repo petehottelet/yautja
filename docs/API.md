@@ -18,7 +18,15 @@ with Image.open('photo.jpg') as source:
 
 This low-level example does not perform the CLI's orientation, metadata, input/output protection or atomic-write checks. Prefer the CLI for end-user conversion. Other helpers, classes and module internals are not a promised stable API merely because tests or repository tools import them.
 
-## Figure catalogs and 2.1 effects
+## 2.2 looks, levels, and reticle shapes
+
+`--thermal low-detail` replaces the simpler Silhouette presentation; `silhouette` and `semantic` remain aliases. `--thermal very-detailed` preserves resolved source facial and fabric features. All four segmented modes use the same model setup.
+
+`--look-preset thermal-spectrum-reference-v1` applies the frozen Reference 12 recipe. Explicit choices override it in either argument order. `--thermal-levels` opts into unified grading (0 continuous, 2–64 banded); band softness, black/white points, gamma, and scalar softness are separately configurable. Reports include the resolved look and transfer parameters. The experimental `Renderer` supports the same underscored keywords and preset precedence; explicit grading also accepts finite floating-point fields in the 0–255 range. Legacy `render_field` retains its uint8 contract. See [the grading reference](../skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
+
+`--target-shape` selects `triangle`, `triangle-dots`, `crosshair`, `iron-sights`, `square`, `square-dot`, `square-cross`, `square-mil`, or `square-x`. Reports include the chosen shape. All inherit existing target styling/timing controls; lock dots appear only after acquisition completes. The default triangle geometry is unchanged.
+
+## Figure catalog schema
 
 `--list-figures` writes a versioned catalog and adjacent HTML contact sheet. Pass its path with `--figures` and repeat or comma-separate `--target` IDs on subsequent conversions. See [the selection and effects reference](../skills/yautja/references/targets.md) for flags, bounds, defaults, and examples.
 

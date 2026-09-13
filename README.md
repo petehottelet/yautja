@@ -56,21 +56,21 @@ Install a published release from [PyPI](https://pypi.org/project/yautja/) in an 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.1,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.2,<3"
 .venv-yautja/bin/python -m yautja --doctor
 .venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.1,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.2,<3"
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 .venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-Alternatively, use `pipx install "yautja>=2.1,<3"` or `pipx install "yautja[semantic]>=2.1,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+Alternatively, use `pipx install "yautja>=2.2,<3"` or `pipx install "yautja[semantic]>=2.2,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -85,23 +85,40 @@ python -m yautja "photo.jpg" "outputs/photo-yautja.png"
 python -m yautja "photo.jpg" "outputs/photo-semantic.png" --thermal semantic --verbose
 ```
 
-Use your virtual environment's Python. PNG output selects still-image mode automatically; FFmpeg is not needed. The same renderer supplies the chosen look, palette, optional grain/pixelation, shaded glyphs, and a static procedural waveform. All three segmented looks work with still images. `--timecode` optionally displays a static clock at `--timecode-start` (zero by default).
+Use your virtual environment's Python. PNG output selects still-image mode automatically; FFmpeg is not needed. The same renderer supplies the chosen look, palette, optional grain/pixelation, shaded glyphs, and a static procedural waveform. All four segmented looks work with still images. `--timecode` optionally displays a static clock at `--timecode-start` (zero by default).
 
 Images retain their aspect ratio and EXIF orientation, with a longest edge of at most 1920 pixels and no upscaling. `--max-size` changes that limit. Transparent areas are flattened onto black before coloring; output is an RGB PNG without source metadata. Animated PNG and video-only timing/audio controls are rejected. Existing output and source files are protected.
 
-## Three thermal looks
+## Four thermal looks
 
-Choose the level of detail separately from the color palette. All three examples use the **original Yautja colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
+Choose the level of detail separately from the color palette. All four examples use the **original Yautja colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
 
-| Silhouette | Cinematic | Detailed |
-| --- | --- | --- |
-| [![Silhouette: soft, blobby anatomy-guided warmth](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-silhouette.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-silhouette.gif) | [![Cinematic: broad skin and gear patches with softened boundaries](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Detailed: distinct skin, clothing, and equipment regions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-detailed.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-detailed.gif) |
-| Soft, blobby subjects and an abstract background—the older semantic look. | The middle ground: broad heat patches, some skin/gear separation, and softer edges. | Distinct skin, clothing, hair, and equipment, with restrained garment shading and more scenery detail. |
-| `--thermal silhouette` | `--thermal cinematic` | `--thermal detailed` |
+| Low Detail | Cinematic |
+| --- | --- |
+| [![Low Detail: broad, soft heat blobs with subdued anatomy](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-low-detail.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-low-detail.gif) | [![Cinematic: broad skin and gear patches with softened boundaries](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) |
+| Broad, soft silhouettes with reduced anatomical variation and an abstract background. | Broad heat patches, some skin/gear separation, and softer edges. |
+| `--thermal low-detail` | `--thermal cinematic` |
 
-All three use anatomy-guided fallback when estimates are uncertain. Cinematic and Detailed reuse the same models for extra surface segmentation; they take longer as the number of people increases. Small objects, distant hands, eyewear, and overlaps can still be missed or misclassified. These are generated visual effects, not measured temperatures or material properties.
+| Detailed | Very Detailed |
+| --- | --- |
+| [![Detailed: distinct skin, clothing, and equipment regions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-detailed.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-detailed.gif) | [![Very Detailed: visible facial features and fabric texture retained from the source](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-very-detailed.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-very-detailed.gif) |
+| Distinct skin, clothing, hair, and equipment, with restrained garment shading. | Preserves visible eyes, nose, mouth, hair, and clothing texture through local source contrast. |
+| `--thermal detailed` | `--thermal very-detailed` |
 
-Existing commands still work: `--thermal semantic` is an alias for Silhouette, and `--thermal realistic` is an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
+All four use anatomy-guided fallback when estimates are uncertain. Cinematic, Detailed, and Very Detailed reuse the same models for extra surface segmentation; they take longer as the number of people increases. Very Detailed preserves features that are visible in the input; small, blurred, or obscured faces cannot gain missing detail. Small objects, distant hands, eyewear, and overlaps can still be missed or misclassified. These are generated visual effects, not measured temperatures or material properties.
+
+Existing commands still work: `--thermal silhouette` and `--thermal semantic` now select Low Detail, and `--thermal realistic` remains an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
+
+### Thermal Spectrum — Reference 12
+
+The named recipe uses eleven positioned colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 representative thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture. Twelve is the reproducible recipe setting; the compressed reference does not establish an exact original level count.
+
+| Reference 12 · complete preset | Thermal Spectrum · palette only |
+| --- | --- |
+| [![Thermal Spectrum Reference 12: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-thermal-spectrum-reference-v1.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-thermal-spectrum-reference-v1.gif) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
+| `--look-preset thermal-spectrum-reference-v1` | `--palette thermal-spectrum` |
+
+Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--thermal-levels 0` for continuous color, and `--thermal-band-softness 0` for hard bands. Soft transitions and optional glow add intermediate visible colors; twelve representative levels does not limit a GIF to twelve RGB colors. Explicit options override the recipe regardless of argument order. For example, add `--hud --thermal very-detailed` to use its colors and levels with more source detail and overlays. [Exact recipe and grading controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
 ### Color palettes
 
@@ -250,6 +267,32 @@ For a thick, full-height, mirrored inkblot display, choose one of three waveform
 
 The original `--wave-style trace` stays the default. Rorschach replaces the left trace, scale, and flanking glyph rows. It uses the existing waveform color, works with all HUD themes, and leaves timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
 
+### Target shapes
+
+Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. Triangle dots and the square center dot appear on lock and reset when the target is lost.
+
+| Triangle + three lock dots | Circular crosshair |
+| --- | --- |
+| [![Triangle + three lock dots animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-triangle-dots.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-triangle-dots.gif) | [![Circular crosshair animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-crosshair.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-crosshair.gif) |
+| `--target-shape triangle-dots` | `--target-shape crosshair` |
+
+| Iron sights | Square brackets |
+| --- | --- |
+| [![Iron sights animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-iron-sights.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-iron-sights.gif) | [![Square brackets animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square.gif) |
+| `--target-shape iron-sights` | `--target-shape square` |
+
+| Square + lock dot | Square + cross |
+| --- | --- |
+| [![Square + lock dot animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-dot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-dot.gif) | [![Square + cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-cross.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-cross.gif) |
+| `--target-shape square-dot` | `--target-shape square-cross` |
+
+| Square + graduated cross | Square + diagonal marks |
+| --- | --- |
+| [![Square + graduated cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-mil.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-mil.gif) | [![Square + diagonal marks animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-x.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-x.gif) |
+| `--target-shape square-mil` | `--target-shape square-x` |
+
+Click any preview for its large animated GIF. [Selection, target colors, and effects](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#target-animation-and-color).
+
 ### Choose a figure and add a target
 
 Scan a clip or still to get a **shot-by-shot figure list**, thumbnails, and reusable IDs. Scanning needs the semantic setup below. Open the generated contact sheet, choose an ID, then render:
@@ -307,13 +350,13 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.1,<3"
+python -m pip install "yautja[semantic]>=2.2,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
 ```
 
-Use your environment's Python. Grounding DINO, SAM 2.1, and ViTPose are shared by all three looks, and conversions use cached weights only. `--device auto` chooses available CUDA or CPU; CPU is slower. Start with a short `--duration 5` sample. See [setup, controls, and limitations](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md) and the [isolated GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md#isolated-cuda-environment-on-windows).
+Use your environment's Python. Grounding DINO, SAM 2.1, and ViTPose are shared by all four looks, and conversions use cached weights only. `--device auto` chooses available CUDA or CPU; CPU is slower. Start with a short `--duration 5` sample. See [setup, controls, and limitations](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md) and the [isolated GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md#isolated-cuda-environment-on-windows).
 
 `--sensor-resolution 160` increases heat-field abstraction, `--warm-objects "person,dog,bird"` selects warm categories, and `--hot-objects "fire"` explicitly adds an artistic hot category. Reports include the actual device, precision, timings, model revisions, and resolved effects. Full precision is the default; `--precision bf16` is experimental. [Earlier CPU/CUDA validation](https://github.com/petehottelet/yautja/blob/main/docs/performance-validation.md).
 
@@ -331,7 +374,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.1,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.1,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.2,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.2,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 

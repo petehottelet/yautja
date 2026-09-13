@@ -1,4 +1,4 @@
-"""Decorative, animated three-blade targeting overlay; no inference here."""
+"""Decorative animated reticles; no inference here."""
 import math
 
 import numpy as np
@@ -6,6 +6,47 @@ from PIL import Image, ImageDraw, ImageFilter
 
 from .colors import parse_hex
 from .hud import blur_layer
+
+TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'iron-sights',
+                 'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')
+
+
+def detail_shapes(shape, radius, locked):
+    """Local vector paths (open/closed) and circles, in radius units."""
+    paths, circles = [], []
+    if shape.startswith('square'):
+        for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            paths.append(([(x * .40, y * .72), (x * .72, y * .72), (x * .72, y * .40)], False))
+    if shape == 'triangle-dots' and locked:
+        circles = [(0, -.23, .105), (-.25, .16, .105), (.25, .16, .105)]
+    elif shape in ('crosshair', 'square-cross', 'square-mil'):
+        outer = .9 if shape == 'crosshair' else .46
+        for axis in (0, 1):
+            for sign in (-1, 1):
+                points = [(sign * .12, 0), (sign * outer, 0)]
+                if axis:
+                    points = [(y, x) for x, y in points]
+                paths.append((points, False))
+        if shape == 'crosshair':
+            for quadrant in range(4):
+                angles = np.linspace(quadrant * math.pi / 2 + .20, (quadrant + 1) * math.pi / 2 - .20, 14)
+                paths.append(([(.59 * math.cos(a), .59 * math.sin(a)) for a in angles], False))
+        if shape == 'square-mil':
+            for axis in (0, 1):
+                for position in (-.38, -.25, .25, .38):
+                    points = [(position, -.055), (position, .055)]
+                    paths.append(([(y, x) for x, y in points] if axis else points, False))
+    elif shape == 'iron-sights':
+        paths.extend([([(-.68, -.42), (-.68, .45), (-.24, .45)], False),
+                      ([(.68, -.42), (.68, .45), (.24, .45)], False),
+                      ([(0, .45), (0, -.20)], False),
+                      ([(-.16, -.20), (.16, -.20)], False)])
+    elif shape == 'square-dot' and locked:
+        circles = [(0, 0, .10)]
+    elif shape == 'square-x':
+        for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            paths.append(([(x * .10, y * .10), (x * .39, y * .39)], False))
+    return paths, circles
 
 
 def target_colors(value):
@@ -30,7 +71,10 @@ def parse_stroke_colors(value):
 class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
     def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.,
-                 opacity=1., flash_opacity=None):
+                 opacity=1., flash_opacity=None, shape='triangle'):
+        if shape not in TARGET_SHAPES:
+            raise ValueError('Unknown target shape: ' + str(shape))
+        self.shape = shape
         flash_opacity = opacity if flash_opacity is None else flash_opacity
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
                                        (flash_rate, 0, 3, 'target-flash-rate'),
@@ -86,7 +130,7 @@ class TargetOverlay:
             flash = progress == 1 and elapsed > 0 and self.flash_rate > 0 and int(elapsed * self.flash_rate * 2) % 2 == 1
             color = colors[int(flash)]
             opacity = round(255 * float(item.get('opacity', 1.)) * (self.flash_opacity if flash else self.opacity))
-            for index in range(3):
+            for index in range(3) if self.shape in ('triangle', 'triangle-dots') else ():
                 a, b = points[index], points[(index + 1) % 3]
                 direction = (b - a) / max(1., np.linalg.norm(b - a))
                 inward = np.array([-direction[1], direction[0]])
@@ -110,6 +154,32 @@ class TargetOverlay:
                 if stroke_width:
                     outline = self.stroke_colors[int(flash)] if self.stroke_colors else tuple(round(c * .62) for c in color)
                     draw.polygon(polygon, outline=(*outline, opacity), width=stroke_width)
+            # All alternative shapes share acquisition, flash, tracking fade,
+            # inward outlines, blur, and transparency with the original triangle.
+            paths, circles = detail_shapes(self.shape, radius, progress == 1)
+            line_width = max(2, round(radius * .085 * 2))
+            outline_width = round(self.stroke * min(width, height) / 1080 * 2)
+            outline = self.stroke_colors[int(flash)] if self.stroke_colors else tuple(round(c * .62) for c in color)
+            cosine, sine = math.cos(angle), math.sin(angle)
+
+            def point(x, y):
+                return ((cx + radius * (x * cosine - y * sine)) * 2,
+                        (cy + radius * (x * sine + y * cosine)) * 2)
+
+            for path, closed in paths:
+                vertices = [point(x, y) for x, y in path]
+                if closed:
+                    vertices.append(vertices[0])
+                draw.line(vertices, fill=(*(outline if outline_width else color), opacity), width=line_width, joint='curve')
+                if outline_width and line_width > outline_width * 2:
+                    draw.line(vertices, fill=(*color, opacity), width=line_width - outline_width * 2, joint='curve')
+            for x, y, dot_radius in circles:
+                px, py = point(x, y)
+                r = radius * dot_radius * 2
+                box = (px - r, py - r, px + r, py + r)
+                draw.ellipse(box, fill=(*color, opacity))
+                if outline_width:
+                    draw.ellipse(box, outline=(*outline, opacity), width=min(outline_width, max(1, round(r))))
         overlay = overlay.resize(image.size, Image.Resampling.LANCZOS)
         overlay = blur_layer(overlay, self.blur * min(width, height) / 1080)
         glow = overlay.filter(ImageFilter.GaussianBlur(max(.5, width / 640)))

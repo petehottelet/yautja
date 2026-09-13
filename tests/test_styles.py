@@ -61,7 +61,7 @@ class StyleTests(unittest.TestCase):
 
     def test_old_mode_names_are_exact_aliases_with_the_original_default_palette(self):
         frame, person = Image.new('RGB', (320, 240)), sample_person()
-        for old, new in [('semantic', 'silhouette'), ('realistic', 'detailed')]:
+        for old, new in [('semantic', 'low-detail'), ('silhouette', 'low-detail'), ('realistic', 'detailed')]:
             before, after = Renderer(320, 240, thermal=old), Renderer(320, 240, thermal=new)
             np.testing.assert_array_equal(np.array(before.render(frame, 0, subjects=[person])),
                                           np.array(after.render(frame, 0, subjects=[person])))
@@ -163,7 +163,7 @@ class IndependentEffectsTests(unittest.TestCase):
             root = Path(directory)
             source = root / 'input.png'
             Image.new('RGB', (320, 240)).save(source)
-            for mode in ('silhouette', 'cinematic', 'detailed'):
+            for mode in ('low-detail', 'cinematic', 'detailed', 'very-detailed'):
                 detector = SimpleNamespace(device='cpu', device_reason='test fixture', precision='fp32',
                     detect=lambda frame: [sample_person()], report=lambda: {})
                 with patch('yautja.semantic.GroundedSegmenter', return_value=detector) as constructor, \
@@ -176,7 +176,7 @@ class IndependentEffectsTests(unittest.TestCase):
                 self.assertEqual(report['palette'], 'green-phosphor')
                 self.assertEqual((report['grain'], report['pixelation'], report['scanlines']), (.02, 80, False))
                 self.assertFalse(report['sensor_texture'])
-                self.assertEqual(constructor.call_args.kwargs['surfaces'], mode != 'silhouette')
+                self.assertEqual(constructor.call_args.kwargs['surfaces'], mode != 'low-detail')
 
 
 if __name__ == '__main__':

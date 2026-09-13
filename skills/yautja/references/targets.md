@@ -29,6 +29,21 @@ Using a saved catalog with Classic needs only the base runtime. Selecting a segm
 
 ## Target animation and color
 
+Select geometry with `--target-shape`. Every shape uses the same selected figure tracks, acquisition duration, scale, red/white flash defaults, custom colors, inward outline, target blur, and opacity controls. Default `triangle` retains the existing three-blade design.
+
+| Shape | Geometry / center detail |
+| --- | --- |
+| `triangle-dots` | Original triangle plus three center dots; dots appear when acquisition completes |
+| `crosshair` | Four radial arms and a segmented circular ring, with an open center |
+| `iron-sights` | Two rear sight posts and a central front post with a short cap |
+| `square` | Four open corner brackets |
+| `square-dot` | Corner brackets with one center dot that appears on lock |
+| `square-cross` | Corner brackets with an open-center cross |
+| `square-mil` | Corner brackets with a graduated cross |
+| `square-x` | Corner brackets with four diagonal center marks |
+
+New shapes contract and settle during acquisition. Lock dots vanish on target loss and reappear only after reacquisition; still images show the locked state immediately. Center details share the target's colors and transparency. `--no-hud` hides all shapes. Reports include `target_shape`.
+
 Three solid-color blades contract into a compact reticle centered on the selected bounding box, with a narrow, clear gap through each corner. The landed radius is 39% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
 
 | Control | Default and range |

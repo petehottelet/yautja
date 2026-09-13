@@ -23,12 +23,14 @@ from .colors import HUD_THEMES, resolve_colors, hex_color
 from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
+from .looks import LOOK_PRESETS, LEVEL_OPTIONS, ThermalTransfer, resolve_look
+from .target import TARGET_SHAPES
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
-                  'hud_opacity', 'hud_opacity_elements')
+                  'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset', *LEVEL_OPTIONS)
 
 
 def target_selection(args, source):
@@ -45,7 +47,9 @@ def extra_report(renderer, selection, *, static=False):
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
     outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
                                                             for key in ('target', 'target-flash'))
-    return {'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
+    return {**renderer.transfer.report(), 'look_preset': renderer.look_preset,
+            'target_shape': renderer.target_overlay.shape,
+            'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
             'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
             'target_colors': [renderer.colors.report()['hud_colors'][k] for k in ('target', 'target-flash')],
             'target_acquire': renderer.target_overlay.acquire,
@@ -218,7 +222,7 @@ def semantic_tracker(args):
     print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
-                              surfaces=not args.list_figures and resolve_thermal(args.thermal) in ('cinematic', 'detailed')), args.detect_interval)
+                              surfaces=not args.list_figures and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')), args.detect_interval)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -480,17 +484,36 @@ def convert_video(args):
                 analysis.close()
 
 
+class LookParser(argparse.ArgumentParser):
+    def parse_args(self, args=None, namespace=None):
+        tokens = list(sys.argv[1:] if args is None else args)
+        result = super().parse_args(tokens, namespace)
+        if result.look_preset:
+            explicit = {self._option_string_actions[token.split('=', 1)[0]].dest
+                        for token in tokens if token.split('=', 1)[0] in self._option_string_actions}
+            overrides = {key: getattr(result, key) for key in explicit if key != 'look_preset'}
+            vars(result).update(resolve_look(result.look_preset, overrides))
+        return result
+
+
 def parser():
-    p = argparse.ArgumentParser(description='Re-skin a local image or video with a sci-fi thermal-imaging look and HUD. Optional segmentation, anatomy-guided coloring, and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
+    p = LookParser(allow_abbrev=False, description='Re-skin a local image or video with a sci-fi thermal-imaging look and HUD. Optional segmentation, anatomy-guided coloring, and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
     version = __version__
     p.add_argument('--version', action='version', version=f'Yautja {version}')
     p.add_argument('input', nargs='?', type=Path, help='Local JPEG/PNG image or video')
     p.add_argument('output', nargs='?', type=Path, help='PNG for a still image; MP4 for a video')
     p.add_argument('--media', choices=['auto', 'image', 'video'], default='auto', help='Auto selects images for JPEG/PNG input or PNG output; use image with --doctor to skip FFmpeg checks')
     p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
-    p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Three segmented looks: silhouette (soft), cinematic (broad surface patches), detailed (skin/clothing/gear). Classic is the lightweight luminance filter; old semantic/realistic names remain aliases')
+    p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Four segmented looks: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Classic is the lightweight luminance filter; semantic/realistic aliases remain supported')
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
+    p.add_argument('--look-preset', choices=LOOK_PRESETS, help='Named visual recipe; explicit options override it regardless of argument order. Separate from encoder --preset')
+    p.add_argument('--thermal-levels', type=int, help='Representative thermal levels: 2–64, or 0 for continuous. Omitted retains legacy grading')
+    p.add_argument('--thermal-band-softness', type=float, help='Transition width between levels, 0–1; 0 gives hard bands, default 0.35 with explicit levels')
+    p.add_argument('--thermal-black-point', type=float, default=0., help='Synthetic warmth mapped to black/cold end, 0–0.95; requires thermal levels or a look preset')
+    p.add_argument('--thermal-white-point', type=float, default=1., help='Synthetic warmth mapped to hot end, 0.05–1; must exceed black point by 0.01')
+    p.add_argument('--thermal-gamma', type=float, default=1., help='Thermal response exponent, 0.25–4; above 1 darkens intermediate warmth')
+    p.add_argument('--thermal-softness', type=float, default=0., help='Scalar Gaussian softness, 0–8 pixels at a 1920px longest edge; separate from band transitions and glow')
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
@@ -507,7 +530,8 @@ def parser():
     p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target')
     p.add_argument('--target', action='append', default=[], help='Figure ID from the catalog, e.g. S001-F002; repeat or comma-separate for multiple figures/shots')
     p.add_argument('--target-colors', help='Two comma-separated RGB hex colors for landing and flash, overriding HUD target colors; default red,white')
-    p.add_argument('--target-acquire', type=float, default=.8, help='Seconds for the three target blades to assemble, 0.1-5')
+    p.add_argument('--target-shape', choices=TARGET_SHAPES, default='triangle', help='Animated reticle geometry; triangle by default. Triangle-dots reveals three center dots on lock')
+    p.add_argument('--target-acquire', type=float, default=.8, help='Seconds for the target reticle to assemble, 0.1-5')
     p.add_argument('--target-flash', action=argparse.BooleanOptionalAction, default=True, help='Alternate target colors after landing; --no-target-flash keeps the landing color')
     p.add_argument('--target-flash-rate', type=float, default=1.5, help='Target flash cycles per second, 0-3; 0 holds the landing color')
     p.add_argument('--target-scale', type=float, default=1., help='Size multiplier for the compact reticle centered on the selected figure, 0.25-3; default 1')
@@ -527,7 +551,7 @@ def parser():
     p.add_argument('--confidence', type=float, default=.30, help='Object detection threshold, 0.05-0.95')
     p.add_argument('--detect-interval', type=float, default=.5, help='Seconds between model detections; masks follow optical flow between them')
     p.add_argument('--sensor-resolution', type=int, default=256, help='Heat-field and optional texture grid longest edge, 64-640; smaller is more abstract')
-    p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to subjects (requires silhouette, cinematic, or detailed mode)')
+    p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to subjects (requires a segmented thermal mode)')
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
@@ -555,6 +579,10 @@ def parser():
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
+    try:
+        ThermalTransfer(**{key: getattr(args, key) for key in LEVEL_OPTIONS})
+    except ValueError as exc:
+        p.error(str(exc))
     try:
         # Reject invalid color settings before opening media or loading models.
         resolve_colors(PALETTES, palette=args.palette, palette_colors=args.palette_colors,
@@ -595,11 +623,11 @@ def main(argv=None):
         if not args.input or (not args.output and not args.list_figures):
             p.error('input and output are required (or use --doctor)')
         if args.hud and args.verbose and args.thermal == 'classic':
-            p.error('--verbose requires --thermal silhouette, cinematic, or detailed')
+            p.error('--verbose requires --thermal low-detail, cinematic, detailed, or very-detailed')
         if args.wave_style == 'trace' and (args.wave_width is not None or args.wave_height is not None):
             p.error('--wave-width and --wave-height require a Rorschach --wave-style')
         if args.precision != 'fp32' and args.thermal == 'classic' and not args.list_figures:
-            p.error('--precision bf16 requires --thermal silhouette, cinematic, or detailed')
+            p.error('--precision bf16 requires --thermal low-detail, cinematic, detailed, or very-detailed')
         checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),
                   (args.wave_window, .05, 5, '--wave-window'), (args.wave_gain, .01, 20, '--wave-gain'),
                   (args.max_size, 160, 8192, '--max-size'), (args.crf, 0, 51, '--crf'),

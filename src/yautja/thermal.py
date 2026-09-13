@@ -6,8 +6,8 @@ import hashlib
 import numpy as np
 from PIL import Image, ImageFilter
 
-THERMAL_MODES = ('classic', 'silhouette', 'cinematic', 'detailed')
-THERMAL_ALIASES = {'semantic': 'silhouette', 'realistic': 'detailed'}
+THERMAL_MODES = ('classic', 'low-detail', 'cinematic', 'detailed', 'very-detailed')
+THERMAL_ALIASES = {'semantic': 'low-detail', 'silhouette': 'low-detail', 'realistic': 'detailed'}
 
 
 def resolve_thermal(mode):
@@ -38,9 +38,12 @@ def sensor_size(width, height, longest):
 class HeatField:
     """Color broad anatomical regions without reconstructing faces or fabric."""
 
-    def __init__(self, width, height, resolution=256, seed=42):
+    edge_blur, field_blur = .8, .65
+
+    def __init__(self, width, height, resolution=256, seed=42, *, legacy_bands=True):
         self.size = sensor_size(width, height, resolution)
         self.seed = seed
+        self.legacy_bands = legacy_bands
         self.yy, self.xx = np.mgrid[:self.size[1], :self.size[0]].astype(np.float32)
 
     @staticmethod
@@ -170,12 +173,31 @@ class HeatField:
             if not hard.any():
                 continue
             warmth = self.surface(subject, hard)
-            alpha = np.asarray(mask_image.filter(ImageFilter.GaussianBlur(.8)), dtype=np.float32) / 255
+            alpha = np.asarray(mask_image.filter(ImageFilter.GaussianBlur(self.edge_blur)), dtype=np.float32) / 255
             alpha *= subject.opacity
             heat = np.maximum(heat, ambient * (1 - alpha) + warmth * alpha)
-        field = Image.fromarray(np.uint8(np.clip(heat, 0, 1) * 255))
-        field = field.filter(ImageFilter.GaussianBlur(.65))
-        return np.asarray(field.resize(frame.size, Image.Resampling.BILINEAR), dtype=np.uint8)
+        return self.finish(heat, frame.size, self.field_blur)
+
+    def finish(self, heat, size, radius):
+        if self.legacy_bands:
+            field = Image.fromarray(np.uint8(np.clip(heat, 0, 1) * 255))
+            field = field.filter(ImageFilter.GaussianBlur(radius))
+            return np.asarray(field.resize(size, Image.Resampling.BILINEAR), dtype=np.uint8)
+        from .looks import blur_scalar
+        field = blur_scalar(np.clip(heat, 0, 1).astype(np.float32) * 255, radius)
+        return np.clip(np.asarray(Image.fromarray(field).resize(size, Image.Resampling.BILINEAR)), 0, 255)
+
+
+class LowDetailHeatField(HeatField):
+    """Broad, soft body heat with subdued anatomy and no facial/material detail."""
+
+    edge_blur, field_blur = 1.7, 1.25
+
+    def surface(self, subject, hard):
+        value = super().surface(subject, hard)
+        # Compress small anatomical variations into a broad, warm silhouette.
+        center = float(np.median(value[hard]))
+        return center + (value - center) * .25
 
 
 class SurfaceHeatField(HeatField):
@@ -240,9 +262,7 @@ class SurfaceHeatField(HeatField):
             warmth = self.detailed_surface(frame, subject, hard)
             alpha = np.asarray(mask.filter(ImageFilter.GaussianBlur(self.edge_blur)), dtype=np.float32) / 255 * subject.opacity
             heat = heat * (1 - alpha) + warmth * alpha
-        field = Image.fromarray(np.uint8(np.clip(heat, 0, 1) * 255))
-        field = field.filter(ImageFilter.GaussianBlur(self.field_blur))
-        return np.asarray(field.resize(frame.size, Image.Resampling.BILINEAR), dtype=np.uint8)
+        return self.finish(heat, frame.size, self.field_blur)
 
 
 class CinematicHeatField(SurfaceHeatField):
@@ -266,5 +286,40 @@ class CinematicHeatField(SurfaceHeatField):
         # Retain the fuller warmth and organic body variation of the older look.
         warmth = .45 * anatomy + .55 * broad
         # Gentle temperature-like bands, applied to the synthetic field only.
-        warmth = .8 * warmth + .2 * np.round(warmth * 16) / 16
+        if self.legacy_bands:
+            warmth = .8 * warmth + .2 * np.round(warmth * 16) / 16
         return np.clip(warmth, .20, .995)
+
+
+class VeryDetailedHeatField(SurfaceHeatField):
+    """Retain source facial/fabric structure inside the semantic warmth field."""
+
+    ambient_resolution, ambient_blur = 320, .35
+    edge_blur, field_blur = .18, .18
+
+    def build(self, frame, subjects):
+        heat = super().build(frame, subjects).astype(np.float32) / 255
+        scale = max(frame.size) / 1920
+        gray = frame.convert('L')
+        smooth = np.asarray(gray.filter(ImageFilter.GaussianBlur(max(.35, .6 * scale))), np.float32) / 255
+        broad = np.asarray(gray.filter(ImageFilter.GaussianBlur(max(2., 16 * scale))), np.float32) / 255
+        coarse = np.asarray(gray.filter(ImageFilter.GaussianBlur(max(4., 48 * scale))), np.float32) / 255
+        # Mid- and fine-scale contrast retain eyes, nose, lips and folds without
+        # treating overall visible-light brightness as temperature.
+        detail = .72 * np.clip((smooth - broad) / .20, -1, 1) + .28 * np.clip((broad - coarse) / .20, -1, 1)
+        coverage = np.zeros(heat.shape, np.float32)
+        face = np.zeros_like(coverage)
+        for subject in subjects:
+            mask = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(frame.size, Image.Resampling.BILINEAR)
+            alpha = np.asarray(mask.filter(ImageFilter.GaussianBlur(max(.5, scale))), np.float32) / 255 * subject.opacity
+            coverage = np.maximum(coverage, alpha)
+            for part in subject.parts:
+                if part.label in ('face', 'hand') and part.score >= SURFACE_RULES[part.label][3]:
+                    region = Image.fromarray(np.uint8(np.clip(part.mask, 0, 1) * 255)).resize(frame.size, Image.Resampling.BILINEAR)
+                    face = np.maximum(face, np.asarray(region, np.float32) / 255 * alpha)
+        # Reserve headroom for light facial contours rather than clipping every
+        # positive feature on a near-white face to the top of the palette.
+        heat = heat * (1 - .14 * coverage) + .055 * coverage
+        heat += detail * (.035 * (1 - coverage) + .13 * coverage + .07 * face)
+        result = np.clip(heat * 255, 0, 255)
+        return result.astype(np.uint8) if self.legacy_bands else result

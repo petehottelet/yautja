@@ -16,6 +16,7 @@ from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .waveform import WAVE_STYLES, inkblot_mask
 from .hud import HudPanel, hud_blurs, hud_opacities
+from .looks import SPECTRUM, ThermalTransfer, resolve_look
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -26,6 +27,7 @@ IRONBOW = [(0, (2, 0, 10)), (.18, (12, 15, 70)), (.30, (55, 18, 140)),
            (.86, (255, 220, 48)), (.96, (255, 250, 171)), (1, (255, 255, 240))]
 
 PALETTES = {
+    'thermal-spectrum': SPECTRUM,
     'yautja': STOPS,
     'ironbow': IRONBOW,
     'abyss': [(0, (5, 12, 15)), (.16, (5, 17, 25)), (.32, (4, 34, 61)),
@@ -197,7 +199,11 @@ def load_glyph_font():
 
 
 class Renderer:
-    def __init__(self, width, height, *, seed=42, grain=None, glow=.65,
+    def __init__(self, width, height, *, look_preset=None, **options):
+        self.look_preset = look_preset
+        self._configure(width, height, **resolve_look(look_preset, options))
+
+    def _configure(self, width, height, *, seed=42, grain=None, glow=.65,
                  show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
                  sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False,
                  palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True,
@@ -205,8 +211,12 @@ class Renderer:
                  motion_blur=0., crt_bleed=0., crt_vertical_lines=False, crt_strength=.12,
                  heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
                  target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None,
-                 hud_opacity=1., hud_opacity_elements=None):
+                 hud_opacity=1., hud_opacity_elements=None, target_shape='triangle',
+                 thermal_levels=None, thermal_band_softness=None, thermal_black_point=0.,
+                 thermal_white_point=1., thermal_gamma=1., thermal_softness=0.):
         self.width, self.height = width, height
+        self.transfer = ThermalTransfer(thermal_levels, thermal_band_softness, thermal_black_point,
+                                        thermal_white_point, thermal_gamma, thermal_softness)
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
         self.pixelation = (sensor_resolution if sensor_texture else 0) if pixelation is None else pixelation
@@ -232,7 +242,7 @@ class Renderer:
         self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale,
                                             stroke=target_stroke, stroke_colors=target_stroke_colors,
                                             blur=self.hud_blurs['target'], opacity=self.hud_opacities['target'],
-                                            flash_opacity=self.hud_opacities['target-flash'])
+                                            flash_opacity=self.hud_opacities['target-flash'], shape=target_shape)
         self.target_flash = target_flash
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
@@ -255,9 +265,11 @@ class Renderer:
         self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         if self.thermal != 'classic':
-            from .thermal import HeatField, CinematicHeatField, SurfaceHeatField
-            field = {'silhouette': HeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField}[self.thermal]
-            self.heat_field = field(width, height, sensor_resolution, seed=seed)
+            from .thermal import LowDetailHeatField, CinematicHeatField, SurfaceHeatField, VeryDetailedHeatField
+            field = {'low-detail': LowDetailHeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField,
+                     'very-detailed': VeryDetailedHeatField}[self.thermal]
+            self.heat_field = field(width, height, sensor_resolution, seed=seed,
+                                    legacy_bands=thermal_levels is None)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
         self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
@@ -487,15 +499,21 @@ class Renderer:
         else:
             rgb = np.asarray(frame, dtype=np.uint8)
             luma = (rgb[..., 0].astype(np.float32) * .2126 + rgb[..., 1] * .7152 + rgb[..., 2] * .0722)
-            luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255).astype(np.uint8)
+            luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255)
+            if self.transfer.levels is None:
+                luma = luma.astype(np.uint8)
         return self.render_field(luma, time, wave=wave, subjects=subjects, targets=targets, shot_id=shot_id, target_static=target_static)
 
     def render_field(self, luma, time, wave=None, subjects=(), *, targets=(), shot_id=None, target_static=False):
         """Color an existing scalar heat field; useful for matched style galleries."""
-        if luma.shape != (self.height, self.width) or luma.dtype != np.uint8:
-            raise ValueError('Heat field must be a uint8 image matching the renderer dimensions')
+        if (luma.shape != (self.height, self.width) or
+            (luma.dtype != np.uint8 and (self.transfer.levels is None or luma.dtype.kind != 'f')) or
+            not np.isfinite(luma).all() or luma.min() < 0 or luma.max() > 255):
+            raise ValueError('Heat field must match the renderer dimensions and contain finite 0–255 values; legacy mode requires uint8')
         # Texture is a display treatment; it must not change the HUD readouts.
         readout_luma = luma
+        if self.transfer.levels is not None:
+            return self.render_graded(luma, time, wave, subjects, targets, shot_id, target_static)
         if self.pixelation or self.grain or self.sensor_texture:
             from .thermal import sensor_size
             size = sensor_size(self.width, self.height, self.pixelation) if self.pixelation else (self.width, self.height)
@@ -517,6 +535,32 @@ class Renderer:
             self.draw_hud(image, readout_luma, time, wave, subjects)
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
             image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static)
+        return self.display_effects(image, time, shot_id)
+
+    def render_graded(self, luma, time, wave, subjects, targets, shot_id, target_static):
+        u = self.transfer.normalize(luma)
+        if self.pixelation:
+            from .thermal import sensor_size
+            size = sensor_size(self.width, self.height, self.pixelation)
+            u = np.asarray(Image.fromarray(u).resize(size, Image.Resampling.BOX)).copy()
+        if self.grain:
+            fixed = np.random.default_rng(self.seed & 0xffffffff).standard_normal(u.shape, dtype=np.float32)
+            rng = np.random.default_rng((self.seed + round(time * 1000)) & 0xffffffff)
+            u = np.clip(u + (fixed * .3 + rng.standard_normal(u.shape, dtype=np.float32) * .7) * self.grain, 0, 1)
+        if self.pixelation:
+            u = np.asarray(Image.fromarray(u).resize((self.width, self.height), Image.Resampling.NEAREST))
+        graded = self.transfer.quantize(u)
+        positions = [s[0] for s in self.colors.stops]
+        rgb = np.stack([np.interp(graded, positions, [s[1][c] for s in self.colors.stops]) for c in range(3)], axis=-1)
+        if self.palette_name in ('yautja', 'ironbow'):
+            rgb *= 1 - (1 - graded[..., None]) ** 4 * .7
+        image = Image.fromarray(np.uint8(np.floor(np.clip(rgb, 0, 255) + .5)))
+        image = highlight_glow(image, u * 255, self.heat_glow, time, self.heat_glow_speed, self.seed,
+                               dark=self.palette[-1].mean() < self.palette[0].mean())
+        if self.hud:
+            self.draw_hud(image, luma, time, wave, subjects)
+            image = self.target_overlay.draw(image, time, targets,
+                        (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static)
         return self.display_effects(image, time, shot_id)
 
     def draw_waveform(self, image, readout_luma, time, wave):

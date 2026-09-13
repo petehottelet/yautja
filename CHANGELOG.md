@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0 — 2026-09-13
+
+- Add Thermal Spectrum — Reference 12 as a named look preset with the frozen eleven-stop palette, twelve soft thermal levels, tonal range, gamma, scalar softness, and clean HUD-free presentation. Expose independent thermal level and grading controls, preserving legacy defaults and explicit option precedence.
+- Add Very Detailed thermal rendering with visible source facial features, hair, and fabric contrast. Rename Silhouette to Low Detail and simplify it to broad soft heat blobs; keep `silhouette` and `semantic` as aliases.
+- Add triangle-with-lock-dots, circular crosshair, iron sights, and five square target variants. Retain the original triangle and share target acquisition, colors, flash, outline, blur, and transparency across all shapes.
+- Add labelled small and large animated GIFs for the new modes, reference treatment, palette, and every target shape; raise the agent skill's minimum runtime to 2.2.
+
 ## 2.1.0 — 2026-09-13
 
 - First PyPI release of the pip-first runtime, with the matching wheel and portable agent skill bundle on GitHub. Includes the 2.0 architecture changes below.

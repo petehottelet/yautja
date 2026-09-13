@@ -155,11 +155,15 @@ class CatalogTests(unittest.TestCase):
         with patch('sys.stdout', new_callable=io.StringIO) as out:
             self.assertEqual(main([str(source), str(output), '--figures', str(catalog), '--target', 'S001-F001,S002-F001',
                                    '--start', '.25', '--duration', '.5', '--fps', '24', '--max-size', '160',
-                                   '--palette', 'abyss', '--motion-blur', '.8', '--crt-vertical-lines', '--heat-glow', '.7']), 0)
+                                   '--palette', 'abyss', '--motion-blur', '.8', '--crt-vertical-lines', '--heat-glow', '.7',
+                                   '--target-shape', 'triangle-dots', '--thermal-levels', '6', '--thermal-band-softness', '.3']), 0)
             report = json.loads(out.getvalue())
         self.assertEqual(report['targets_seen'], ['S001-F001', 'S002-F001'])
         self.assertEqual(report['targets_unseen'], [])
         self.assertEqual(report['target_frames'], 12)
+        self.assertEqual(report['target_shape'], 'triangle-dots')
+        self.assertEqual(report['thermal_levels'], 6)
+        self.assertEqual(report['thermal_band_softness'], .3)
         self.assertTrue(report['audio_preserved'])
         subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-i', str(output), '-f', 'null', '-'], check=True, capture_output=True)
 
