@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1 — 2026-09-13
+
+- Make White Hot's default and palette-matched waveform, glyphs, timecode, callouts, and both target states white. Preserve explicit HUD and target color overrides and refresh its small/large palette GIFs.
+
 ## 2.2.0 — 2026-09-13
 
 - Add Thermal Spectrum — Reference 12 as a named look preset with the frozen eleven-stop palette, twelve soft thermal levels, tonal range, gamma, scalar softness, and clean HUD-free presentation. Expose independent thermal level and grading controls, preserving legacy defaults and explicit option precedence.
