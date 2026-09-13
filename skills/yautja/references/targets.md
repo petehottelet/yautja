@@ -29,7 +29,7 @@ Using a saved catalog with Classic needs only the base runtime. Selecting a segm
 
 ## Target animation and color
 
-Three beveled blades contract into a compact reticle centered on the selected bounding box, with a clear gap through each corner. The landed radius is 39% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
+Three solid-color blades contract into a compact reticle centered on the selected bounding box, with a narrow, clear gap through each corner. The landed radius is 39% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
 
 | Control | Default and range |
 | --- | --- |

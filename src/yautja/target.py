@@ -42,7 +42,7 @@ class TargetOverlay:
         self.seen.update(visible)
         self.frames += 1
         width, height = image.size
-        # Draw at twice output resolution for crisp bevels without jagged edges.
+        # Draw at twice output resolution for crisp edges without jagged pixels.
         overlay = Image.new('RGBA', (width * 2, height * 2))
         draw = ImageDraw.Draw(overlay)
         for item in targets:
@@ -77,7 +77,7 @@ class TargetOverlay:
                 offset = -inward * (1 - ease) * max(width, height) * .25
                 # Terminate each blade well before the vertex: three clearly
                 # open corners, including the white flash and its soft glow.
-                gap = min(radius * .30, max(.8, radius * .24))
+                gap = .70 * min(radius * .30, max(.8, radius * .24))
                 # Parallel cuts at the 60-degree corners keep the gap open
                 # through the entire stroke, rather than pinching shut inside.
                 cutback = gap + thickness * math.sqrt(3)
@@ -86,9 +86,6 @@ class TargetOverlay:
                                      a + direction * cutback + inward * thickness])
                 vertices += np.array([cx, cy]) + offset
                 draw.polygon([tuple(point * 2) for point in vertices], fill=(*color, opacity))
-                # A subtle darker inner bevel follows the selected ink color.
-                bevel = tuple(round(c * .62) for c in color)
-                draw.line([tuple(vertices[2] * 2), tuple(vertices[3] * 2)], fill=(*bevel, opacity), width=max(1, round(thickness * .28)))
         overlay = overlay.resize(image.size, Image.Resampling.LANCZOS)
         glow = overlay.filter(ImageFilter.GaussianBlur(max(.5, width / 640)))
         glow.putalpha(glow.getchannel('A').point(lambda a: round(a * .22)))
