@@ -50,6 +50,12 @@ def variants():
                               'crt_vertical_lines': True, 'crt_strength': .25, 'heat_glow': .65},
         'target-custom': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette',
                           'target_colors': '#31d7bb,#d6fff3', 'target_acquire': .45, 'crt_bleed': .4},
+        'target-outline': {'thermal': 'cinematic', 'target_stroke': 5, 'target_stroke_colors': '#660b12,#687a8d'},
+        'target-blur': {'thermal': 'cinematic', 'hud_blur_elements': 'target=8'},
+        'target-wave-blur': {'thermal': 'cinematic', 'wave_style': 'rorschach',
+                             'wave_width': .14, 'wave_height': 1., 'hud_blur_elements': 'waveform=6'},
+        'target-hud-blur': {'thermal': 'cinematic', 'hud_blur': 3,
+                            'hud_blur_elements': 'waveform=6,target=5,timecode=0'},
         **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
                                'wave_width': .14, 'wave_height': 1.}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow')},

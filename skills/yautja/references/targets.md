@@ -45,7 +45,40 @@ Three solid-color blades contract into a compact reticle centered on the selecte
 yautja "clip.mov" "abyss-target.mp4" --thermal cinematic --palette abyss --figures "figures.json" --target S001-F003 --no-target-flash --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65
 ```
 
+## Reticle stroke and independent HUD blur
+
+Both options are off by default and work for images and videos. The reticle remains solid-colored without a stroke. Its size, blade thickness, acquisition animation, and corner gaps use the existing settings.
+
+| Control | Effect |
+| --- | --- |
+| `--target-stroke 3` | Inward outline width on all three blades, 0–12; 0 disables, bare flag uses 2 |
+| `--target-stroke-colors "#660b12,#687a8d"` | Outline colors for landing and flash; a single hex value uses that color in both states |
+| `--target-stroke-colors auto` | Default: darker shades of the current target colors, following its flash state and HUD theme |
+| `--hud-blur 3` | Shared Gaussian blur radius for all HUD artwork, 0–20; default 0 |
+| `--hud-blur-elements "waveform=6,target=4,timecode=0"` | Independent radius overrides; unspecified elements inherit the shared value and explicit 0 restores sharp artwork |
+
+Stroke widths and blur radii are **reference pixels at a 1080px short edge**. A value of 4 becomes 2 output pixels at 960×540 and 1 at 480×270. The same scaling applies to portrait and still outputs. Very fine outlines may round away at low resolution. Large stroke widths can cover a narrow blade; they never expand its outer boundary or close its corner gaps. Explicit outline colors remain independent of fill colors and can introduce other hues in Virtual Boy when the stroke is enabled. Black Hot's automatic outline remains black; choose an explicit color for contrast.
+
+Available blur keys: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. The `waveform` key affects the trace itself or the selected Rorschach shape. Axis, ticks, and flanking glyph rows have separate controls; they are absent in Rorschach modes. `readout` means the upper-right alien glyph row. `target` softens both landing and flash states, including its optional outline. There is no separate `target-flash` blur key. Changing blur does not enable a disabled timecode, callout, or target.
+
+```bash
+# Soft waveform and target; keep all other HUD artwork sharp.
+yautja "clip.mov" "soft-target.mp4" --figures "figures.json" --target S001-F003 --hud-blur-elements "waveform=6,target=4"
+
+# Blur the HUD as a whole, then restore a sharp timecode and target.
+yautja "clip.mov" "soft-hud.mp4" --timecode --hud-blur 3 --hud-blur-elements "timecode=0,target=0"
+
+# Add an outline with fixed color, while retaining the red/white fill flash.
+yautja "clip.mov" "outlined.mp4" --figures "figures.json" --target S001-F003 --target-stroke 4 --target-stroke-colors "#420910"
+```
+
+HUD blur softens transparent artwork before it is placed on the scene. It does not blur the underlying thermal image, change audio, alter figure tracking, or change the readout values. The existing `--glow` bloom and `--heat-glow` remain separate; CRT bleed, VHS, and motion blur still treat the finished image and can further soften overlays. `--no-hud` hides every stroke and blurred element. Explicit zero settings preserve the current sharp rendering.
+
+Conversion reports record resolved per-element radii in `hud_blur_elements`, the outline width in `target_stroke`, its resolved landing/flash colors in `target_stroke_colors`, and reference units in `hud_effect_units`. Effective blur/stroke values become zero with HUD off; `settings` retains the user's requested values.
+
 ## Independent heat glow, trails, and CRT controls
+
+For HUD-only softness and target outlines, see [reticle stroke and independent HUD blur](#reticle-stroke-and-independent-hud-blur).
 
 | Control | Effect |
 | --- | --- |

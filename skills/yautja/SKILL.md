@@ -78,6 +78,8 @@ For a figure list or a selected tracking triangle, read [targets.md](references/
 
 The three-blade triangle contracts into a compact reticle at the selected figure's center, with solid-color sides and narrow, open corners. It lands in red, then flashes red/white by default; Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
 
+For an optional outline on each target blade, use `--target-stroke 3` (0–12; default 0/off) and optionally `--target-stroke-colors "#660b12,#687a8d"` for landing/flash colors; a single hex color holds both states. Without explicit colors, the outline uses darker shades of the target colors. The stroke is drawn inward to keep the corner gaps open.
+
 Use `--heat-glow 0.6` for moving bloom on hot regions with **any palette**; strength is 0–1 and defaults to 0. `--heat-glow-speed` ranges 0–5 (default 1); 0 freezes the pattern. This is independent of `--glow`, which controls HUD bloom. Use `--motion-blur 0.4` for video frame persistence and `--crt-bleed 0.4` for horizontal phosphor smear; both range 0–1 and default to 0. They affect the picture and HUD, leaving audio unchanged.
 
 Use `--crt-vertical-lines` for vertical CRT stripes, independently of horizontal `--crt-lines`; both can be enabled together. `--crt-strength` controls stripe darkness from 0–1 (default 0.12). The existing sensor preset does not enable these new effects. See [targets.md](references/targets.md#independent-heat-glow-trails-and-crt-controls) for all ranges, aliases, and still/video behavior.
@@ -89,6 +91,8 @@ waveform, scale, glyphs, timecode, callouts, leaders, and target markers, even i
 `--timecode` or `--verbose` is also supplied. Thermal style, colors, textures, and
 the video soundtrack remain active. Waveform analysis is skipped. HUD is on by
 default; `--hud` restores it. This works for both images and videos.
+
+Use `--hud-blur 3` to soften HUD artwork, or `--hud-blur-elements "waveform=6,target=4,timecode=0"` to control elements independently. Each radius is 0–20; explicit 0 keeps an element sharp and omitted elements inherit `--hud-blur` (default 0). Target blur covers both flash states. Blur and target stroke widths use pixels at a 1080px short edge, scaled to the output. Blur is applied to the HUD layers before scene composition, independently of heat glow, HUD bloom, and whole-frame CRT/VHS effects. See [all element keys and examples](references/targets.md#reticle-stroke-and-independent-hud-blur).
 
 Keep Black Hot's black HUD, Abyss's muted cyan, or the standard red/cyan HUD for other palettes unless the user chooses another theme. `--hud-theme muted-cyan` also works with any palette. Use
 `--hud-theme palette` to coordinate every HUD element with the selected thermal

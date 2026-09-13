@@ -15,6 +15,7 @@ from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .waveform import WAVE_STYLES, inkblot_mask
+from .hud import HudPanel, hud_blurs
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -202,7 +203,8 @@ class Renderer:
                  palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True,
                  target_colors=None, target_acquire=.8, target_flash=True, target_flash_rate=1.5, target_scale=1.,
                  motion_blur=0., crt_bleed=0., crt_vertical_lines=False, crt_strength=.12,
-                 heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6):
+                 heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
+                 target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None):
         self.width, self.height = width, height
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
@@ -221,7 +223,12 @@ class Renderer:
         self.target_color_override = parse_target_colors(target_colors)
         if self.target_color_override:
             self.hud_colors['target'], self.hud_colors['target-flash'] = self.target_color_override
-        self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale)
+        self.hud_blur = hud_blur
+        self.hud_blurs = hud_blurs(hud_blur, hud_blur_elements)
+        self.hud_blur_pixels = {key: value * min(width, height) / 1080 for key, value in self.hud_blurs.items()}
+        self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale,
+                                            stroke=target_stroke, stroke_colors=target_stroke_colors,
+                                            blur=self.hud_blurs['target'])
         self.target_flash = target_flash
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
@@ -300,6 +307,13 @@ class Renderer:
             bloom = bloom.point(lambda v: round(v * self.glow))
             overlay = ImageChops.add(overlay, bloom)
         image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
+
+    def hud_panel(self, size, *elements):
+        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements)
+
+    def composite_panel(self, image, panel, x, y):
+        artwork, pad = panel.finish()
+        self.composite(image, artwork, x - pad, y - pad)
 
     def callout_geometry(self):
         if self.callout_segments is None:
@@ -435,16 +449,18 @@ class Renderer:
 
     def annotate(self, image, subjects):
         s = self.scale
-        layer = Image.new(self.overlay_mode, image.size)
-        draw = ImageDraw.Draw(layer)
+        panel = self.hud_panel(image.size, 'leaders', 'markers', 'callouts')
+        leaders = ImageDraw.Draw(panel.layer('leaders'))
+        markers = ImageDraw.Draw(panel.layer('markers'))
+        layer = panel.layer('callouts')
         for item in self.annotation_layout(subjects):
             subject, size, step = item['subject'], item['size'], item['step']
             x, y = item['rect'][:2]
             cx, cy = item['target']
             color = self.hud_ink('callouts', subject.opacity)
-            draw.line([item['target'], item['anchor']], fill=self.hud_ink('leaders', subject.opacity), width=max(1, round(1.5 * s)))
+            leaders.line([item['target'], item['anchor']], fill=self.hud_ink('leaders', subject.opacity), width=max(1, round(1.5 * s)))
             radius = max(1, round(2 * s))
-            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=self.hud_ink('markers', subject.opacity))
+            markers.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=self.hud_ink('markers', subject.opacity))
             for i, pattern in enumerate(self.callout_symbols(subject.track_id)):
                 ink = self.callout_glyph(pattern, size)
                 if self.overlay_mode == 'RGBA':
@@ -453,7 +469,7 @@ class Renderer:
                 else:
                     tile = ImageChops.multiply(Image.merge('RGB', (ink,) * 3), Image.new('RGB', ink.size, color))
                 layer.paste(tile, (x + i * step, y))
-        self.composite(image, layer, 0, 0)
+        self.composite_panel(image, panel, 0, 0)
 
     def render(self, frame, time, wave=None, subjects=(), *, targets=(), shot_id=None, target_static=False):
         if self.display.motion_blur:
@@ -512,12 +528,14 @@ class Renderer:
                 panel.putalpha(mask)
             else:
                 panel = ImageChops.multiply(Image.merge('RGB', (mask,) * 3), Image.new('RGB', mask.size, color))
-            self.composite(image, panel, max(1, round(self.width * .012)), (self.height - height) // 2)
+            group = self.hud_panel(panel.size, 'waveform')
+            group.replace('waveform', panel)
+            self.composite_panel(image, group, max(1, round(self.width * .012)), (self.height - height) // 2)
             stats = [float(readout_luma.mean() / 255), float(readout_luma.max() / 255), float(np.abs(np.diff(readout_luma.astype(np.float32), axis=1)).mean() / 255)]
             return max(10, round(25 * s)), stats
         panel_w = min(self.width, round(110 * s))
-        panel = Image.new(self.overlay_mode, (panel_w, self.height))
-        d = ImageDraw.Draw(panel)
+        panel = self.hud_panel((panel_w, self.height), 'waveform-glyphs', 'waveform-axis', 'waveform-ticks', 'waveform')
+        glyphs = panel.layer('waveform-glyphs')
         size = max(10, round(25 * s))
         gy = max(round(24 * s), round(self.height * .12))
         top, bottom = gy + size + round(6 * s), round(self.height * .84)
@@ -539,8 +557,10 @@ class Renderer:
                 if bounds:
                     left, _, right, _ = bounds
                     tile = tile.crop((left, 0, right, tile.height))
-                panel.paste(tile, (round(anchor - (tile.width - 1) / 2), y))
+                glyphs.paste(tile, (round(anchor - (tile.width - 1) / 2), y))
+        d = ImageDraw.Draw(panel.layer('waveform-axis'))
         d.line((center, top, center, bottom), fill=self.hud_ink('waveform-axis'), width=max(1, round(s)))
+        d = ImageDraw.Draw(panel.layer('waveform-ticks'))
         for i in range(17):
             y = top + (bottom - top) * i / 16
             d.line((10 * s, y, (19 if i % 4 == 0 else 14) * s, y), fill=self.hud_ink('waveform-ticks'))
@@ -554,8 +574,8 @@ class Renderer:
             for i, (lo, hi) in enumerate(zip(low, high)):
                 y = top + (bottom - top) * i / max(1, len(low) - 1)
                 points.extend([(center + amp * lo, y), (center + amp * hi, y)])
-        d.line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
-        self.composite(image, panel, 0, 0)
+        ImageDraw.Draw(panel.layer('waveform')).line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
+        self.composite_panel(image, panel, 0, 0)
         return size, stats
 
     def draw_hud(self, image, readout_luma, time, wave=None, subjects=()):
@@ -565,7 +585,8 @@ class Renderer:
         step, pad = round(25 * s), round(16 * s)
         rw = max(step * 8, round(180 * s))
         rh = size + (round(27 * s) if self.show_timecode else 0) + round(12 * s)
-        right = Image.new(self.overlay_mode, (rw, rh))
+        panel = self.hud_panel((rw, rh), *(['readout', 'timecode'] if self.show_timecode else ['readout']))
+        right = panel.layer('readout')
         reading = round(stats[0] * 9999)
         for i in range(8):
             value = round(stats[i % 3] * 71) if i < 4 else reading // 10 ** (7 - i) % 10
@@ -578,12 +599,13 @@ class Renderer:
                 glyphs = right.crop(bounds)
                 right = Image.new(self.overlay_mode, (rw, rh))
                 right.paste(glyphs, (rw - glyphs.width, bounds[1]))
+                panel.replace('readout', right)
             clock_height = max(6, round(max(9, round(19 * .8 * s)) * .69))
             clock = lcd_timecode(timecode(time + self.timecode_start), clock_height, self.hud_ink('timecode'))
             if clock.width > rw:
                 clock = clock.resize((rw, max(1, round(clock.height * rw / clock.width))), Image.Resampling.LANCZOS)
-            right.paste(clock, (rw - clock.width, size + round(7 * s)))
-        self.composite(image, right, max(0, self.width - rw - pad), pad)
+            panel.layer('timecode').paste(clock, (rw - clock.width, size + round(7 * s)))
+        self.composite_panel(image, panel, max(0, self.width - rw - pad), pad)
         if self.verbose:
             self.annotate(image, subjects)
 
@@ -599,7 +621,8 @@ class Renderer:
             if self.crt_vertical_lines:
                 pixels[:, ::2] *= 1 - self.crt_strength
             image = Image.fromarray(np.uint8(pixels))
-        if self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette') and not self.target_color_override)):
+        if self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette')
+                and not self.target_color_override and not (self.target_overlay.stroke and self.target_overlay.stroke_colors))):
             # This palette is strictly red-only, including glyphs and defects.
             pixels = np.asarray(image).copy()
             pixels[..., 0] = pixels.max(axis=2)

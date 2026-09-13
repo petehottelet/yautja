@@ -19,13 +19,15 @@ from PIL import Image, ImageOps
 
 from . import __version__
 from .render import Renderer, PALETTES
-from .colors import HUD_THEMES, resolve_colors
+from .colors import HUD_THEMES, resolve_colors, hex_color
+from .hud import BLUR_ELEMENTS, hud_blurs
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
-                  'wave_style', 'wave_width', 'wave_height', 'wave_detail')
+                  'wave_style', 'wave_width', 'wave_height', 'wave_detail',
+                  'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements')
 
 
 def target_selection(args, source):
@@ -40,12 +42,19 @@ def extra_report(renderer, selection, *, static=False):
     unseen = sorted(selected - renderer.target_overlay.seen)
     if unseen:
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
+    outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
+                                                            for key in ('target', 'target-flash'))
     return {'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
             'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
             'target_colors': [renderer.colors.report()['hud_colors'][k] for k in ('target', 'target-flash')],
             'target_acquire': renderer.target_overlay.acquire,
             'target_flash': bool(selected and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
             'target_scale': renderer.target_overlay.scale, 'motion_blur': renderer.display.motion_blur,
+            'target_stroke': renderer.target_overlay.stroke if renderer.hud else 0.,
+            'target_stroke_colors': [hex_color(color) for color in outline],
+            'hud_blur': renderer.hud_blur if renderer.hud else 0.,
+            'hud_blur_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_blurs.items()},
+            'hud_effect_units': 'pixels at 1080px short edge, scaled with output size',
             'crt_bleed': renderer.display.crt_bleed, 'crt_vertical_lines': renderer.crt_vertical_lines,
             'crt_strength': renderer.crt_strength, 'heat_glow': renderer.heat_glow, 'heat_glow_speed': renderer.heat_glow_speed,
             'wave_style': renderer.wave_style if renderer.hud else 'off',
@@ -482,6 +491,8 @@ def parser():
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
+    p.add_argument('--hud-blur', type=float, default=0., help='Gaussian softness for all HUD artwork only, 0-20 reference pixels at a 1080px short edge; default 0 (sharp)')
+    p.add_argument('--hud-blur-elements', help='Override blur independently with quoted comma-separated element=radius values, 0-20; explicit 0 keeps an element sharp. Elements: ' + ', '.join(BLUR_ELEMENTS) + '. Target applies to both flash states')
     p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
     p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
@@ -495,6 +506,8 @@ def parser():
     p.add_argument('--target-flash', action=argparse.BooleanOptionalAction, default=True, help='Alternate target colors after landing; --no-target-flash keeps the landing color')
     p.add_argument('--target-flash-rate', type=float, default=1.5, help='Target flash cycles per second, 0-3; 0 holds the landing color')
     p.add_argument('--target-scale', type=float, default=1., help='Size multiplier for the compact reticle centered on the selected figure, 0.25-3; default 1')
+    p.add_argument('--target-stroke', nargs='?', type=float, const=2., default=0., help='Optional inward outline on each target blade, 0-12 reference pixels at a 1080px short edge; bare flag 2, default 0 (off)')
+    p.add_argument('--target-stroke-colors', help='Outline color: one RGB hex color or a landing,flash pair. Omit or use auto for darker shades of the current target colors; requires nonzero --target-stroke to be visible')
     p.add_argument('--motion-blur', type=float, default=0., help='Temporal motion trails/persistence strength, 0-1; 0 disables. Video only; stills have no preceding frames')
     p.add_argument('--crt-bleed', type=float, default=0., help='Horizontal phosphor color spread, 0-1; independent of VHS and CRT lines')
     p.add_argument('--crt-vertical-lines', '--vertical-crt-lines', dest='crt_vertical_lines', action=argparse.BooleanOptionalAction, default=False, help='Vertical CRT columns across image and HUD; combine with horizontal --crt-lines')
@@ -542,8 +555,10 @@ def main(argv=None):
         resolve_colors(PALETTES, palette=args.palette, palette_colors=args.palette_colors,
                        hud_theme=args.hud_theme, hud_colors=args.hud_colors,
                        random_colors=args.random_colors, seed=args.seed)
-        from .target import target_colors
+        from .target import target_colors, parse_stroke_colors
         target_colors(args.target_colors)
+        parse_stroke_colors(args.target_stroke_colors)
+        hud_blurs(args.hud_blur, args.hud_blur_elements)
         if args.list_figures and (args.figures or args.target):
             p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
         if args.hud and bool(args.target) != bool(args.figures):
@@ -586,7 +601,7 @@ def main(argv=None):
         checks += [(getattr(args, key), 0, 1, '--' + key.replace('_', '-')) for key in ('motion_blur', 'crt_bleed', 'crt_strength', 'heat_glow')]
         checks += [(args.heat_glow_speed, 0, 5, '--heat-glow-speed'), (args.target_acquire, .1, 5, '--target-acquire'),
                    (args.target_flash_rate, 0, 3, '--target-flash-rate'), (args.target_scale, .25, 3, '--target-scale'),
-                   (args.wave_detail, 0, 1, '--wave-detail')]
+                   (args.wave_detail, 0, 1, '--wave-detail'), (args.target_stroke, 0, 12, '--target-stroke')]
         if args.wave_width is not None:
             checks.append((args.wave_width, .02, .3, '--wave-width'))
         if args.wave_height is not None:

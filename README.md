@@ -271,6 +271,24 @@ These target examples show seconds 0–3.25 of the source, selecting the foregro
 
 Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or use the `target` and `target-flash` keys with custom HUD colors. Palette-matched and random HUD themes also color targets. `--no-hud` hides them along with every other overlay. [All target controls, bounds, scan details, and effect options](skills/yautja/references/targets.md).
 
+### Reticle stroke and HUD blur
+
+Add an optional outline with `--target-stroke 5`. Choose one outline color or a landing/flash pair with `--target-stroke-colors "#660b12,#687a8d"`; omit the colors to use darker shades of the current target colors. The outline is drawn inward, keeping the corner gaps open. It is off by default (`--target-stroke 0`); the bare flag uses width 2 and the range is 0–12.
+
+`--hud-blur 3` softens all HUD artwork. Use `--hud-blur-elements "waveform=6,target=4,timecode=0"` for independent overrides: omitted elements inherit the shared amount, and explicit 0 keeps an element sharp. Every radius is 0–20, with 0 as the default. Blur and stroke widths are pixels at a **1080px short edge**, scaled with output size. HUD blur affects the artwork before it is placed on the scene, leaving the underlying thermal image sharp.
+
+| Reticle outline · separate flash colors | Target blur only |
+| --- | --- |
+| [![Reticle with an optional colored outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-outline.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-outline.gif) | [![Soft target with crisp waveform, callouts, and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-blur.gif) |
+| `--target-stroke 5 --target-stroke-colors "#660b12,#687a8d"` | `--hud-blur-elements "target=8"` |
+
+| Rorschach waveform blur only | Shared HUD blur · sharp timecode |
+| --- | --- |
+| [![Soft Rorschach waveform with a sharp reticle and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-wave-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-wave-blur.gif) | [![HUD softened by element while its timecode remains sharp](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-hud-blur.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-hud-blur.gif) |
+| `--wave-style rorschach --wave-width 0.14 --wave-height 1 --hud-blur-elements "waveform=6"` | `--hud-blur 3 --hud-blur-elements "waveform=6,target=5,timecode=0"` |
+
+Click any preview for the large GIF. These comparisons use the same 0–3.25-second clip and target selections as the examples above. Blur keys are `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. Target blur applies to both flash states. These controls work for images and videos, alongside HUD bloom, heat glow, and CRT/VHS effects. `--no-hud` hides them all. [Full controls and examples](skills/yautja/references/targets.md#reticle-stroke-and-independent-hud-blur).
+
 ### Segmentation setup
 
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once. Before PyPI publication, use the GitHub install with `[semantic]` or the local-clone command above; after publication:

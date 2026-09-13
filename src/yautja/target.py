@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from .colors import parse_hex
+from .hud import blur_layer
 
 
 def target_colors(value):
@@ -16,15 +17,28 @@ def target_colors(value):
     return tuple(parse_hex(part) for part in parts)
 
 
+def parse_stroke_colors(value):
+    if value is None or value.strip().lower() == 'auto':
+        return None
+    parts = value.split(',')
+    if len(parts) not in (1, 2):
+        raise ValueError('--target-stroke-colors needs one RGB hex color or a landing,flash pair')
+    colors = tuple(parse_hex(part) for part in parts)
+    return colors * 2 if len(colors) == 1 else colors
+
+
 class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
-    def __init__(self, acquire=.8, flash_rate=1.5, scale=1.):
+    def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.):
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
                                        (flash_rate, 0, 3, 'target-flash-rate'),
-                                       (scale, .25, 3, 'target-scale')):
+                                       (scale, .25, 3, 'target-scale'), (stroke, 0, 12, 'target-stroke'),
+                                       (blur, 0, 20, 'target blur')):
             if not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f'--{flag} must be between {low} and {high}')
         self.acquire, self.flash_rate, self.scale = acquire, flash_rate, scale
+        self.stroke, self.blur = stroke, blur
+        self.stroke_colors = parse_stroke_colors(stroke_colors)
         self.active = {}
         self.last_time = None
         self.shot = None
@@ -85,8 +99,15 @@ class TargetOverlay:
                                      b - direction * cutback + inward * thickness,
                                      a + direction * cutback + inward * thickness])
                 vertices += np.array([cx, cy]) + offset
-                draw.polygon([tuple(point * 2) for point in vertices], fill=(*color, opacity))
+                polygon = [tuple(point * 2) for point in vertices]
+                draw.polygon(polygon, fill=(*color, opacity))
+                # Draw inward so an outline never expands the blades into the gaps.
+                stroke_width = round(self.stroke * min(width, height) / 1080 * 2)
+                if stroke_width:
+                    outline = self.stroke_colors[int(flash)] if self.stroke_colors else tuple(round(c * .62) for c in color)
+                    draw.polygon(polygon, outline=(*outline, opacity), width=stroke_width)
         overlay = overlay.resize(image.size, Image.Resampling.LANCZOS)
+        overlay = blur_layer(overlay, self.blur * min(width, height) / 1080)
         glow = overlay.filter(ImageFilter.GaussianBlur(max(.5, width / 640)))
         glow.putalpha(glow.getchannel('A').point(lambda a: round(a * .22)))
         base = Image.alpha_composite(image.convert('RGBA'), glow)
