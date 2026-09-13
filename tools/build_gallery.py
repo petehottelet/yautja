@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 
 from yautja.render import Renderer, PALETTES
+from yautja.figures import TargetSelection
 from yautja.semantic import GroundedSegmenter, SemanticTracker
 from yautja.cli import (AudioAnalysis, ConversionError, audio_filter, binary, dimensions,
                     number, probe, read_frame, run, stop_process)
@@ -27,6 +28,10 @@ def variants():
         'grain': {'grain': .06}, 'pixelation': {'pixelation': 80},
         'crt-lines': {'scanlines': True}, 'sensor-texture': {'sensor_texture': True},
         'vhs': {'vhs': True}, 'vhs-crt': {'vhs': True, 'scanlines': True},
+        'crt-vertical': {'crt_vertical_lines': True, 'crt_strength': .25},
+        'motion-soft': {'motion_blur': .35}, 'motion-strong': {'motion_blur': .85},
+        'bleed-soft': {'crt_bleed': .3}, 'bleed-strong': {'crt_bleed': .85},
+        'heat-glow': {'heat_glow': .75},
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
@@ -38,6 +43,16 @@ def variants():
                           'hud_theme': 'custom',
                           'hud_colors': 'waveform=#ffb347,waveform-axis=#684323,waveform-ticks=#9c6535,waveform-glyphs=#ffd28a,readout=#7fe8ff,timecode=#d6f7ff,callouts=#77ffd0,leaders=#399e83,markers=#ffffff'},
         'colors-random': {'thermal': 'cinematic', 'random_colors': True, 'seed': 137},
+        'glow-abyss': {'thermal': 'cinematic', 'palette': 'abyss', 'heat_glow': .75},
+        'glow-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette', 'heat_glow': .75},
+        'target-lock': {'thermal': 'cinematic'},
+        'target-abyss-steady': {'thermal': 'cinematic', 'palette': 'abyss', 'target_flash': False,
+                              'crt_vertical_lines': True, 'crt_strength': .25, 'heat_glow': .65},
+        'target-custom': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette',
+                          'target_colors': '#31d7bb,#d6fff3', 'target_acquire': .45, 'crt_bleed': .4},
+        **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
+                               'wave_width': .14, 'wave_height': 1.}
+           for style in ('rorschach', 'rorschach-split', 'rorschach-hollow')},
     })
     return result
 
@@ -50,13 +65,23 @@ def main():
     parser.add_argument('--start', type=float, default=.5)
     parser.add_argument('--duration', type=float, default=3.)
     parser.add_argument('--fps', type=int, default=12)
+    parser.add_argument('--wave-gain', type=float, default=1., help='Audio waveform gain for these previews')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--figures', type=Path, help='Saved figure catalog for the target examples')
+    parser.add_argument('--target', action='append', default=[], help='Demo figure IDs, repeated or comma-separated')
     parser.add_argument('--only', nargs='+', choices=[*variants(), 'hero'], help='Regenerate selected previews and their large versions only')
     args = parser.parse_args()
+    if not math.isfinite(args.wave_gain) or not .01 <= args.wave_gain <= 20:
+        parser.error('Waveform gain must be between 0.01 and 20.')
     if not math.isfinite(args.start) or args.start < 0 or not math.isfinite(args.duration) or not .5 <= args.duration <= 10 or not 6 <= args.fps <= 24:
         parser.error('Use a nonnegative start, 0.5–10 seconds, and 6–24 fps.')
     source, destination = args.input.resolve(), args.output_dir.resolve()
     settings = {name: options for name, options in variants().items() if not args.only or name in args.only}
+    selected = None
+    if any(name.startswith('target-') for name in settings):
+        if not args.figures or not args.target:
+            parser.error('Target examples require --figures and --target from a saved scan.')
+        selected = TargetSelection(args.figures, source, args.target)
     include_hero = not args.only or 'hero' in args.only
     settings.update({f'large/{name}': options for name, options in list(settings.items())})
     if include_hero:
@@ -117,11 +142,13 @@ def main():
                         scaled_heat = {(size, mode): np.asarray(Image.fromarray(value).resize(size, Image.Resampling.BILINEAR))
                                        for size in {(r.width, r.height) for r in renderers.values()}
                                        for mode, value in heat.items()}
-                        wave = analysis.waveform(args.start + time) if analysis and not analysis.silent else None
+                        wave = analysis.waveform(args.start + time, gain=args.wave_gain) if analysis and not analysis.silent else None
                         for name, renderer in renderers.items():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
-                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), renderer.thermal)], time, wave, subjects)
+                            targets, shot = selected.at(args.start + time) if selected and name.removeprefix('large/').startswith('target-') else ([], tracker.scene_cuts + 1)
+                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), renderer.thermal)], time, wave, subjects,
+                                                          targets=targets, shot_id=shot)
                             image.save(temp / name / f'{count:04d}.png')
                             if name == 'hero' and count == 0:
                                 image.save(temp / 'poster.png')
@@ -153,6 +180,10 @@ def main():
                     results[name] = {'frames': check.n_frames, 'seconds': duration / 1000,
                                      'size': list(check.size), 'bytes': gif.stat().st_size,
                                      'settings': settings[name], 'colors': renderers[name].colors.report()}
+                    if name.removeprefix('large/').startswith('target-'):
+                        if not renderers[name].target_overlay.seen:
+                            raise ConversionError('No selected targets appeared in the gallery range: ' + name)
+                        results[name]['targets_seen'] = sorted(renderers[name].target_overlay.seen)
             for name in names:
                 if not args.overwrite and (destination / name).exists():
                     raise ConversionError('A gallery output appeared during rendering: ' + name)
@@ -162,7 +193,7 @@ def main():
             if analysis:
                 analysis.close()
     print(json.dumps({'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-                      'source_start': args.start, 'frames': count, 'fps': args.fps,
+                      'source_start': args.start, 'frames': count, 'fps': args.fps, 'wave_gain': args.wave_gain,
                       'tracking': tracker.report(), 'examples': results}, indent=2))
 
 

@@ -21,6 +21,37 @@ from . import __version__
 from .render import Renderer, PALETTES
 from .colors import HUD_THEMES, resolve_colors
 from .thermal import THERMAL_MODES, resolve_thermal
+from .waveform import WAVE_STYLES
+
+EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
+                  'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
+                  'wave_style', 'wave_width', 'wave_height', 'wave_detail')
+
+
+def target_selection(args, source):
+    if not args.hud or not args.target:
+        return None
+    from .figures import TargetSelection
+    return TargetSelection(args.figures, source, args.target)
+
+
+def extra_report(renderer, selection, *, static=False):
+    selected = selection.selected if selection and renderer.hud else set()
+    unseen = sorted(selected - renderer.target_overlay.seen)
+    if unseen:
+        print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
+    return {'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
+            'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
+            'target_colors': [renderer.colors.report()['hud_colors'][k] for k in ('target', 'target-flash')],
+            'target_acquire': renderer.target_overlay.acquire,
+            'target_flash': bool(selected and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
+            'target_scale': renderer.target_overlay.scale, 'motion_blur': renderer.display.motion_blur,
+            'crt_bleed': renderer.display.crt_bleed, 'crt_vertical_lines': renderer.crt_vertical_lines,
+            'crt_strength': renderer.crt_strength, 'heat_glow': renderer.heat_glow, 'heat_glow_speed': renderer.heat_glow_speed,
+            'wave_style': renderer.wave_style if renderer.hud else 'off',
+            'wave_width': renderer.wave_width if renderer.hud and renderer.wave_style != 'trace' else None,
+            'wave_height': renderer.wave_height if renderer.hud and renderer.wave_style != 'trace' else None,
+            'wave_detail': renderer.wave_detail if renderer.hud and renderer.wave_style != 'trace' else None}
 
 
 class ConversionError(RuntimeError):
@@ -169,30 +200,19 @@ def output_paths(args, suffix):
 
 
 def semantic_tracker(args):
-    if args.thermal == 'classic':
+    if args.thermal == 'classic' and not args.list_figures:
         return None
     from .semantic import GroundedSegmenter, SemanticTracker
     print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
-                              surfaces=resolve_thermal(args.thermal) in ('cinematic', 'detailed')), args.detect_interval)
+                              surfaces=not args.list_figures and resolve_thermal(args.thermal) in ('cinematic', 'detailed')), args.detect_interval)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
 
 
-def convert_image(args):
-    started = time.monotonic()
-    source, output = output_paths(args, '.png')
-    video_options = {'start': 0., 'duration': None, 'fps': None, 'audio_stream': 0,
-                     'mute': False, 'wave_window': .6, 'wave_gain': 1.,
-                     'crf': 18, 'preset': 'medium', 'detect_interval': .5}
-    invalid = ['--' + key.replace('_', '-') for key, default in video_options.items()
-               if getattr(args, key) != default]
-    if args.hud and args.waveform == 'audio':
-        invalid.append('--waveform audio')
-    if invalid:
-        raise ConversionError('Still images do not use video timing or audio options: ' + ', '.join(invalid))
+def load_image(source, max_size):
     try:
         with Image.open(source, formats=['JPEG', 'PNG']) as original:
             if getattr(original, 'n_frames', 1) != 1:
@@ -205,12 +225,29 @@ def convert_image(args):
                 frame = Image.alpha_composite(Image.new('RGBA', rgba.size, (0, 0, 0, 255)), rgba).convert('RGB')
             else:
                 frame = oriented.convert('RGB')
-            frame.thumbnail((args.max_size, args.max_size), Image.Resampling.LANCZOS)
+            frame.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
             frame.info.clear()
     except (OSError, Image.DecompressionBombError) as exc:
         raise ConversionError(f'Cannot read a still JPEG or PNG image: {exc}') from exc
     if min(frame.size) < 2:
         raise ConversionError('Image width and height must each be at least 2 pixels.')
+    return frame, input_format, transparency
+
+
+def convert_image(args):
+    started = time.monotonic()
+    source, output = output_paths(args, '.png')
+    selection = target_selection(args, source)
+    video_options = {'start': 0., 'duration': None, 'fps': None, 'audio_stream': 0,
+                     'mute': False, 'wave_window': .6, 'wave_gain': 1.,
+                     'crf': 18, 'preset': 'medium', 'detect_interval': .5}
+    invalid = ['--' + key.replace('_', '-') for key, default in video_options.items()
+               if getattr(args, key) != default]
+    if args.hud and args.waveform == 'audio':
+        invalid.append('--waveform audio')
+    if invalid:
+        raise ConversionError('Still images do not use video timing or audio options: ' + ', '.join(invalid))
+    frame, input_format, transparency = load_image(source, args.max_size)
     timings = {'image_decode_seconds': time.monotonic() - started}
     setup_started = time.monotonic()
     tracker = semantic_tracker(args)
@@ -224,8 +261,10 @@ def convert_image(args):
                         sensor_texture=args.sensor_texture, palette=args.palette,
                         pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                         palette_colors=args.palette_colors, hud_theme=args.hud_theme,
-                        hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud)
-    rendered = renderer.render(frame, 0., subjects=subjects)
+                        hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud,
+                        **{key: getattr(args, key) for key in EFFECT_OPTIONS})
+    targets, shot = selection.at(0.) if selection else ([], None)
+    rendered = renderer.render(frame, 0., subjects=subjects, targets=targets, shot_id=shot, target_static=True)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -254,6 +293,9 @@ def convert_image(args):
                   'hot_objects', 'confidence', 'sensor_resolution', 'timecode_start', 'sensor_texture', 'palette',
                   'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')}}
     report.update(renderer.colors.report())
+    report.update(extra_report(renderer, selection, static=True))
+    report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
+    report['settings']['target'] = args.target
     if tracker:
         report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
         if not subjects:
@@ -272,6 +314,7 @@ def convert_video(args):
     started = time.monotonic()
     timings = {}
     source, output = output_paths(args, '.mp4')
+    selection = target_selection(args, source)
     ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
     data, video = probe(source, ffprobe)
     audios = [s for s in data['streams'] if s['codec_type'] == 'audio']
@@ -327,7 +370,8 @@ def convert_video(args):
                                 sensor_texture=args.sensor_texture, palette=args.palette,
                                 pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                                 palette_colors=args.palette_colors, hud_theme=args.hud_theme,
-                                hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud)
+                                hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud,
+                                **{key: getattr(args, key) for key in EFFECT_OPTIONS})
             intermediate = temp / 'picture.mp4'
             decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
                           *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
@@ -347,7 +391,8 @@ def convert_video(args):
                         wave = analysis.waveform(args.start + t, args.wave_window, args.wave_gain) if mode == 'audio' else None
                         frame = Image.frombytes('RGB', (width, height), raw)
                         subjects = tracker.update(frame, t) if tracker else ()
-                        encoded = renderer.render(frame, t, wave, subjects)
+                        targets, shot = selection.at(args.start + t) if selection else ([], getattr(tracker, 'scene_cuts', None))
+                        encoded = renderer.render(frame, t, wave, subjects, targets=targets, shot_id=shot)
                         encoder.stdin.write(encoded.tobytes())
                         frames += 1
                         if frames % max(1, round(fps * 2)) == 0:
@@ -409,6 +454,9 @@ def convert_video(args):
                               'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs',
                               'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')})
             report.update(renderer.colors.report())
+            report.update(extra_report(renderer, selection))
+            report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
+            report['settings']['target'] = args.target
             if tracker:
                 report['semantic'] = tracker.report()
                 if not tracker.max_subjects:
@@ -431,14 +479,28 @@ def parser():
     p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Three segmented looks: silhouette (soft), cinematic (broad surface patches), detailed (skin/clothing/gear). Classic is the lightweight luminance filter; old semantic/realistic names remain aliases')
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
-    p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (default), palette-matched, custom element colors, or seeded random')
+    p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
-    p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers. Unspecified elements keep standard colors')
+    p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
     p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
     p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
     p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; default off unless sensor texture is enabled')
     p.add_argument('--vhs', action=argparse.BooleanOptionalAction, default=False, help='VHS-style color bleed, horizontal wobble, tape noise, and tracking defects; default off')
+    p.add_argument('--list-figures', action='store_true', help='Scan shots into a JSON figure catalog and HTML contact sheet; optional output defaults beside the input. Requires the semantic runtime')
+    p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target')
+    p.add_argument('--target', action='append', default=[], help='Figure ID from the catalog, e.g. S001-F002; repeat or comma-separate for multiple figures/shots')
+    p.add_argument('--target-colors', help='Two comma-separated RGB hex colors for landing and flash, overriding HUD target colors; default red,white')
+    p.add_argument('--target-acquire', type=float, default=.8, help='Seconds for the three target blades to assemble, 0.1-5')
+    p.add_argument('--target-flash', action=argparse.BooleanOptionalAction, default=True, help='Alternate target colors after landing; --no-target-flash keeps the landing color')
+    p.add_argument('--target-flash-rate', type=float, default=1.5, help='Target flash cycles per second, 0-3; 0 holds the landing color')
+    p.add_argument('--target-scale', type=float, default=1., help='Target size relative to the selected figure, 0.25-3')
+    p.add_argument('--motion-blur', type=float, default=0., help='Temporal motion trails/persistence strength, 0-1; 0 disables. Video only; stills have no preceding frames')
+    p.add_argument('--crt-bleed', type=float, default=0., help='Horizontal phosphor color spread, 0-1; independent of VHS and CRT lines')
+    p.add_argument('--crt-vertical-lines', '--vertical-crt-lines', dest='crt_vertical_lines', action=argparse.BooleanOptionalAction, default=False, help='Vertical CRT columns across image and HUD; combine with horizontal --crt-lines')
+    p.add_argument('--crt-strength', type=float, default=.12, help='Darkening strength of enabled horizontal/vertical CRT lines, 0-1')
+    p.add_argument('--heat-glow', type=float, default=0., help='Animated bloom from synthetic hot regions in any palette, 0-1; independent of HUD --glow')
+    p.add_argument('--heat-glow-speed', type=float, default=1., help='Heat-glow movement speed, 0-5; 0 freezes it. Stills show time zero')
     p.add_argument('--download-models', action='store_true', help='Download pinned Apache-2.0 semantic models once, then exit (no input needed)')
     p.add_argument('--device', choices=['auto', 'cpu', 'cuda'], default='auto', help='Semantic inference device; auto prefers available CUDA')
     p.add_argument('--precision', choices=['fp32', 'bf16'], default='fp32', help='Semantic model precision; bf16 is experimental and requires compatible CUDA')
@@ -451,6 +513,10 @@ def parser():
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
+    p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Standard trace or thick mirrored Rorschach column: filled, split lobes, or hollow pockets')
+    p.add_argument('--wave-width', type=float, help='Rorschach column maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
+    p.add_argument('--wave-height', type=float, help='Rorschach column height as a fraction of the frame, 0.1-1; default 0.96')
+    p.add_argument('--wave-detail', type=float, default=.6, help='Rorschach lobe detail, 0-1; lower is broader/smoother, higher is more intricate')
     p.add_argument('--wave-window', type=float, default=.6, help='Trailing audio window in seconds')
     p.add_argument('--wave-gain', type=float, default=1., help='Audio waveform gain')
     p.add_argument('--audio-stream', type=int, default=0, help='Zero-based audio track used for waveform and output')
@@ -476,6 +542,12 @@ def main(argv=None):
         resolve_colors(PALETTES, palette=args.palette, palette_colors=args.palette_colors,
                        hud_theme=args.hud_theme, hud_colors=args.hud_colors,
                        random_colors=args.random_colors, seed=args.seed)
+        from .target import target_colors
+        target_colors(args.target_colors)
+        if args.list_figures and (args.figures or args.target):
+            p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
+        if args.hud and bool(args.target) != bool(args.figures):
+            p.error('--target and --figures must be used together')
         if args.doctor:
             from .runtime import environment_info, installation_info, semantic_diagnostics
             from .render import load_glyph_font
@@ -488,7 +560,7 @@ def main(argv=None):
                 if 'libx264' not in encoders or ' aac ' not in encoders:
                     raise ConversionError('FFmpeg needs the libx264 and AAC encoders.')
             semantic = semantic_diagnostics(args.device, args.precision)
-            ready = args.thermal == 'classic' or semantic['ready']
+            ready = (args.thermal == 'classic' and not args.list_figures) or semantic['ready']
             print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), 'media_type': media, **tools,
                               'environment': environment_info(), 'installation': installation_info(), 'thermal': args.thermal,
                               'ready': ready, 'semantic': semantic}, indent=2))
@@ -499,16 +571,26 @@ def main(argv=None):
                                       precision=args.precision, download=True)
             print(json.dumps({'downloaded': MODELS, 'device': model.device, 'license': 'Apache-2.0'}, indent=2))
             return 0
-        if not args.input or not args.output:
+        if not args.input or (not args.output and not args.list_figures):
             p.error('input and output are required (or use --doctor)')
         if args.hud and args.verbose and args.thermal == 'classic':
             p.error('--verbose requires --thermal silhouette, cinematic, or detailed')
-        if args.precision != 'fp32' and args.thermal == 'classic':
+        if args.wave_style == 'trace' and (args.wave_width is not None or args.wave_height is not None):
+            p.error('--wave-width and --wave-height require a Rorschach --wave-style')
+        if args.precision != 'fp32' and args.thermal == 'classic' and not args.list_figures:
             p.error('--precision bf16 requires --thermal silhouette, cinematic, or detailed')
         checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),
                   (args.wave_window, .05, 5, '--wave-window'), (args.wave_gain, .01, 20, '--wave-gain'),
                   (args.max_size, 160, 8192, '--max-size'), (args.crf, 0, 51, '--crf'),
                   (args.glow, 0, 1, '--glow'), (args.audio_stream, 0, 100, '--audio-stream')]
+        checks += [(getattr(args, key), 0, 1, '--' + key.replace('_', '-')) for key in ('motion_blur', 'crt_bleed', 'crt_strength', 'heat_glow')]
+        checks += [(args.heat_glow_speed, 0, 5, '--heat-glow-speed'), (args.target_acquire, .1, 5, '--target-acquire'),
+                   (args.target_flash_rate, 0, 3, '--target-flash-rate'), (args.target_scale, .25, 3, '--target-scale'),
+                   (args.wave_detail, 0, 1, '--wave-detail')]
+        if args.wave_width is not None:
+            checks.append((args.wave_width, .02, .3, '--wave-width'))
+        if args.wave_height is not None:
+            checks.append((args.wave_height, .1, 1, '--wave-height'))
         if args.grain is not None:
             checks.append((args.grain, 0, .25, '--grain'))
         if args.pixelation is not None and args.pixelation != 0:
@@ -522,7 +604,11 @@ def main(argv=None):
         for value, lo, hi, name in checks:
             if not math.isfinite(value) or not lo <= value <= hi:
                 p.error(f'{name} must be finite and between {lo} and {hi}')
-        convert(args)
+        if args.list_figures:
+            from .figures import scan
+            scan(args)
+        else:
+            convert(args)
         return 0
     except (ConversionError, ValueError, OSError) as exc:
         print(f'Yautja: {exc}', file=sys.stderr)

@@ -126,18 +126,20 @@ class IndependentEffectsTests(unittest.TestCase):
 
     def test_display_options_do_not_change_heat_or_hud_layers(self):
         field = np.tile(np.arange(256, dtype=np.uint8), (180, 1))
-        saved, layers = field.copy(), []
+        saved = field.copy()
         options = [{}, {'grain': .05}, {'pixelation': 64}, {'scanlines': True},
-                   {'sensor_texture': True}, *({'palette': name} for name in PALETTES)]
-        for settings in options:
-            renderer = Renderer(256, 180, **settings)
-            captured = []
-            with patch.object(renderer, 'composite', side_effect=lambda image, overlay, x, y: captured.append(np.array(overlay))):
-                renderer.render_field(field, 0)
-            for reference, actual in zip(layers, captured):
-                np.testing.assert_array_equal(reference, actual)
-            layers = captured
-            np.testing.assert_array_equal(field, saved)
+                   {'sensor_texture': True}, {'heat_glow': .8}, {'crt_vertical_lines': True}, {'crt_bleed': .7}]
+        for palette in PALETTES:
+            layers = []
+            for settings in options:
+                renderer = Renderer(256, 180, palette=palette, **settings)
+                captured = []
+                with patch.object(renderer, 'composite', side_effect=lambda image, overlay, x, y: captured.append(np.array(overlay))):
+                    renderer.render_field(field, 0)
+                for reference, actual in zip(layers, captured):
+                    np.testing.assert_array_equal(reference, actual)
+                layers = captured
+                np.testing.assert_array_equal(field, saved)
 
     def test_cli_defaults_bare_flags_and_invalid_settings(self):
         defaults = parser().parse_args([])

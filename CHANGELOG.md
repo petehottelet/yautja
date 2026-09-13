@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0 — pending publication
+
+- Add three optional audio-reactive Rorschach waveform shapes: filled mirrored lobes, separated inkblots, and hollow pockets. Expose column width, full-height layout, and lobe complexity; keep the aligned thin trace as the default. Include matched small/large animated examples.
+- Add local figure scans with shot-local IDs, thumbnail contact sheets, source verification, and reusable selections for images and videos. Saved tracks support new frame rates, resolutions, and trims; conversion reports identify selected figures that did or did not appear.
+- Add an animated three-blade target that assembles around selected figures, lands red, and flashes red/white. Expose assembly duration, size, flash rate, flash disable, and independent primary/flash colors. Targets support matched, custom, and random HUD colors, and disappear with `--no-hud`.
+- Add the optional Abyss palette: deep blue-black scenery, amber/white-hot regions, and a muted cyan HUD. Make muted cyan available as its own HUD theme. Keep the original palette and existing defaults.
+- Add independent, adjustable heat glow for every palette with configurable movement speed; retain the separate HUD glow control. Add adjustable video frame persistence, horizontal CRT phosphor bleed, and vertical CRT stripes, with shared line-strength control for either direction. All new effects default off.
+- Document the complete selection workflow and controls in the CLI and thin skill. Raise its minimum runtime to 2.1, and add labelled small/large GIFs for targets, Abyss, glow in several palettes, vertical lines, and softer/stronger trails and bleed.
+
 ## 2.0.0 — pending publication
 
 - **Breaking:** install Yautja with pip/pipx and invoke `yautja` or `python -m yautja`. The copied-script entrypoint has been removed. The package uses a standard source layout, bundled glyph resources and a single version in `pyproject.toml`.

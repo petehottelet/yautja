@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import math
 from importlib.resources import files
 
 import numpy as np
@@ -11,6 +12,9 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from .thermal import resolve_thermal
 from .colors import resolve_colors
+from .display import DisplayEffects, highlight_glow
+from .target import TargetOverlay, target_colors as parse_target_colors
+from .waveform import WAVE_STYLES, inkblot_mask
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -23,6 +27,10 @@ IRONBOW = [(0, (2, 0, 10)), (.18, (12, 15, 70)), (.30, (55, 18, 140)),
 PALETTES = {
     'yautja': STOPS,
     'ironbow': IRONBOW,
+    'abyss': [(0, (5, 12, 15)), (.16, (5, 17, 25)), (.32, (4, 34, 61)),
+              (.43, (8, 62, 85)), (.51, (25, 106, 93)), (.56, (134, 115, 19)),
+              (.60, (158, 41, 3)), (.69, (244, 114, 6)), (.78, (255, 197, 56)),
+              (.86, (255, 243, 159)), (.94, (255, 255, 232)), (1, (255, 255, 255))],
     'redline': [(0, (8, 9, 11)), (.20, (8, 9, 11)), (.27, (12, 16, 30)),
                 (.32, (13, 50, 137)), (.43, (25, 92, 235)), (.52, (36, 110, 248)),
                 (.555, (15, 19, 28)), (.60, (85, 17, 12)), (.68, (175, 24, 16)),
@@ -191,7 +199,10 @@ class Renderer:
     def __init__(self, width, height, *, seed=42, grain=None, glow=.65,
                  show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
                  sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False,
-                 palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True):
+                 palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True,
+                 target_colors=None, target_acquire=.8, target_flash=True, target_flash_rate=1.5, target_scale=1.,
+                 motion_blur=0., crt_bleed=0., crt_vertical_lines=False, crt_strength=.12,
+                 heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6):
         self.width, self.height = width, height
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
@@ -207,6 +218,28 @@ class Renderer:
                                      random_colors=random_colors, seed=seed)
         self.palette_name, self.palette = self.colors.palette_name, self.colors.palette
         self.hud_theme, self.hud_colors = self.colors.hud_theme, self.colors.hud
+        self.target_color_override = parse_target_colors(target_colors)
+        if self.target_color_override:
+            self.hud_colors['target'], self.hud_colors['target-flash'] = self.target_color_override
+        self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale)
+        self.target_flash = target_flash
+        self.display = DisplayEffects(motion_blur, crt_bleed)
+        self.previous_source = None
+        self.crt_vertical_lines, self.crt_strength = crt_vertical_lines, crt_strength
+        self.heat_glow, self.heat_glow_speed = heat_glow, heat_glow_speed
+        if wave_style not in WAVE_STYLES:
+            raise ValueError('Unknown waveform style: ' + wave_style)
+        self.wave_style = wave_style
+        self.wave_width = .12 if wave_width is None else wave_width
+        self.wave_height = .96 if wave_height is None else wave_height
+        self.wave_detail = wave_detail
+        for value, lo, hi, flag in ((self.wave_width, .02, .3, 'wave-width'), (self.wave_height, .1, 1, 'wave-height'),
+                                   (wave_detail, 0, 1, 'wave-detail')):
+            if not math.isfinite(value) or not lo <= value <= hi:
+                raise ValueError(f'--{flag} must be between {lo} and {hi}')
+        for value, high, flag in ((crt_strength, 1, 'crt-strength'), (heat_glow, 1, 'heat-glow'), (heat_glow_speed, 5, 'heat-glow-speed')):
+            if not math.isfinite(value) or not 0 <= value <= high:
+                raise ValueError(f'--{flag} must be between 0 and {high}')
         # Custom ink uses alpha so even black or very dark hex colors remain visible.
         self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' else 'RGB'
         self.annotation_positions = {}
@@ -422,7 +455,12 @@ class Renderer:
                 layer.paste(tile, (x + i * step, y))
         self.composite(image, layer, 0, 0)
 
-    def render(self, frame, time, wave=None, subjects=()):
+    def render(self, frame, time, wave=None, subjects=(), *, targets=(), shot_id=None, target_static=False):
+        if self.display.motion_blur:
+            coarse = np.asarray(frame.convert('L').resize((32, 18)), np.float32)
+            if self.previous_source is not None and np.abs(coarse - self.previous_source).mean() > 38:
+                self.display.reset()
+            self.previous_source = coarse
         # All modes are artistic effects, not actual heat measurement.
         if self.thermal != 'classic':
             luma = self.heat_field.build(frame, subjects)
@@ -430,9 +468,9 @@ class Renderer:
             rgb = np.asarray(frame, dtype=np.uint8)
             luma = (rgb[..., 0].astype(np.float32) * .2126 + rgb[..., 1] * .7152 + rgb[..., 2] * .0722)
             luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255).astype(np.uint8)
-        return self.render_field(luma, time, wave=wave, subjects=subjects)
+        return self.render_field(luma, time, wave=wave, subjects=subjects, targets=targets, shot_id=shot_id, target_static=target_static)
 
-    def render_field(self, luma, time, wave=None, subjects=()):
+    def render_field(self, luma, time, wave=None, subjects=(), *, targets=(), shot_id=None, target_static=False):
         """Color an existing scalar heat field; useful for matched style galleries."""
         if luma.shape != (self.height, self.width) or luma.dtype != np.uint8:
             raise ValueError('Heat field must be a uint8 image matching the renderer dimensions')
@@ -453,12 +491,30 @@ class Renderer:
             luma = np.asarray(Image.fromarray(samples).resize((self.width, self.height), Image.Resampling.NEAREST))
         mapped = self.palette[luma].astype(np.float32)
         image = Image.fromarray(np.uint8(np.clip(mapped, 0, 255)))
+        image = highlight_glow(image, readout_luma, self.heat_glow, time, self.heat_glow_speed, self.seed,
+                               dark=self.colors.palette[-1].mean() < self.colors.palette[0].mean())
         if self.hud:
             self.draw_hud(image, readout_luma, time, wave, subjects)
-        return self.display_effects(image, time)
+            colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
+            image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static)
+        return self.display_effects(image, time, shot_id)
 
-    def draw_hud(self, image, readout_luma, time, wave=None, subjects=()):
+    def draw_waveform(self, image, readout_luma, time, wave):
         s = self.scale
+        if self.wave_style != 'trace':
+            width = max(2, round(self.width * self.wave_width))
+            height = max(2, round(self.height * self.wave_height))
+            signal = np.abs(procedural_wave(time, self.seed)) if wave is None else np.maximum(np.abs(wave[0]), np.abs(wave[1]))
+            mask = inkblot_mask(width, height, signal, time, style=self.wave_style, detail=self.wave_detail, seed=self.seed)
+            color = self.hud_colors['waveform']
+            if self.overlay_mode == 'RGBA':
+                panel = Image.new('RGBA', mask.size, (*color, 0))
+                panel.putalpha(mask)
+            else:
+                panel = ImageChops.multiply(Image.merge('RGB', (mask,) * 3), Image.new('RGB', mask.size, color))
+            self.composite(image, panel, max(1, round(self.width * .012)), (self.height - height) // 2)
+            stats = [float(readout_luma.mean() / 255), float(readout_luma.max() / 255), float(np.abs(np.diff(readout_luma.astype(np.float32), axis=1)).mean() / 255)]
+            return max(10, round(25 * s)), stats
         panel_w = min(self.width, round(110 * s))
         panel = Image.new(self.overlay_mode, (panel_w, self.height))
         d = ImageDraw.Draw(panel)
@@ -500,6 +556,11 @@ class Renderer:
                 points.extend([(center + amp * lo, y), (center + amp * hi, y)])
         d.line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
         self.composite(image, panel, 0, 0)
+        return size, stats
+
+    def draw_hud(self, image, readout_luma, time, wave=None, subjects=()):
+        s = self.scale
+        size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.
         step, pad = round(25 * s), round(16 * s)
         rw = max(step * 8, round(180 * s))
@@ -526,15 +587,19 @@ class Renderer:
         if self.verbose:
             self.annotate(image, subjects)
 
-    def display_effects(self, image, time):
+    def display_effects(self, image, time, shot_id=None):
         # Tape/CRT treatments affect the final display, including the HUD.
+        image = self.display.apply(image, time, shot_id)
         if self.vhs:
             image = vhs_frame(image, time, self.seed)
-        if self.scanlines:
+        if self.scanlines or self.crt_vertical_lines:
             pixels = np.asarray(image, dtype=np.float32).copy()
-            pixels[::2] *= .88
+            if self.scanlines:
+                pixels[::2] *= 1 - self.crt_strength
+            if self.crt_vertical_lines:
+                pixels[:, ::2] *= 1 - self.crt_strength
             image = Image.fromarray(np.uint8(pixels))
-        if self.palette_name == 'virtualboy' and (not self.hud or self.hud_theme in ('standard', 'palette')):
+        if self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette') and not self.target_color_override)):
             # This palette is strictly red-only, including glyphs and defects.
             pixels = np.asarray(image).copy()
             pixels[..., 0] = pixels.max(axis=2)

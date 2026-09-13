@@ -18,8 +18,10 @@ HUD_DEFAULTS = {
     'callouts': (65, 232, 239),
     'leaders': (65, 232, 239),
     'markers': (65, 232, 239),
+    'target': (255, 48, 43),
+    'target-flash': (255, 255, 255),
 }
-HUD_THEMES = ('standard', 'palette', 'custom', 'random')
+HUD_THEMES = ('standard', 'palette', 'muted-cyan', 'custom', 'random')
 
 
 def parse_hex(value):
@@ -118,6 +120,11 @@ def resolve_colors(palettes, *, palette='auto', palette_colors=None, hud_theme='
         table *= 1 - (1 - pos[:, None]) ** 4 * .7
     table = np.uint8(np.clip(table, 0, 255))
     hud = HUD_DEFAULTS.copy()
+    if hud_theme == 'muted-cyan' or (hud_theme == 'standard' and name == 'abyss'):
+        hud.update({key: (38, 112, 133) for key in hud if key not in ('target', 'target-flash')})
+        hud.update(timecode=(80, 157, 171), callouts=(54, 133, 149))
+        hud['waveform-axis'] = (13, 55, 77)
+        hud['waveform-ticks'] = (22, 73, 95)
     if hud_theme == 'palette':
         def sample(position):
             rgb = table[round(position * 255)].astype(float)
@@ -131,6 +138,7 @@ def resolve_colors(palettes, *, palette='auto', palette_colors=None, hud_theme='
         hud['waveform-glyphs'] = primary
         hud['waveform-axis'] = tuple(round(c * .36) for c in primary)
         hud['waveform-ticks'] = tuple(round(c * .43) for c in primary)
+        hud['target'], hud['target-flash'] = primary, light
     elif hud_theme == 'custom':
         hud.update(hud_hexes(hud_colors))
     elif hud_theme == 'random':

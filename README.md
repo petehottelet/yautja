@@ -23,7 +23,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 
 [![Cinematic thermal look in the original Yautja palette, with broad warm regions, shaded cyan glyph callouts, and compact LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hero.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif)
 
-A three-second loop from generated jungle-explorer footage, using **Cinematic** detail and the **original Yautja palette**, with texture off. The waveform follows the source audio; GIFs are silent. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png). The gallery reflects the 2.0 source, including the centered waveform. The older [1.0 demo with sound](https://github.com/petehottelet/yautja/releases/download/v1.0.0/yautja-demo.mp4) uses the previous renderer.
+A three-second loop from generated jungle-explorer footage, using **Cinematic** detail and the **original Yautja palette**, with texture off. The waveform follows the source audio; GIFs are silent. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png). The gallery reflects the 2.x source, including the centered waveform. The older [1.0 demo with sound](https://github.com/petehottelet/yautja/releases/download/v1.0.0/yautja-demo.mp4) uses the previous renderer.
 
 ## Install the agent skill
 
@@ -51,7 +51,7 @@ The effect uses image segmentation and synthetic color fields, with seeded varia
 
 Python 3.10+ is required. For videos, also install [FFmpeg](https://ffmpeg.org/download.html) with ffprobe on PATH. Images do not need FFmpeg.
 
-**2.0 build status:** the installable package and skill bundle are built from this source. The first PyPI publication is gated on maintainer setup. Install directly from GitHub in an isolated environment today (Git required):
+**2.1 build status:** the installable package and skill bundle are built from this source. The first PyPI publication is gated on maintainer setup. Install directly from GitHub in an isolated environment today (Git required):
 
 ```bash
 python -m venv .venv-yautja
@@ -70,7 +70,7 @@ python -m venv .venv-yautja
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-After the first PyPI release, the standard install is `pipx install "yautja>=2,<3"` or `pipx install "yautja[semantic]>=2,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+After the first PyPI release, the standard install is `pipx install "yautja>=2.1,<3"` or `pipx install "yautja[semantic]>=2.1,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -125,6 +125,17 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 | `--palette amber-phosphor` | `--palette white-hot` | `--palette black-hot` |
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
+
+### Abyss and animated heat glow
+
+**Abyss** uses deep blue-black scenery, amber-to-white-hot regions, and a subdued cyan HUD. Glow is a separate option and is off by default, including with Abyss.
+
+| Abyss · clean | Abyss · heat glow |
+| --- | --- |
+| [![Abyss palette with muted cyan HUD and no glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-abyss.gif) | [![Abyss palette with moving glow on the hot regions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/glow-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/glow-abyss.gif) |
+| `--palette abyss` | `--palette abyss --heat-glow 0.75` |
+
+`--hud-theme muted-cyan` makes the same subdued HUD available with any palette. Selecting `--hud-theme palette` instead matches its colors to that palette's ramp.
 
 ### Turn the HUD off
 
@@ -197,12 +208,75 @@ python -m yautja "clip.mov" "outputs/clip-virtualboy.mp4" --thermal silhouette -
 
 All comparison GIFs use the same three-second slice at 12 fps, with the original audio driving the waveform. Embedded previews are 480×270; click one to open its **960×540 large version**, rendered with HUD and textures at that size. The hero uses 640×360. They compare styling choices, not model accuracy. The source footage stays local.
 
+### Heat glow, vertical CRT lines, and adjustable trails
+
+**Heat glow works with every palette.** Set `--heat-glow` from **0–1** (default 0), and `--heat-glow-speed` from **0–5** (default 1). A speed of 0 freezes the glow pattern. It brightens and diffuses hot regions before the HUD is added; inverted Black Hot uses dark diffusion. The existing `--glow` setting still controls HUD bloom independently.
+
+| Original palette · heat glow | Green Phosphor · heat glow |
+| --- | --- |
+| [![Original Yautja palette with moving heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-heat-glow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-heat-glow.gif) | [![Green Phosphor with palette-matched HUD and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/glow-green.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/glow-green.gif) |
+| `--heat-glow 0.75` | `--palette green-phosphor --hud-theme palette --heat-glow 0.75` |
+
+**Vertical CRT lines** can be enabled independently or together with horizontal lines. `--crt-strength` sets their darkness from **0–1** (default 0.12); 0 hides them. These stripes affect the complete picture, including the HUD.
+
+[![Vertical CRT lines at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-vertical.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-vertical.gif)
+
+`--crt-vertical-lines --crt-strength 0.25` · add `--crt-lines` for both directions.
+
+**Motion blur** adds temporal frame persistence: higher values leave longer trails on moving subjects and HUD details. It resets at detected cuts and needs consecutive video frames; stills have no motion trail. **CRT bleed** adds horizontal phosphor smear to both images and videos. Both strengths range from **0–1**, default to 0, and leave the soundtrack unchanged.
+
+| Softer motion trails | Stronger motion trails |
+| --- | --- |
+| [![Softer temporal motion trails](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-motion-soft.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-motion-soft.gif) | [![Stronger temporal motion trails](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-motion-strong.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-motion-strong.gif) |
+| `--motion-blur 0.35` | `--motion-blur 0.85` |
+
+| Softer CRT bleed | Stronger CRT bleed |
+| --- | --- |
+| [![Softer horizontal CRT phosphor bleed](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-bleed-soft.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-bleed-soft.gif) | [![Stronger horizontal CRT phosphor bleed](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-bleed-strong.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-bleed-strong.gif) |
+| `--crt-bleed 0.3` | `--crt-bleed 0.85` |
+
+All of these controls are independent of VHS, grain, pixelation, and the sensor-texture preset. Click each preview for the large animated GIF.
+
+### Rorschach waveforms
+
+For a thick, full-height, mirrored inkblot display, choose one of three waveform transformations. These examples use **Redline**, with `--wave-width 0.14 --wave-height 1 --wave-gain 4` (extra audio gain for this quiet clip). The occupied width follows the soundtrack; GIFs are silent.
+
+| Filled · broad connected lobes | Split · separated inkblots | Hollow · dark interior pockets |
+| --- | --- | --- |
+| [![Filled mirrored Rorschach waveform spanning the image height](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach.gif) | [![Separated mirrored inkblots responding to the soundtrack](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-split.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-split.gif) | [![Hollow mirrored waveform lobes with dark pockets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-hollow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-hollow.gif) |
+| `--wave-style rorschach` | `--wave-style rorschach-split` | `--wave-style rorschach-hollow` |
+
+`--wave-width` sets maximum width as a fraction of the frame (0.02–0.3, default 0.12); `--wave-height` sets height (0.1–1, default 0.96). `--wave-detail` goes from broad and smooth at 0 to intricate at 1 (default 0.6). The shapes mirror, smooth, and compress waveform energy into slowly moving contours, making quiet ambience visible while still reacting to volume. Silent pauses within audible tracks stay empty; the existing fallback for an absent or entirely silent soundtrack remains procedural.
+
+The original `--wave-style trace` stays the default. Rorschach replaces the left trace, scale, and flanking glyph rows. It uses the existing waveform color, works with all HUD themes, and leaves timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
+
+### Choose a figure and add a target
+
+Scan a clip or still to get a **shot-by-shot figure list**, thumbnails, and reusable IDs. Scanning needs the semantic setup below. Open the generated contact sheet, choose an ID, then render:
+
+```bash
+yautja "clip.mov" "figures.json" --list-figures
+# Open figures.html; select an ID from that scan.
+yautja "clip.mov" "targeted.mp4" --thermal cinematic --figures "figures.json" --target S001-F003
+```
+
+The saved catalog belongs to the exact source file. Reuse it for different palettes, resolutions, frame rates, or trims; select additional shot IDs explicitly when a figure reappears after a cut. IDs are detected tracks, and detection can miss or swap figures during occlusion. Inspect the contact sheet and output. `targets_seen` and `targets_unseen` in the report confirm which selections appeared.
+
+| Assemble and flash · red/white | Abyss · steady target + vertical CRT | Custom target colors |
+| --- | --- | --- |
+| [![Three blades assemble around a selected explorer and flash red and white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-lock.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-lock.gif) | [![Abyss with steady red target, vertical CRT lines, and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-abyss-steady.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-abyss-steady.gif) | [![Green palette with a custom teal and pale mint target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-custom.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-custom.gif) |
+| Default target animation | `--palette abyss --no-target-flash --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65` | `--palette green-phosphor --hud-theme palette --target-colors "#31d7bb,#d6fff3" --target-acquire 0.45 --crt-bleed 0.4` |
+
+These target examples show seconds 0–3.25 of the source, selecting the foreground explorer separately in the first two shots. The triangle assembles in **0.8 seconds**, lands red, then flashes red/white at **1.5 cycles per second**. Set `--target-acquire`, `--target-scale`, and `--target-flash-rate` to change timing and size. `--no-target-flash` keeps the assembly and holds red; equal primary/flash colors work too. Stills display the assembled triangle immediately.
+
+Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or use the `target` and `target-flash` keys with custom HUD colors. Palette-matched and random HUD themes also color targets. `--no-hud` hides them along with every other overlay. [All target controls, bounds, scan details, and effect options](skills/yautja/references/targets.md).
+
 ### Segmentation setup
 
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once. Before PyPI publication, use the GitHub install with `[semantic]` or the local-clone command above; after publication:
 
 ```bash
-python -m pip install "yautja[semantic]>=2,<3"
+python -m pip install "yautja[semantic]>=2.1,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
@@ -226,7 +300,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2,<3"` (retain the semantic extra when used). Before PyPI publication, upgrade from the same GitHub source URL. Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.1,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.1,<3"` (retain the semantic extra when used). Before PyPI publication, upgrade from the same GitHub source URL. Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 
@@ -293,9 +367,13 @@ Every benchmark run starts a fresh process and reloads models. Operating-system 
 The generated demo source is kept locally in the ignored `00_project_files/` folder and is not included in a clone. With the semantic environment and cached models ready:
 
 ```bash
-python -m tools.build_gallery "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --overwrite
+yautja "00_project_files/create_a_video_of_explorers_wa.mp4" "outputs/figures.json" --list-figures --fps 12 --max-size 640 --device cuda
+# Inspect outputs/figures.html and use the IDs from your scan.
+python -m tools.build_gallery "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --figures outputs/figures.json --target S001-F003,S002-F002,S003-F002 --overwrite
+python -m tools.build_gallery "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --figures outputs/figures.json --target S001-F003,S002-F002 --start 0 --duration 3.25 --only target-lock target-abyss-steady target-custom --overwrite
+python -m tools.build_gallery "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --wave-gain 4 --only waveform-rorschach waveform-rorschach-split waveform-rorschach-hollow --overwrite
 ```
 
-The builder processes seconds 0.5–3.5 once, shares tracked masks and heat fields across matched variants, and exports all labelled examples into `assets/examples/`, with larger versions in `assets/examples/large/`. Add `--only colors-matched-green texture-crt-lines` to regenerate selected previews and their large versions. It applies texture at the final display size so GIF downsampling does not erase grain or scanlines. It verifies animation timing before replacing the GIFs. The source and temporary decoded frames are never included in the skill archive. The helper is for short SDR gallery clips; use the main converter for normal images and videos.
+The first gallery command processes seconds 0.5–3.5 once, shares tracked masks and heat fields across matched variants, and exports all labelled examples into `assets/examples/`, with larger versions in `assets/examples/large/`. Add `--only colors-matched-green texture-crt-lines` to regenerate selected previews and their large versions. The second gallery command gives target acquisition and flashing a longer first shot (seconds 0–3.25); the third raises audio gain for the Rorschach comparisons. It applies texture at the final display size so GIF downsampling does not erase grain or scanlines. It verifies animation timing before replacing the GIFs. The source and temporary decoded frames are never included in the skill archive. The helper is for short SDR gallery clips; use the main converter for normal images and videos.
 
 </details>

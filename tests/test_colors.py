@@ -57,12 +57,15 @@ class ColorTests(unittest.TestCase):
         field = np.full((360, 640), 100, np.uint8)
         all_green = ','.join(f'{key}=#00ff00' for key in HUD_DEFAULTS)
         options = dict(hud_theme='custom', hud_colors=all_green, glow=0, verbose=True, show_timecode=True)
-        original = Renderer(640, 360, **options)
-        baseline = np.asarray(original.render_field(field, .5, subjects=subjects))
         for key in HUD_DEFAULTS:
             with self.subTest(element=key):
+                original = Renderer(640, 360, **options)
                 renderer = Renderer(640, 360, **{**options, 'hud_colors': all_green.replace(f'{key}=#00ff00', f'{key}=#0000ff')})
-                result = np.asarray(renderer.render_field(field, .5, subjects=subjects))
+                targets = [{'id': 'S001-F001', 'bbox': [.35, .28, .58, .83]}]
+                times = (0, .3, .6, .9, 1.2, 1.4) if key == 'target-flash' else (0, .3, .6, .9)
+                for time in times:
+                    baseline = np.asarray(original.render_field(field, time, subjects=subjects, targets=targets))
+                    result = np.asarray(renderer.render_field(field, time, subjects=subjects, targets=targets))
                 self.assertGreater(np.count_nonzero(result != baseline), 0)
                 # Recoloring never alters the thermal ramp or the glyph sequence/layout.
                 np.testing.assert_array_equal(renderer.palette, original.palette)
@@ -139,7 +142,7 @@ class ColorTests(unittest.TestCase):
                 with self.subTest(options=options), patch('sys.stdout', new_callable=io.StringIO) as report:
                     self.assertEqual(main([str(source), str(root / 'out.png'), '--overwrite', '--timecode', *options]), 0)
                     data = json.loads(report.getvalue())
-                self.assertEqual(len(data['hud_colors']), 9)
+                self.assertEqual(set(data['hud_colors']), set(HUD_DEFAULTS))
                 self.assertGreaterEqual(len(data['palette_stops']), 2)
                 with Image.open(root / 'out.png') as image:
                     self.assertEqual(image.size, (320, 180))

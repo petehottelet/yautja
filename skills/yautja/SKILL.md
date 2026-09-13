@@ -1,17 +1,17 @@
 ---
 name: yautja
-description: Re-skin local images and videos with Yautja thermal-style silhouettes, cinematic heat patches, or detailed surface segmentation. Use for sci-fi palettes, red-only Virtual Boy, alien glyphs, optional grain, chunky pixels, CRT lines, or VHS styling. For entertainment only; colors are generated, not measured temperatures.
+description: Re-skin local images and videos with Yautja thermal-style silhouettes, cinematic heat patches, or detailed surface segmentation. Use for sci-fi palettes, shot-by-shot figure lists and animated targets, alien glyphs, Rorschach inkblot waveforms, adjustable heat glow, motion trails, grain, chunky pixels, horizontal or vertical CRT lines, and VHS styling. For entertainment only; colors are generated, not measured temperatures.
 ---
 
 # Yautja
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.1,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2,<3` for the three segmented looks, or `yautja>=2,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.1,<3` for the three segmented looks, or `yautja>=2.1,<3` for Classic. A base pipx install does not include segmentation.
 
 The first PyPI publication needs maintainer setup. Until it is available, install the built release wheel or the GitHub source as described in the runtime guide; do not substitute a similarly named package.
 
@@ -59,6 +59,7 @@ Original **Yautja** colors are the default in every mode, including Detailed. `-
 
 - `--palette yautja`: the original cold blue/cyan through green, yellow, and red.
 - `--palette ironbow`: purple/red/orange with yellow-white highlights.
+- `--palette abyss`: deep blue-black scenery, amber-to-white-hot regions, and a muted cyan HUD. Heat glow remains a separate option.
 - `--palette redline`: near-black shadows, vivid blue cooler regions, dominant red warmth, and restrained pink highlights for a movie-style red/blue/black treatment.
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.
 - `--palette green-phosphor`: a green night-vision-style display.
@@ -71,6 +72,16 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 
 `--sensor-texture` remains a combined preset: grain 0.035, pixels at `--sensor-resolution` (default 256), CRT lines, and light intensity quantization. It does not enable VHS. Individual grain/pixelation/CRT settings override their preset components. `--no-sensor-texture` turns off the preset; explicitly enabled individual effects remain active. For completely clean output, omit all effects or pass `--no-sensor-texture --grain 0 --pixelation 0 --no-crt-lines --no-vhs`.
 
+## Figure selection and optional glow
+
+For a figure list or a selected tracking triangle, read [targets.md](references/targets.md). First scan with `yautja "clip.mov" "figures.json" --list-figures` using cached semantic models, then inspect the generated contact sheet. Resolve the user's chosen figure to its shot-local ID and render with `--figures "figures.json" --target S001-F003`. Reuse that catalog for later color/effect changes. IDs are detected tracks, not identities. Check `targets_seen` and `targets_unseen` in the conversion report.
+
+The three-blade triangle assembles in red, then flashes red/white by default. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Stills show the landed triangle. HUD off also suppresses selected targets.
+
+Use `--heat-glow 0.6` for moving bloom on hot regions with **any palette**; strength is 0–1 and defaults to 0. `--heat-glow-speed` ranges 0–5 (default 1); 0 freezes the pattern. This is independent of `--glow`, which controls HUD bloom. Use `--motion-blur 0.4` for video frame persistence and `--crt-bleed 0.4` for horizontal phosphor smear; both range 0–1 and default to 0. They affect the picture and HUD, leaving audio unchanged.
+
+Use `--crt-vertical-lines` for vertical CRT stripes, independently of horizontal `--crt-lines`; both can be enabled together. `--crt-strength` controls stripe darkness from 0–1 (default 0.12). The existing sensor preset does not enable these new effects. See [targets.md](references/targets.md#independent-heat-glow-trails-and-crt-controls) for all ranges, aliases, and still/video behavior.
+
 ## HUD and custom colors
 
 Use `--no-hud` when the user wants only the thermal image: it hides the entire
@@ -79,7 +90,7 @@ waveform, scale, glyphs, timecode, callouts, leaders, and target markers, even i
 the video soundtrack remain active. Waveform analysis is skipped. HUD is on by
 default; `--hud` restores it. This works for both images and videos.
 
-Keep the standard red/cyan HUD unless the user chooses another theme. Use
+Keep the standard red/cyan HUD, or Abyss's muted cyan, unless the user chooses another theme. `--hud-theme muted-cyan` also works with any other palette. Use
 `--hud-theme palette` to coordinate every HUD element with the selected thermal
 palette, such as `--palette green-phosphor --hud-theme palette` for greens.
 Use `--palette custom --palette-colors "#000000,#0033ff,#ff2200"` for 2–16
@@ -95,6 +106,8 @@ a new set. Preserve the resolved hex colors and seed from the JSON report when
 the user wants to reuse a result.
 
 ## Defaults and constraints
+
+For a thick, mirrored, nearly full-height waveform, use `--wave-style rorschach` (filled), `rorschach-split` (separated lobes), or `rorschach-hollow` (dark pockets). The default remains `trace`. Set Rorschach width/height with `--wave-width 0.14 --wave-height 1` as fractions of the frame, and complexity with `--wave-detail` from 0–1. The waveform uses its existing audio/procedural source and color; it replaces only the left trace, scale, and flanking glyph rows. Read [waveform details](references/targets.md#rorschach-waveforms) for ranges and examples.
 
 - Segmentation uses the `semantic` extra and the explicit `--download-models` command once. Conversions use cached weights only. `--verbose` attaches glyph annotations in all three segmented looks. Keep model dependencies under their own licenses as documented in [dependencies.md](references/dependencies.md).
 - For an update or version check, use `yautja --version` and [the same-environment update instructions](references/runtime.md#updates). Keep conversion runs on the installed version unless an update is requested or necessary for the task. Future skill features must raise the minimum compatible minor version or be explicitly gated on CLI support.

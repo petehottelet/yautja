@@ -66,6 +66,14 @@ def check_runtime(python, env, cwd, prefix):
     still = json.loads(run(shlex.split(image_command), cwd, image_env))
     assert still['frames'] == 1 and still['media_type'] == 'image'
     run([python, '-c', "from PIL import Image; im=Image.open('photo-yautja.png'); assert im.size==(320,180); im.verify()"], cwd, env)
+    effects = json.loads(run(['yautja', 'photo.jpg', 'effects.png', '--palette', 'abyss', '--heat-glow', '.6',
+                              '--heat-glow-speed', '0', '--crt-vertical-lines', '--crt-strength', '.25',
+                              '--crt-bleed', '.4', '--no-target-flash', '--wave-style', 'rorschach-hollow',
+                              '--wave-width', '.14', '--wave-height', '1'], cwd, image_env))
+    assert effects['palette'] == 'abyss' and effects['heat_glow'] == .6 and effects['crt_vertical_lines']
+    assert effects['crt_bleed'] == .4 and effects['targets'] == []
+    assert effects['hud_colors']['waveform'] == '#267085'
+    assert effects['wave_style'] == 'rorschach-hollow' and effects['wave_height'] == 1
     print(f'Passed isolated install and image/video conversion: {prefix.name}')
 
 

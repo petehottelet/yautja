@@ -20,7 +20,11 @@ python -m yautja "photo.jpg" "ironbow.png" --palette ironbow --hud-theme palette
 palette, with dimmer scale lines. Green Phosphor uses greens; Amber Phosphor uses
 ambers; White Hot and Black Hot use gray/white HUD ink. It also works with custom
 and random thermal palettes. `--hud-theme standard` retains the familiar red/cyan
-HUD. Matching is optional, not a change to the default.
+HUD, with a muted cyan default for the Abyss palette. `--hud-theme muted-cyan`
+selects that subdued theme with any palette. Abyss maps blue-black scenery through
+amber and white-hot regions. Matching remains optional; the original Yautja palette
+and HUD defaults are unchanged. Heat glow is independent: add `--heat-glow 0.6`
+to any palette, and adjust movement with `--heat-glow-speed` (0 freezes it).
 
 ## Custom thermal palette
 
@@ -49,8 +53,10 @@ antialiasing, opacity, and glow still apply.
 | `callouts` | Glyph labels attached to segmented subjects |
 | `leaders` | Lines from labels to subjects |
 | `markers` | Small circles at the target endpoints |
+| `target` | Selected three-blade triangle's primary/landing color |
+| `target-flash` | Selected triangle's alternate flash color |
 
-Full example, with an independent thermal palette and every HUD element assigned:
+Example with an independent thermal palette and the usual HUD elements assigned:
 
 ```bash
 python -m yautja "clip.mov" "custom.mp4" --thermal cinematic --verbose --timecode --palette custom --palette-colors "#020518,#173d8f,#10b7ad,#fbad43,#fff1c7" --hud-theme custom --hud-colors "waveform=#ffb347,waveform-axis=#684323,waveform-ticks=#9c6535,waveform-glyphs=#ffd28a,readout=#7fe8ff,timecode=#d6f7ff,callouts=#77ffd0,leaders=#399e83,markers=#ffffff"
@@ -61,7 +67,12 @@ Standard, matched, and random HUD themes retain the existing luminous blending.
 Glow and VHS/CRT effects can alter final pixel values; use `--glow 0` and omit
 those effects when checking exact solid ink colors. Virtual Boy stays entirely
 red-only with standard/matched HUD themes. Explicit custom/random HUD themes
-allow other HUD colors with its red thermal palette.
+or `--target-colors` allow other HUD colors with its red thermal palette.
+
+Selected triangles use `target` and `target-flash`, including in matched and random
+themes. `--target-colors "#ff302b,#ffffff"` overrides both keys directly.
+Use `--no-target-flash` or equal colors to keep the primary color after assembly.
+See [targets.md](targets.md) for scanning, selecting figures, animation, and display effects.
 
 ## Random colors
 
