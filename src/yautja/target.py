@@ -55,13 +55,15 @@ class TargetOverlay:
             radius = max((x1 - x0) * width * .8, (y1 - y0) * height * .62, 12) * self.scale
             # Lock onto the figure's center with a compact reticle, rather than
             # enclosing its full silhouette. Keep the broad acquisition sweep.
-            radius = min(radius, max(width, height) * .65) * .30
-            radius += (max(width, height) * .75 - radius) * (1 - ease)
+            lock_radius = min(radius, max(width, height) * .65) * .30
+            stroke_radius = lock_radius + (max(width, height) * .75 - lock_radius) * (1 - ease)
+            radius = stroke_radius + lock_radius * .30 * ease
             angle = -.17 * (1 - ease)
             points = np.array([(math.cos(a + angle), math.sin(a + angle))
                                for a in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6)]) * radius
-            thickness = min(radius * .30, max(1.5, min(width, height) / 150) + radius * .24
-                            + (1 - ease) * min(width, height) * .08)
+            # Reduce the existing stroke independently of the 30% size increase.
+            thickness = .75 * min(stroke_radius * .30, max(1.5, min(width, height) / 150) + stroke_radius * .24
+                                  + (1 - ease) * min(width, height) * .08)
             elapsed = max(0., age - self.acquire - .18)
             flash = progress == 1 and elapsed > 0 and self.flash_rate > 0 and int(elapsed * self.flash_rate * 2) % 2 == 1
             color = colors[int(flash)]
