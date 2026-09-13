@@ -18,6 +18,26 @@ from yautja.cli import main, parser
 
 
 class HudTests(unittest.TestCase):
+    def test_waveform_axis_is_centered_under_middle_glyph(self):
+        for width, height in ((320, 180), (960, 540), (1920, 1080)):
+            with self.subTest(width=width):
+                renderer = Renderer(width, height, glow=0, hud_theme='custom',
+                                    hud_colors='waveform=#f00,waveform-axis=#f00,waveform-glyphs=#fff,waveform-ticks=#000')
+                field = np.full((height, width), 100, np.uint8)
+                picture = Image.new('RGB', (width, height))
+                renderer.draw_hud(picture, field, 0, wave=(np.zeros(32), np.zeros(32)))
+                pixels = np.asarray(picture)
+                row = pixels[height // 2]
+                axis = np.flatnonzero((row[:, 0] > 200) & (row[:, 1] == 0))
+                self.assertGreater(len(axis), 0)
+                s = renderer.scale
+                y = max(round(24 * s), round(height * .12))
+                left, right = round(42 * s), round(68 * s)
+                tile = pixels[y:y + max(10, round(25 * s)), left:right]
+                visible = np.where((tile[..., 0] > 30) & (tile[..., 1] > 30))[1]
+                self.assertGreater(len(visible), 0)
+                self.assertAlmostEqual(float(axis.mean()), left + (visible.min() + visible.max()) / 2, delta=1.5)
+
     def test_hud_is_enabled_by_default_and_last_toggle_wins(self):
         self.assertTrue(parser().parse_args([]).hud)
         self.assertFalse(parser().parse_args(['--hud', '--no-hud']).hud)

@@ -5,6 +5,7 @@
 - **Breaking:** install Yautja with pip/pipx and invoke `yautja` or `python -m yautja`. The copied-script entrypoint has been removed. The package uses a standard source layout, bundled glyph resources and a single version in `pyproject.toml`.
 - Move the thin agent skill into `skills/yautja/`; build `yautja-skill.zip` with its matching application wheel. Add explicit same-environment and complete offline-wheelhouse setup, reproducible wheel/bundle checks, clean installs on every CI platform, and gated PyPI Trusted Publishing.
 - Add installation context and PATH diagnostics to doctor. Keep all current flags, dependency constraints, model revisions, rendering modes and media safeguards.
+- Center the audio waveform beneath the middle alien glyph, aligning the visible glyph shapes across both rows without moving the signal when symbols change. Refresh the labelled small/large GIF gallery.
 
 - Add `--no-hud` to hide every overlay while retaining thermal coloring, textures, and sound. It overrides timecode and annotations, skips waveform analysis and glyph loading, and has linked small/large GIF examples. HUD remains enabled by default.
 - Add optional palette-matched HUD colors, custom hex ramps and nine independent HUD element colors, and seeded random colors for the thermal palette, HUD, or both. Reports include the resolved color values; colors stay fixed throughout a video. Standard colors remain unchanged.

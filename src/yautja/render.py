@@ -465,13 +465,25 @@ class Renderer:
         size = max(10, round(25 * s))
         gy = max(round(24 * s), round(self.height * .12))
         top, bottom = gy + size + round(6 * s), round(self.height * .84)
-        center, amp = round(42 * s), 31 * s
+        # Glyph positions are tile origins. Put the signal through the middle
+        # tile's center, rather than through its left edge.
+        tile_width = round(max(8, size) * .85)
+        center, amp = round(round(42 * s) + (tile_width - 1) / 2), 31 * s
         means = readout_luma.mean(axis=1) / 255
         stats = [float(readout_luma.mean() / 255), float(readout_luma.max() / 255), float(np.abs(np.diff(readout_luma.astype(np.float32), axis=1)).mean() / 255)]
         for i, metric in enumerate(stats):
-            panel.paste(self.glyph(round(metric * 71), size), (round((16 + i * 26) * s), gy))
             row = min(len(means) - 1, round(len(means) * (i + 1) / 4))
-            panel.paste(self.glyph(round(means[row] * 97), size), (round((16 + i * 26) * s), bottom + round(12 * s)))
+            anchor = center + round((i - 1) * 26 * s)
+            for value, y in ((round(metric * 71), gy),
+                             (round(means[row] * 97), bottom + round(12 * s))):
+                tile = self.glyph(value, size)
+                bounds = tile.getbbox()
+                # Exclude side bearings so narrow and asymmetric symbols share
+                # a fixed visible center; the audio axis never jitters with them.
+                if bounds:
+                    left, _, right, _ = bounds
+                    tile = tile.crop((left, 0, right, tile.height))
+                panel.paste(tile, (round(anchor - (tile.width - 1) / 2), y))
         d.line((center, top, center, bottom), fill=self.hud_ink('waveform-axis'), width=max(1, round(s)))
         for i in range(17):
             y = top + (bottom - top) * i / 16
