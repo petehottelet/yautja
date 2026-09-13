@@ -69,12 +69,12 @@ For a wide, mirrored inkblot column in place of the thin trace, select a Rorscha
 
 | Setting | Shape |
 | --- | --- |
-| `--wave-style rorschach` | Broad, connected, mirrored lobes with shaded edges |
+| `--wave-style rorschach` | Broad, connected, mirrored lobes with shaded, spiky edges driven by waveform peaks |
 | `--wave-style rorschach-split` | Broken-up lobes separated by dark gaps |
 | `--wave-style rorschach-hollow` | Mirrored rings and lobes with dark interior pockets |
 | `--wave-width 0.14` | Maximum Rorschach column width as a frame fraction, 0.02–0.3; default 0.12 |
 | `--wave-height 1` | Rorschach height as a frame fraction, 0.1–1; default 0.96, vertically centered |
-| `--wave-detail 0.6` | Lobe complexity, 0–1; low values are broad/smooth, high values more intricate |
+| `--wave-detail 0.6` | Detail, 0–1; 0 is broad/smooth, higher values strengthen audio-driven edge spikes and lobe complexity |
 
 ```bash
 yautja "clip.mov" "inkblot.mp4" --thermal cinematic --palette redline --wave-style rorschach-hollow --wave-width 0.14 --wave-height 1 --wave-detail 0.6

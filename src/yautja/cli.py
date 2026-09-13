@@ -516,7 +516,7 @@ def parser():
     p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Standard trace or thick mirrored Rorschach column: filled, split lobes, or hollow pockets')
     p.add_argument('--wave-width', type=float, help='Rorschach column maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
     p.add_argument('--wave-height', type=float, help='Rorschach column height as a fraction of the frame, 0.1-1; default 0.96')
-    p.add_argument('--wave-detail', type=float, default=.6, help='Rorschach lobe detail, 0-1; lower is broader/smoother, higher is more intricate')
+    p.add_argument('--wave-detail', type=float, default=.6, help='Rorschach detail, 0-1; 0 is broad/smooth, higher values add sharper audio-driven edge spikes and more intricate lobes')
     p.add_argument('--wave-window', type=float, default=.6, help='Trailing audio window in seconds')
     p.add_argument('--wave-gain', type=float, default=1., help='Audio waveform gain')
     p.add_argument('--audio-stream', type=int, default=0, help='Zero-based audio track used for waveform and output')

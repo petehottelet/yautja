@@ -11,16 +11,16 @@ def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, s
     """Return a symmetrical shaded L mask; zero input always produces zero ink."""
     if style not in WAVE_STYLES[1:]:
         raise ValueError('Choose a Rorschach waveform style.')
-    # Supersample the silhouette so wide, soft lobes survive small GIF exports.
+    # Supersample for antialiasing while retaining short, pointed audio peaks.
     rows, columns = height * 2, width * 2
     y = np.linspace(0, 1, rows)
     values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
-    envelope = np.interp(y, np.linspace(0, 1, len(values)), values)
+    peaks = np.interp(y, np.linspace(0, 1, len(values)), values)
     radius = max(1, round(rows * (.018 - detail * .012)))
     kernel_x = np.arange(-radius * 3, radius * 3 + 1)
     kernel = np.exp(-.5 * (kernel_x / radius) ** 2)
     kernel /= kernel.sum()
-    envelope = np.convolve(np.pad(envelope, len(kernel) // 2, mode='edge'), kernel, mode='valid')
+    envelope = np.convolve(np.pad(peaks, len(kernel) // 2, mode='edge'), kernel, mode='valid')
     phase = (seed % 997) / 997 * math.tau
     frequency = 22 + detail * 55
     # Slowly drifting, incommensurate lobes avoid a repeated stack of identical cells.
@@ -31,6 +31,14 @@ def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, s
     # without normalizing each frame or turning actual silence into movement.
     drive = np.clip(envelope * 4, 0, 1) ** .25
     outer = drive * (.16 + .84 * profile)
+    # Preserve local attacks and troughs instead of smoothing them into lobes.
+    # Linear interpolation makes pointed teeth at the actual waveform bins;
+    # their height follows the local peak/envelope contrast, not random noise.
+    contrast = np.divide(peaks, envelope, out=np.ones_like(peaks), where=envelope > 1e-8)
+    teeth = np.clip(contrast - 1, -1, 1.5)
+    # Lift small audio attacks, just as the broad envelope lifts quiet ambience.
+    teeth = np.sign(teeth) * np.sqrt(np.abs(teeth))
+    outer = np.clip(outer * (1 + .8 * detail * teeth), 0, 1)
     if style == 'rorschach-split':
         outer *= np.clip((profile - .28) * 4, 0, 1)
     x = np.abs(np.linspace(-1, 1, columns))[None, :]

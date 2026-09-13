@@ -36,6 +36,28 @@ class InkblotTests(unittest.TestCase):
                 loud = np.asarray(inkblot_mask(100, 360, np.full(256, .8), .7, style=style))
                 self.assertGreater(loud.sum(), quiet.sum() * 1.5)
 
+    def test_short_audio_attacks_survive_as_localized_edge_spikes(self):
+        steady = np.full(256, .02)
+        attacks = steady.copy()
+        positions = (63, 112, 177)
+        attacks[list(positions)] = .12
+        # Include the small README size: antialiasing must not erase the teeth.
+        for width, height in ((100, 540), (67, 270)):
+            for style in ('rorschach', 'rorschach-hollow'):
+                with self.subTest(size=(width, height), style=style):
+                    baseline = np.asarray(inkblot_mask(width, height, steady, .7, style=style))
+                    spiky = np.asarray(inkblot_mask(width, height, attacks, .7, style=style))
+                    np.testing.assert_array_equal(spiky, spiky[:, ::-1])
+                    np.testing.assert_array_equal(spiky[:35], baseline[:35])
+                    x = np.abs(np.arange(width) - (width - 1) / 2)
+                    edge = np.max(np.where(spiky > 32, x, 0), axis=1)
+                    old_edge = np.max(np.where(baseline > 32, x, 0), axis=1)
+                    for index in positions:
+                        row = round(index / 255 * (height - 1))
+                        tip = edge[row - 1:row + 2].max()
+                        self.assertGreater(tip - old_edge[row], 5)
+                        self.assertGreater(tip - edge[[row - 4, row + 4]].mean(), 5)
+
     def test_inkblots_drift_deterministically_and_detail_changes_lobes(self):
         signal = np.abs(procedural_wave(1))
         a = np.asarray(inkblot_mask(100, 360, signal, 1))
