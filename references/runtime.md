@@ -51,7 +51,7 @@ For the optional subject-based heat simulation, model setup, GPU selection, and 
 
 ## CRT and VHS display effects
 
-`--crt-lines` (alias `--scanlines`) adds horizontal dark rows across the final picture, including the HUD; `--no-crt-lines` disables them. `--vhs` adds seeded color bleed, reduced color detail, slight horizontal wobble, tape noise, dropouts, and tracking defects. These animate with video time; still images get a fixed frame. VHS can be combined with CRT lines or other effects, and `--no-vhs` disables it independently. The sensor-texture preset enables CRT lines but does not enable VHS. These are visual treatments only: they do not alter the soundtrack, tracking results, or timecode values. Virtual Boy keeps even the HUD and analog defects red-only.
+`--crt-lines` (alias `--scanlines`) adds horizontal dark rows across the final picture, including the HUD; `--no-crt-lines` disables them. `--vhs` adds seeded color bleed, reduced color detail, slight horizontal wobble, tape noise, dropouts, and tracking defects. These animate with video time; still images get a fixed frame. VHS can be combined with CRT lines or other effects, and `--no-vhs` disables it independently. The sensor-texture preset enables CRT lines but does not enable VHS. These are visual treatments only: they do not alter the soundtrack, tracking results, or timecode values. Virtual Boy keeps the HUD and analog defects red-only with standard or palette-matched HUD colors; explicit custom/random HUD colors can override this. See [color controls](colors.md) for palette matching and per-element hex values.
 
 ## Verification
 

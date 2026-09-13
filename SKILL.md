@@ -60,6 +60,23 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 
 `--sensor-texture` remains a combined preset: grain 0.035, pixels at `--sensor-resolution` (default 256), CRT lines, and light intensity quantization. It does not enable VHS. Individual grain/pixelation/CRT settings override their preset components. `--no-sensor-texture` turns off the preset; explicitly enabled individual effects remain active. For completely clean output, omit all effects or pass `--no-sensor-texture --grain 0 --pixelation 0 --no-crt-lines --no-vhs`.
 
+## HUD and custom colors
+
+Keep the standard red/cyan HUD unless the user chooses another theme. Use
+`--hud-theme palette` to coordinate every HUD element with the selected thermal
+palette, such as `--palette green-phosphor --hud-theme palette` for greens.
+Use `--palette custom --palette-colors "#000000,#0033ff,#ff2200"` for 2–16
+evenly spaced cold-to-hot hex colors. Use `--hud-theme custom --hud-colors
+"waveform=#44ff88,timecode=#ddffee"` for independent HUD elements; omitted elements
+keep standard colors. Read [colors.md](references/colors.md) for every element key,
+full examples, and compositing behavior.
+
+Use `--random-colors` to randomize the thermal palette and all HUD elements, or
+`--palette random` / `--hud-theme random` for just one. Colors remain fixed across
+frames. `--seed` chooses a reproducible set (default 42); choose another seed for
+a new set. Preserve the resolved hex colors and seed from the JSON report when
+the user wants to reuse a result.
+
 ## Defaults and constraints
 
 - Segmentation uses `requirements-semantic.txt` and the explicit `--download-models` command once. Conversions use cached weights only. `--verbose` attaches glyph annotations in all three segmented looks. Keep model dependencies under their own licenses as documented in [dependencies.md](references/dependencies.md).

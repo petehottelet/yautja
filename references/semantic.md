@@ -61,9 +61,12 @@ The JSON conversion report includes actual PyTorch/device/precision information,
 | `--palette yautja` | Original colors, default for every style; `auto` is an alias |
 | `--palette ironbow` | Purple/red/orange through yellow-white |
 | `--palette redline` | Near-black, vivid blue, dominant red, and restrained pink highlights |
-| `--palette virtualboy` | Red/black only, including all glyphs and the HUD |
+| `--palette virtualboy` | Red/black only; explicit custom/random HUD colors can override the red HUD |
 | `--palette green-phosphor` / `--palette amber-phosphor` | Green or amber display colors |
 | `--palette white-hot` / `--palette black-hot` | Grayscale with simulated warm areas light or dark |
+| `--hud-theme palette` | Coordinate all HUD ink with the selected thermal palette |
+| `--palette custom` / `--hud-theme custom` | Independent hex colors; see [color controls](colors.md) |
+| `--random-colors` | Seeded random thermal and HUD colors, fixed throughout the video |
 | `--sensor-texture` / `--no-sensor-texture` | Combined preset: grain, pixels, scanlines, and quantization; default off |
 | `--grain` / `--grain 0.02` | Independent noise, bare flag 0.035; 0 disables |
 | `--pixelation` / `--pixelation 80` | Independent chunky pixels; bare flag longest edge 96, range 32–640; 0 disables |

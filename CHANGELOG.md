@@ -2,11 +2,12 @@
 
 ## Unreleased
 
+- Add optional palette-matched HUD colors, custom hex ramps and nine independent HUD element colors, and seeded random colors for the thermal palette, HUD, or both. Reports include the resolved color values; colors stay fixed throughout a video. Standard colors remain unchanged.
 - Add three segmented looks: Silhouette for soft anatomy-guided warmth, Cinematic for broad surface patches, and Detailed for distinct exposed skin, clothing, hair, shoes, and gear. The `semantic` and `realistic` names remain aliases for Silhouette and Detailed. All three reuse the same cached models.
 - Keep the original Yautja palette as the default in every mode. Add optional Redline (red/blue/black), red-only Virtual Boy, Ironbow, Green Phosphor, Amber Phosphor, White Hot, and Black Hot palettes.
 - Add independent optional grain, chunky pixelation, and scanlines for both images and videos, plus the combined sensor-texture preset. Clean output remains the default; explicit controls override preset components. Detection and HUD readouts remain independent of display effects.
-- Add horizontal CRT lines and seeded VHS-style color bleed, wobble, tape noise, dropouts, and tracking defects across the final image and HUD. VHS leaves the soundtrack unchanged. Virtual Boy keeps the entire result red-only, including glyphs and defects.
-- Add labelled, matched animated GIFs for every thermal look, palette, and texture option in the README, with a reproducible gallery builder. Preview media stays outside the portable skill archive.
+- Add horizontal CRT lines and seeded VHS-style color bleed, wobble, tape noise, dropouts, and tracking defects across the final image and HUD. VHS leaves the soundtrack unchanged. Virtual Boy keeps the entire result red-only, including glyphs and defects, with standard or palette-matched HUD colors.
+- Add labelled, matched animated GIFs for every thermal look, palette, HUD color option, and texture in the README. Every preview links to a 960×540 version with HUD and textures rendered at that size. The reproducible gallery builder can regenerate selected examples. Preview media stays outside the portable skill archive.
 - Add direct JPEG/PNG-to-PNG conversion with the shared classic and anatomy-guided semantic renderer, shaded glyph callouts, and a static HUD. Still-image conversion and `--doctor --media image` work without FFmpeg.
 - Apply EXIF orientation, preserve image aspect ratio and odd dimensions, flatten transparency onto black, and omit source metadata. Protect inputs and existing outputs, reject animated PNG and video-only options, and clean up failed image exports.
 - Guide human color regions with 17 estimated body landmarks from pinned ViTPose weights, including broad head, torso, arm, wrist, and leg regions.

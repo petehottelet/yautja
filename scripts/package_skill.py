@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parent.parent
 FILES = ('SKILL.md', 'requirements.txt', 'LICENSE', 'VERSION', 'agents/openai.yaml',
          'assets/glyphs.json', 'references/runtime.md', 'scripts/render.py', 'scripts/yautja.py',
          'requirements-semantic.txt', 'references/semantic.md', 'references/dependencies.md',
-         'scripts/thermal.py', 'scripts/semantic.py', 'scripts/runtime.py')
+         'scripts/thermal.py', 'scripts/semantic.py', 'scripts/runtime.py', 'scripts/colors.py',
+         'references/colors.md')
 
 
 def main():

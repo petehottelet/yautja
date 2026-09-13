@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from thermal import resolve_thermal
+from colors import resolve_colors
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -116,7 +117,7 @@ def timecode(seconds):
     return f'{hours:02}:{minutes:02}:{sec:02}.{ms:03}'
 
 
-def lcd_timecode(text, height):
+def lcd_timecode(text, height, color=(255, 118, 98)):
     """Draw a seven-segment clock from polygons, without a font asset."""
     segments = ('abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg',
                 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg')
@@ -131,7 +132,7 @@ def lcd_timecode(text, height):
     height = max(6, round(height))
     scale = height * ss / 20
     width = max(1, round((sum(7 if c in ':.' else 15 for c in text) - 3) * height / 20))
-    tile = Image.new('RGB', (width * ss, height * ss))
+    tile = Image.new('RGBA' if len(color) == 4 else 'RGB', (width * ss, height * ss))
     draw = ImageDraw.Draw(tile)
     x = 0
     for char in text:
@@ -142,11 +143,11 @@ def lcd_timecode(text, height):
             tops = (round(height * .3), round(height * .65)) if char == ':' else (height - dot_size,)
             for y in tops:
                 draw.rectangle((dot_x * ss, y * ss, (dot_x + dot_size) * ss - 1,
-                                (y + dot_size) * ss - 1), fill=(255, 118, 98))
+                                (y + dot_size) * ss - 1), fill=color)
             x += 7
         else:
             for name in segments[int(char)]:
-                draw.polygon([((x+px)*scale, py*scale) for px, py in polygons[name]], fill=(255, 118, 98))
+                draw.polygon([((x+px)*scale, py*scale) for px, py in polygons[name]], fill=color)
             x += 15
     tile = tile.resize((width, height), Image.Resampling.LANCZOS)
     bounds = tile.getbbox()
@@ -189,7 +190,8 @@ def load_glyph_font():
 class Renderer:
     def __init__(self, width, height, *, seed=42, grain=None, glow=.65,
                  show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
-                 sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False):
+                 sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False,
+                 palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False):
         self.width, self.height = width, height
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
@@ -199,34 +201,39 @@ class Renderer:
         self.show_timecode, self.timecode_start = show_timecode, timecode_start
         self.thermal, self.verbose = resolve_thermal(thermal), verbose
         self.sensor_texture, self.sensor_resolution = sensor_texture, sensor_resolution
-        self.palette_name = 'yautja' if palette == 'auto' else palette
-        if self.palette_name not in PALETTES:
-            raise ValueError('Unknown thermal palette: ' + self.palette_name)
+        self.colors = resolve_colors(PALETTES, palette=palette, palette_colors=palette_colors,
+                                     hud_theme=hud_theme, hud_colors=hud_colors,
+                                     random_colors=random_colors, seed=seed)
+        self.palette_name, self.palette = self.colors.palette_name, self.colors.palette
+        self.hud_theme, self.hud_colors = self.colors.hud_theme, self.colors.hud
+        # Custom ink uses alpha so even black or very dark hex colors remain visible.
+        self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' else 'RGB'
         self.annotation_positions = {}
         if self.thermal != 'classic':
             from thermal import HeatField, CinematicHeatField, SurfaceHeatField
             field = {'silhouette': HeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField}[self.thermal]
             self.heat_field = field(width, height, sensor_resolution, seed=seed)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
-        self.color = (255, 48, 43)
-        pos = np.arange(256) / 255
-        stops = PALETTES[self.palette_name]
-        table = np.stack([np.interp(pos, [s[0] for s in stops], [s[1][c] for s in stops]) for c in range(3)], axis=1)
-        if self.palette_name in ('yautja', 'ironbow'):
-            table *= 1 - (1 - pos[:, None]) ** 4 * .7
-        self.palette = np.uint8(np.clip(table, 0, 255))
+        self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font()
         self.fonts, self.tiles = {}, {}
         self.annotation_pool = None
         self.callout_segments = None
 
-    def glyph(self, value, height, numeral=False):
+    def hud_ink(self, element, opacity=1.):
+        color = self.hud_colors[element]
+        if self.overlay_mode == 'RGBA':
+            return (*color, round(255 * opacity))
+        return tuple(round(v * opacity) for v in color)
+
+    def glyph(self, value, height, numeral=False, element='waveform-glyphs'):
         height = max(8, round(height))
-        key = (value, height, numeral)
+        color = self.hud_ink(element)
+        key = (value, height, numeral, color)
         if key in self.tiles:
             return self.tiles[key]
         ss = 3
-        tile = Image.new('RGB', (round(height * .85) * ss, height * ss))
+        tile = Image.new(self.overlay_mode, (round(height * .85) * ss, height * ss))
         choices = [c for c in self.font_chars if c.isdigit() == numeral]
         if choices:
             if height not in self.fonts:
@@ -234,8 +241,8 @@ class Renderer:
             font = self.fonts[height]
             char = choices[value % len(choices)]
             box = font.getbbox(char)
-            mask = Image.new('RGB', (max(1, box[2] - box[0]), max(1, box[3] - box[1])))
-            ImageDraw.Draw(mask).text((-box[0], -box[1]), char, font=font, fill=self.color)
+            mask = Image.new(self.overlay_mode, (max(1, box[2] - box[0]), max(1, box[3] - box[1])))
+            ImageDraw.Draw(mask).text((-box[0], -box[1]), char, font=font, fill=color)
             ratio = min(tile.width / mask.width, tile.height / mask.height)
             mask = mask.resize((max(1, round(mask.width * ratio)), max(1, round(mask.height * ratio))), Image.Resampling.LANCZOS)
             tile.paste(mask, ((tile.width - mask.width) // 2, (tile.height - mask.height) // 2))
@@ -246,6 +253,14 @@ class Renderer:
         return tile
 
     def composite(self, image, overlay, x, y):
+        if overlay.mode == 'RGBA':
+            base = image.crop((x, y, x + overlay.width, y + overlay.height)).convert('RGBA')
+            if self.glow:
+                bloom = overlay.filter(ImageFilter.GaussianBlur(max(.5, self.scale * 2)))
+                bloom.putalpha(bloom.getchannel('A').point(lambda v: round(v * self.glow)))
+                base = Image.alpha_composite(base, bloom)
+            image.paste(Image.alpha_composite(base, overlay).convert('RGB'), (x, y))
+            return
         if self.glow:
             bloom = overlay.filter(ImageFilter.GaussianBlur(max(.5, self.scale * 2)))
             bloom = bloom.point(lambda v: round(v * self.glow))
@@ -386,19 +401,23 @@ class Renderer:
 
     def annotate(self, image, subjects):
         s = self.scale
-        layer = Image.new('RGB', image.size)
+        layer = Image.new(self.overlay_mode, image.size)
         draw = ImageDraw.Draw(layer)
         for item in self.annotation_layout(subjects):
             subject, size, step = item['subject'], item['size'], item['step']
             x, y = item['rect'][:2]
             cx, cy = item['target']
-            color = tuple(round(v * subject.opacity) for v in (65, 232, 239))
-            draw.line([item['target'], item['anchor']], fill=color, width=max(1, round(1.5 * s)))
+            color = self.hud_ink('callouts', subject.opacity)
+            draw.line([item['target'], item['anchor']], fill=self.hud_ink('leaders', subject.opacity), width=max(1, round(1.5 * s)))
             radius = max(1, round(2 * s))
-            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=color)
+            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=self.hud_ink('markers', subject.opacity))
             for i, pattern in enumerate(self.callout_symbols(subject.track_id)):
                 ink = self.callout_glyph(pattern, size)
-                tile = ImageChops.multiply(Image.merge('RGB', (ink,) * 3), Image.new('RGB', ink.size, color))
+                if self.overlay_mode == 'RGBA':
+                    tile = Image.new('RGBA', ink.size, color)
+                    tile.putalpha(ink.point(lambda v: round(v * subject.opacity)))
+                else:
+                    tile = ImageChops.multiply(Image.merge('RGB', (ink,) * 3), Image.new('RGB', ink.size, color))
                 layer.paste(tile, (x + i * step, y))
         self.composite(image, layer, 0, 0)
 
@@ -435,7 +454,7 @@ class Renderer:
         image = Image.fromarray(np.uint8(np.clip(mapped, 0, 255)))
         s = self.scale
         panel_w = min(self.width, round(110 * s))
-        panel = Image.new('RGB', (panel_w, self.height))
+        panel = Image.new(self.overlay_mode, (panel_w, self.height))
         d = ImageDraw.Draw(panel)
         size = max(10, round(25 * s))
         gy = max(round(24 * s), round(self.height * .12))
@@ -447,10 +466,10 @@ class Renderer:
             panel.paste(self.glyph(round(metric * 71), size), (round((16 + i * 26) * s), gy))
             row = min(len(means) - 1, round(len(means) * (i + 1) / 4))
             panel.paste(self.glyph(round(means[row] * 97), size), (round((16 + i * 26) * s), bottom + round(12 * s)))
-        d.line((center, top, center, bottom), fill=(95, 17, 15), width=max(1, round(s)))
+        d.line((center, top, center, bottom), fill=self.hud_ink('waveform-axis'), width=max(1, round(s)))
         for i in range(17):
             y = top + (bottom - top) * i / 16
-            d.line((10 * s, y, (19 if i % 4 == 0 else 14) * s, y), fill=(110, 22, 19))
+            d.line((10 * s, y, (19 if i % 4 == 0 else 14) * s, y), fill=self.hud_ink('waveform-ticks'))
         if wave is None:
             values = procedural_wave(time, self.seed)
             points = [(center + amp * v, top + (bottom - top) * i / (len(values) - 1)) for i, v in enumerate(values)]
@@ -461,27 +480,27 @@ class Renderer:
             for i, (lo, hi) in enumerate(zip(low, high)):
                 y = top + (bottom - top) * i / max(1, len(low) - 1)
                 points.extend([(center + amp * lo, y), (center + amp * hi, y)])
-        d.line(points, fill=self.color, width=max(1, round(1.25 * s)))
+        d.line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
         self.composite(image, panel, 0, 0)
         # Top-right readout. Optional human timecode goes below the alien string.
         step, pad = round(25 * s), round(16 * s)
         rw = max(step * 8, round(180 * s))
         rh = size + (round(27 * s) if self.show_timecode else 0) + round(12 * s)
-        right = Image.new('RGB', (rw, rh))
+        right = Image.new(self.overlay_mode, (rw, rh))
         reading = round(stats[0] * 9999)
         for i in range(8):
             value = round(stats[i % 3] * 71) if i < 4 else reading // 10 ** (7 - i) % 10
-            right.paste(self.glyph(value, size, i >= 4), (i * step, 0))
+            right.paste(self.glyph(value, size, i >= 4, element='readout'), (i * step, 0))
         if self.show_timecode:
             # Align visible glyph artwork and the clock to one right edge,
             # excluding the glyph tiles' trailing side bearings.
             bounds = right.getbbox()
             if bounds:
                 glyphs = right.crop(bounds)
-                right = Image.new('RGB', (rw, rh))
+                right = Image.new(self.overlay_mode, (rw, rh))
                 right.paste(glyphs, (rw - glyphs.width, bounds[1]))
             clock_height = max(6, round(max(9, round(19 * .8 * s)) * .69))
-            clock = lcd_timecode(timecode(time + self.timecode_start), clock_height)
+            clock = lcd_timecode(timecode(time + self.timecode_start), clock_height, self.hud_ink('timecode'))
             if clock.width > rw:
                 clock = clock.resize((rw, max(1, round(clock.height * rw / clock.width))), Image.Resampling.LANCZOS)
             right.paste(clock, (rw - clock.width, size + round(7 * s)))
@@ -495,7 +514,7 @@ class Renderer:
             pixels = np.asarray(image, dtype=np.float32).copy()
             pixels[::2] *= .88
             image = Image.fromarray(np.uint8(pixels))
-        if self.palette_name == 'virtualboy':
+        if self.palette_name == 'virtualboy' and self.hud_theme in ('standard', 'palette'):
             # This palette is strictly red-only, including glyphs and defects.
             pixels = np.asarray(image).copy()
             pixels[..., 0] = pixels.max(axis=2)

@@ -29,6 +29,15 @@ def variants():
         'vhs': {'vhs': True}, 'vhs-crt': {'vhs': True, 'scanlines': True},
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
+    result.update({
+        'colors-matched-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette'},
+        'colors-matched-ironbow': {'thermal': 'cinematic', 'palette': 'ironbow', 'hud_theme': 'palette'},
+        'colors-custom': {'thermal': 'cinematic', 'palette': 'custom',
+                          'palette_colors': '#020518,#173d8f,#10b7ad,#fbad43,#fff1c7',
+                          'hud_theme': 'custom',
+                          'hud_colors': 'waveform=#ffb347,waveform-axis=#684323,waveform-ticks=#9c6535,waveform-glyphs=#ffd28a,readout=#7fe8ff,timecode=#d6f7ff,callouts=#77ffd0,leaders=#399e83,markers=#ffffff'},
+        'colors-random': {'thermal': 'cinematic', 'random_colors': True, 'seed': 137},
+    })
     return result
 
 
@@ -41,12 +50,17 @@ def main():
     parser.add_argument('--duration', type=float, default=3.)
     parser.add_argument('--fps', type=int, default=12)
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--only', nargs='+', choices=[*variants(), 'hero'], help='Regenerate selected previews and their large versions only')
     args = parser.parse_args()
     if not math.isfinite(args.start) or args.start < 0 or not math.isfinite(args.duration) or not .5 <= args.duration <= 10 or not 6 <= args.fps <= 24:
         parser.error('Use a nonnegative start, 0.5–10 seconds, and 6–24 fps.')
     source, destination = args.input.resolve(), args.output_dir.resolve()
-    settings = variants()
-    names = [*(name + '.gif' for name in settings), 'hero.gif', 'poster.png']
+    settings = {name: options for name, options in variants().items() if not args.only or name in args.only}
+    include_hero = not args.only or 'hero' in args.only
+    settings.update({f'large/{name}': options for name, options in list(settings.items())})
+    if include_hero:
+        settings['hero'] = {'thermal': 'cinematic'}
+    names = [*(name + '.gif' for name in settings), *(['poster.png'] if include_hero else [])]
     if any(source == destination / name for name in names):
         parser.error('The gallery cannot replace its source.')
     if not args.overwrite and any((destination / name).exists() for name in names):
@@ -57,15 +71,17 @@ def main():
         parser.error('Normalize HDR to SDR with the main converter workflow before building the gallery.')
     width, height = dimensions(video, 640)
     gif_width, gif_height = dimensions(video, 480)
+    large_width, large_height = dimensions(video, 960)
     container_start = number(data.get('format', {}).get('start_time'))
     video_start = number(video.get('start_time'), container_start)
     seek = max(0., args.start + video_start - container_start)
     destination.mkdir(parents=True, exist_ok=True)
     tracker = SemanticTracker(GroundedSegmenter(device=args.device, surfaces=True))
-    renderers = {name: Renderer(gif_width, gif_height, verbose=True, show_timecode=True, **options)
+    renderers = {name: Renderer(*( (large_width, large_height) if name.startswith('large/') else
+                                  (width, height) if name == 'hero' else (gif_width, gif_height)),
+                                verbose=True, show_timecode=True, **options)
                  for name, options in settings.items()}
-    renderers['hero'] = Renderer(width, height, thermal='cinematic', verbose=True, show_timecode=True)
-    fields = {mode: Renderer(width, height, thermal=mode).heat_field for mode in ('silhouette', 'cinematic', 'detailed')}
+    fields = {mode: Renderer(width, height, thermal=mode).heat_field for mode in {r.thermal for r in renderers.values()}}
     results = {}
     with tempfile.TemporaryDirectory(prefix='.yautja-gallery-', dir=destination) as directory:
         temp = Path(directory)
@@ -82,7 +98,7 @@ def main():
                 analysis = AudioAnalysis(pcm, int(audio.get('channels', 1)),
                                          number(audio.get('start_time'), container_start) - video_start)
             for name in renderers:
-                (temp / name).mkdir()
+                (temp / name).mkdir(parents=True)
             filters = f'setpts=PTS-STARTPTS,fps={args.fps}:eof_action=pass,scale={width}:{height}:flags=lanczos,setsar=1,format=rgb24'
             with (temp / 'decode.log').open('w+b') as log:
                 decoder = subprocess.Popen([ffmpeg, '-v', 'error', '-nostdin', '-ss', str(seek), '-i', str(source),
@@ -97,13 +113,14 @@ def main():
                         frame = Image.frombytes('RGB', (width, height), raw)
                         subjects = tracker.update(frame, time)
                         heat = {mode: field.build(frame, subjects) for mode, field in fields.items()}
-                        gif_heat = {mode: np.asarray(Image.fromarray(value).resize((gif_width, gif_height), Image.Resampling.BILINEAR))
-                                    for mode, value in heat.items()}
+                        scaled_heat = {(size, mode): np.asarray(Image.fromarray(value).resize(size, Image.Resampling.BILINEAR))
+                                       for size in {(r.width, r.height) for r in renderers.values()}
+                                       for mode, value in heat.items()}
                         wave = analysis.waveform(args.start + time) if analysis and not analysis.silent else None
                         for name, renderer in renderers.items():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
-                            image = renderer.render_field((heat if name == 'hero' else gif_heat)[renderer.thermal], time, wave, subjects)
+                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), renderer.thermal)], time, wave, subjects)
                             image.save(temp / name / f'{count:04d}.png')
                             if name == 'hero' and count == 0:
                                 image.save(temp / 'poster.png')
@@ -118,9 +135,9 @@ def main():
                     decoder.stdout.close()
             if count < 2:
                 raise ConversionError('The selected clip has fewer than two frames.')
-            for name in [*settings, 'hero']:
+            for name in settings:
                 frames = temp / name
-                size = width if name == 'hero' else gif_width
+                size = renderers[name].width
                 palette = f'scale={size}:-1:flags=lanczos,split[frames][colors];[colors]palettegen=max_colors=128:stats_mode=diff[palette];[frames][palette]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle'
                 gif = temp / (name + '.gif')
                 run([ffmpeg, '-v', 'error', '-nostdin', '-framerate', str(args.fps), '-i', str(frames / '%04d.png'),
@@ -134,10 +151,11 @@ def main():
                         raise ConversionError('GIF timing check failed: ' + name)
                     results[name] = {'frames': check.n_frames, 'seconds': duration / 1000,
                                      'size': list(check.size), 'bytes': gif.stat().st_size,
-                                     'settings': settings.get(name, settings['style-cinematic'])}
+                                     'settings': settings[name], 'colors': renderers[name].colors.report()}
             for name in names:
                 if not args.overwrite and (destination / name).exists():
                     raise ConversionError('A gallery output appeared during rendering: ' + name)
+                (destination / name).parent.mkdir(parents=True, exist_ok=True)
                 os.replace(temp / name, destination / name)
         finally:
             if analysis:

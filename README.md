@@ -9,7 +9,7 @@
   <img alt="Claude + Codex" src="https://img.shields.io/badge/Claude%20%2B%20Codex-agent%20ready-555555.svg">
   <a href="SKILL.md"><img alt="Agent Skill (SKILL.md)" src="https://img.shields.io/badge/Agent%20Skill-SKILL.md-orange.svg"></a>
   <a href="#install-the-agent-skill"><img alt="Install with skills.sh" src="https://img.shields.io/badge/skills.sh-install-111111.svg"></a>
-  <a href="https://github.com/petehottelet/yautja/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/petehottelet/yautja/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/petehottelet/yautja/actions/workflows/ci.yml?query=branch%3Amain"><img alt="CI on main" src="https://github.com/petehottelet/yautja/actions/workflows/ci.yml/badge.svg?branch=main&amp;event=push"></a>
   <a href="https://yautja.ai"><img alt="Website: yautja.ai" src="https://img.shields.io/badge/web-yautja.ai-ef4444.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@ Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skil
 
 Re-skin local images and video frames with cold blues, warm silhouettes, and alien HUD glyphs. Videos add an audio-reactive waveform. A portable **agent skill for Claude and OpenAI Codex**, with a standalone Python CLI and FFmpeg for video. [yautja.ai](https://yautja.ai).
 
-![Cinematic thermal look in the original Yautja palette, with broad warm regions, shaded cyan glyph callouts, and compact LCD timecode](assets/examples/hero.gif)
+[![Cinematic thermal look in the original Yautja palette, with broad warm regions, shaded cyan glyph callouts, and compact LCD timecode](assets/examples/hero.gif)](assets/examples/large/style-cinematic.gif)
 
 A three-second loop from generated jungle-explorer footage, using **Cinematic** detail and the **original Yautja palette**, with texture off. The waveform follows the source audio; GIFs are silent. [View a still frame](assets/examples/poster.png). The gallery and new controls below reflect the current source; the published 1.0 archive and [earlier demo with sound](https://github.com/petehottelet/yautja/releases/latest/download/yautja-demo.mp4) use the previous renderer.
 
@@ -92,11 +92,11 @@ Images retain their aspect ratio and EXIF orientation, with a longest edge of at
 
 ## Three thermal looks
 
-Choose the level of detail separately from the color palette. All three examples use the **original Yautja colors**, with grain, pixelation, and scanlines off.
+Choose the level of detail separately from the color palette. All three examples use the **original Yautja colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
 
 | Silhouette | Cinematic | Detailed |
 | --- | --- | --- |
-| ![Silhouette: soft, blobby anatomy-guided warmth](assets/examples/style-silhouette.gif) | ![Cinematic: broad skin and gear patches with softened boundaries](assets/examples/style-cinematic.gif) | ![Detailed: distinct skin, clothing, and equipment regions](assets/examples/style-detailed.gif) |
+| [![Silhouette: soft, blobby anatomy-guided warmth](assets/examples/style-silhouette.gif)](assets/examples/large/style-silhouette.gif) | [![Cinematic: broad skin and gear patches with softened boundaries](assets/examples/style-cinematic.gif)](assets/examples/large/style-cinematic.gif) | [![Detailed: distinct skin, clothing, and equipment regions](assets/examples/style-detailed.gif)](assets/examples/large/style-detailed.gif) |
 | Soft, blobby subjects and an abstract background—the older semantic look. | The middle ground: broad heat patches, some skin/gear separation, and softer edges. | Distinct skin, clothing, hair, and equipment, with restrained garment shading and more scenery detail. |
 | `--thermal silhouette` | `--thermal cinematic` | `--thermal detailed` |
 
@@ -110,22 +110,44 @@ Existing commands still work: `--thermal semantic` is an alias for Silhouette, a
 
 | Redline · red, blue, and black | Virtual Boy · red only |
 | --- | --- |
-| ![Redline palette: near-black shadows, vivid blue cooler regions, and dominant red warmth with restrained pink highlights](assets/examples/palette-redline.gif) | ![Virtual Boy palette: the scene and HUD rendered entirely in shades of red and black](assets/examples/palette-virtualboy.gif) |
+| [![Redline palette: near-black shadows, vivid blue cooler regions, and dominant red warmth with restrained pink highlights](assets/examples/palette-redline.gif)](assets/examples/large/palette-redline.gif) | [![Virtual Boy palette: the scene and HUD rendered entirely in shades of red and black](assets/examples/palette-virtualboy.gif)](assets/examples/large/palette-virtualboy.gif) |
 | `--palette redline` | `--palette virtualboy` |
 
-Redline gives the movie-style red/blue/black treatment, with broad red warmth and small pink highlights. Virtual Boy uses only red and black, including the glyphs, waveform, and timecode.
+Redline gives the movie-style red/blue/black treatment, with broad red warmth and small pink highlights. Virtual Boy uses only red and black, including the glyphs, waveform, and timecode, unless you explicitly choose custom or random HUD colors.
 
 | Yautja · original/default | Ironbow | Green Phosphor |
 | --- | --- | --- |
-| ![Original Yautja palette: cool blue and cyan through yellow and red](assets/examples/style-cinematic.gif) | ![Ironbow palette: purple, orange, and yellow-white](assets/examples/palette-ironbow.gif) | ![Green Phosphor palette: a monochrome green night-vision style](assets/examples/palette-green-phosphor.gif) |
+| [![Original Yautja palette: cool blue and cyan through yellow and red](assets/examples/style-cinematic.gif)](assets/examples/large/style-cinematic.gif) | [![Ironbow palette: purple, orange, and yellow-white](assets/examples/palette-ironbow.gif)](assets/examples/large/palette-ironbow.gif) | [![Green Phosphor palette: a monochrome green night-vision style](assets/examples/palette-green-phosphor.gif)](assets/examples/large/palette-green-phosphor.gif) |
 | `--palette yautja` | `--palette ironbow` | `--palette green-phosphor` |
 
 | Amber Phosphor | White Hot | Black Hot |
 | --- | --- | --- |
-| ![Amber Phosphor palette: warm amber display colors](assets/examples/palette-amber-phosphor.gif) | ![White Hot palette: simulated warm regions appear lighter](assets/examples/palette-white-hot.gif) | ![Black Hot palette: simulated warm regions appear darker](assets/examples/palette-black-hot.gif) |
+| [![Amber Phosphor palette: warm amber display colors](assets/examples/palette-amber-phosphor.gif)](assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: simulated warm regions appear lighter](assets/examples/palette-white-hot.gif)](assets/examples/large/palette-white-hot.gif) | [![Black Hot palette: simulated warm regions appear darker](assets/examples/palette-black-hot.gif)](assets/examples/large/palette-black-hot.gif) |
 | `--palette amber-phosphor` | `--palette white-hot` | `--palette black-hot` |
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
+
+### HUD colors, custom palettes, and random colors
+
+Keep the standard red/cyan HUD, or use **`--hud-theme palette`** to match its waveform, glyphs, clock, callouts, and scale to the selected palette. These controls work with images and videos and every thermal look.
+
+| Green Phosphor · matched HUD | Ironbow · matched HUD |
+| --- | --- |
+| [![Green Phosphor with matching green waveform, readout, timecode, and callouts](assets/examples/colors-matched-green.gif)](assets/examples/large/colors-matched-green.gif) | [![Ironbow with coordinated orange and purple HUD colors](assets/examples/colors-matched-ironbow.gif)](assets/examples/large/colors-matched-ironbow.gif) |
+| `--palette green-phosphor --hud-theme palette` | `--palette ironbow --hud-theme palette` |
+
+| Custom thermal + HUD colors | Random thermal + HUD colors |
+| --- | --- |
+| [![Custom navy, teal, and gold thermal colors with independently colored HUD elements](assets/examples/colors-custom.gif)](assets/examples/large/colors-custom.gif) | [![A seeded random thermal palette and independently randomized HUD colors, stable across frames](assets/examples/colors-random.gif)](assets/examples/large/colors-random.gif) |
+| [Exact custom settings](references/colors.md#custom-hud-elements) | `--random-colors --seed 137` |
+
+**Custom thermal colors:** use `--palette custom --palette-colors "#000000,#0033ff,#ff2200,#fff0c0"`. Supply 2–16 hex colors, cold to hot, separated by commas or spaces. Stops are evenly spaced. Three- and six-digit RGB hex values work; quote the string.
+
+**Custom HUD colors:** use `--hud-theme custom --hud-colors "waveform=#44ff88,timecode=#ddffee,callouts=#88ccff"`. Set any of these independently: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, and `markers`. Omitted elements keep their standard colors. Custom ink supports black and dark colors as well as bright ones.
+
+**Random colors:** `--random-colors` randomizes both the thermal palette and every HUD element. Use `--palette random` or `--hud-theme random` for just one. A different `--seed` produces a new set; the same seed repeats it. Colors stay fixed throughout the clip. The JSON report includes the resolved hex values so a set can be reused.
+
+See the [color controls guide](references/colors.md) for full commands, element descriptions, and how custom ink interacts with glow and analog effects.
 
 ### Grain and chunky pixels
 
@@ -133,17 +155,17 @@ Every effect is **optional and off by default**. Add grain, chunky pixels, CRT l
 
 | Clean · default | Grain only | Chunky pixels only |
 | --- | --- | --- |
-| ![Clean Cinematic output without added texture](assets/examples/style-cinematic.gif) | ![Fine animated grain without pixelation or scanlines](assets/examples/texture-grain.gif) | ![Chunky pixelation without added grain or scanlines](assets/examples/texture-pixelation.gif) |
+| [![Clean Cinematic output without added texture](assets/examples/style-cinematic.gif)](assets/examples/large/style-cinematic.gif) | [![Fine animated grain without pixelation or scanlines](assets/examples/texture-grain.gif)](assets/examples/large/texture-grain.gif) | [![Chunky pixelation without added grain or scanlines](assets/examples/texture-pixelation.gif)](assets/examples/large/texture-pixelation.gif) |
 | No texture flags | `--grain 0.06` | `--pixelation 80` |
 
 | CRT Lines only | Sensor texture · combined preset |
 | --- | --- |
-| ![Horizontal CRT lines across the picture and HUD](assets/examples/texture-crt-lines.gif) | ![Combined sensor texture with grain, sensor pixels, and CRT lines](assets/examples/texture-sensor-texture.gif) |
+| [![Horizontal CRT lines across the picture and HUD](assets/examples/texture-crt-lines.gif)](assets/examples/large/texture-crt-lines.gif) | [![Combined sensor texture with grain, sensor pixels, and CRT lines](assets/examples/texture-sensor-texture.gif)](assets/examples/large/texture-sensor-texture.gif) |
 | `--crt-lines` | `--sensor-texture` |
 
 | VHS only | VHS + CRT Lines |
 | --- | --- |
-| ![VHS styling with softened color, chroma bleed, horizontal wobble, tape noise, and occasional tracking defects](assets/examples/texture-vhs.gif) | ![Combined VHS analog defects and horizontal CRT lines](assets/examples/texture-vhs-crt.gif) |
+| [![VHS styling with softened color, chroma bleed, horizontal wobble, tape noise, and occasional tracking defects](assets/examples/texture-vhs.gif)](assets/examples/large/texture-vhs.gif) | [![Combined VHS analog defects and horizontal CRT lines](assets/examples/texture-vhs-crt.gif)](assets/examples/large/texture-vhs-crt.gif) |
 | `--vhs` | `--vhs --crt-lines` |
 
 Bare `--grain` uses strength 0.035; the example above uses a stronger 0.06 so it is easy to see. `--grain 0` disables noise. Bare `--pixelation` uses a longest grid edge of 96; lower values make larger blocks (range 32–640), and `--pixelation 0` disables it. Pixelation changes the display, not the segmentation resolution. `--no-crt-lines` disables CRT lines; the older `--scanlines` / `--no-scanlines` flags are aliases.
@@ -160,7 +182,7 @@ python scripts/yautja.py "clip.mov" "outputs/clip-vhs.mp4" --thermal cinematic -
 python scripts/yautja.py "clip.mov" "outputs/clip-virtualboy.mp4" --thermal silhouette --palette virtualboy
 ```
 
-All comparison GIFs use the same three-second slice, 480×270 at 12 fps, with the original audio driving the waveform. The hero uses 640×360. They compare styling choices, not model accuracy. The source footage stays local.
+All comparison GIFs use the same three-second slice at 12 fps, with the original audio driving the waveform. Embedded previews are 480×270; click one to open its **960×540 large version**, rendered with HUD and textures at that size. The hero uses 640×360. They compare styling choices, not model accuracy. The source footage stays local.
 
 ### Segmentation setup
 
@@ -231,8 +253,12 @@ Use the same installation method for updates. The copier replaces only the known
 | `--vhs` / `--no-vhs` | Toggle analog tape styling and defects |
 | `--sensor-texture` / `--no-sensor-texture` | Toggle the combined preset; individual effects override its defaults |
 | `--palette green-phosphor` | Choose a palette independently of thermal detail |
+| `--hud-theme palette` | Match every HUD element to the thermal palette |
+| `--palette custom --palette-colors "#000,#03f,#f20"` | Define an evenly spaced cold-to-hot hex ramp |
+| `--hud-theme custom --hud-colors "waveform=#0f8,timecode=#fff"` | Assign colors to individual HUD elements |
+| `--random-colors` | Randomize both the thermal palette and HUD colors |
 | `--glow 0.4` | Restrain HUD bloom independently of sensor texture |
-| `--seed 123` | Reproducible generated waveform, grain, and callout glyph combinations |
+| `--seed 123` | Reproducible colors, generated waveform, grain, and callout glyph combinations |
 
 Video output is H.264/AAC MP4, CRF 18, source aspect ratio and orientation, at most 1920 pixels on the longest edge, and source-average constant frame rate capped at 60 fps. Image output is RGB PNG. It handles local JPEG/PNG stills and FFmpeg-decodable videos; protected, corrupt, or unsupported media cannot be guaranteed. Colors are simulated and do not measure temperature.
 
@@ -268,6 +294,6 @@ The generated demo source is kept locally in the ignored `00_project_files/` fol
 python scripts/build_gallery.py "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --overwrite
 ```
 
-The builder processes seconds 0.5–3.5 once, shares tracked masks and heat fields across matched variants, and exports all labelled examples into `assets/examples/`. It applies texture at the final display size so GIF downsampling does not erase grain or scanlines. It verifies animation timing before replacing the GIFs. The source and temporary decoded frames are never included in the skill archive. The helper is for short SDR gallery clips; use the main converter for normal images and videos.
+The builder processes seconds 0.5–3.5 once, shares tracked masks and heat fields across matched variants, and exports all labelled examples into `assets/examples/`, with larger versions in `assets/examples/large/`. Add `--only colors-matched-green texture-crt-lines` to regenerate selected previews and their large versions. It applies texture at the final display size so GIF downsampling does not erase grain or scanlines. It verifies animation timing before replacing the GIFs. The source and temporary decoded frames are never included in the skill archive. The helper is for short SDR gallery clips; use the main converter for normal images and videos.
 
 </details>

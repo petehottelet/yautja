@@ -18,6 +18,7 @@ import numpy as np
 from PIL import Image, ImageOps
 
 from render import Renderer, PALETTES
+from colors import HUD_THEMES, resolve_colors
 from thermal import THERMAL_MODES, resolve_thermal
 
 
@@ -220,7 +221,9 @@ def convert_image(args):
                         show_timecode=args.timecode, timecode_start=args.timecode_start,
                         thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose,
                         sensor_texture=args.sensor_texture, palette=args.palette,
-                        pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs)
+                        pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
+                        palette_colors=args.palette_colors, hud_theme=args.hud_theme,
+                        hud_colors=args.hud_colors, random_colors=args.random_colors)
     rendered = renderer.render(frame, 0., subjects=subjects)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
@@ -248,7 +251,8 @@ def convert_image(args):
               'settings': {key: getattr(args, key) for key in (
                   'max_size', 'seed', 'grain', 'glow', 'device', 'precision', 'warm_objects',
                   'hot_objects', 'confidence', 'sensor_resolution', 'timecode_start', 'sensor_texture', 'palette',
-                  'pixelation', 'scanlines', 'vhs')}}
+                  'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors')}}
+    report.update(renderer.colors.report())
     if tracker:
         report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
         if not subjects:
@@ -320,7 +324,9 @@ def convert_video(args):
                                 show_timecode=args.timecode, timecode_start=args.timecode_start,
                                 thermal=args.thermal, sensor_resolution=args.sensor_resolution, verbose=args.verbose,
                                 sensor_texture=args.sensor_texture, palette=args.palette,
-                                pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs)
+                                pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
+                                palette_colors=args.palette_colors, hud_theme=args.hud_theme,
+                                hud_colors=args.hud_colors, random_colors=args.random_colors)
             intermediate = temp / 'picture.mp4'
             decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
                           *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
@@ -399,7 +405,9 @@ def convert_video(args):
                               'start', 'duration', 'max_size', 'fps', 'crf', 'preset', 'seed', 'grain', 'glow',
                               'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval',
                               'sensor_resolution', 'waveform', 'wave_window', 'wave_gain', 'audio_stream', 'mute',
-                              'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs')})
+                              'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs',
+                              'palette_colors', 'hud_theme', 'hud_colors', 'random_colors')})
+            report.update(renderer.colors.report())
             if tracker:
                 report['semantic'] = tracker.report()
                 if not tracker.max_subjects:
@@ -420,7 +428,11 @@ def parser():
     p.add_argument('--media', choices=['auto', 'image', 'video'], default='auto', help='Auto selects images for JPEG/PNG input or PNG output; use image with --doctor to skip FFmpeg checks')
     p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
     p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Three segmented looks: silhouette (soft), cinematic (broad surface patches), detailed (skin/clothing/gear). Classic is the lightweight luminance filter; old semantic/realistic names remain aliases')
-    p.add_argument('--palette', choices=['auto', *PALETTES], default='yautja', help='Original Yautja colors in every mode by default; auto is also Yautja. Palettes are independent of thermal style')
+    p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
+    p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
+    p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (default), palette-matched, custom element colors, or seeded random')
+    p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers. Unspecified elements keep standard colors')
+    p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
     p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
     p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; default off unless sensor texture is enabled')
@@ -449,7 +461,7 @@ def parser():
     p.add_argument('--preset', choices=['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow'], default='medium')
     p.add_argument('--grain', nargs='?', type=float, const=.035, help='Optional grain strength, 0-0.25 (bare flag: 0.035); 0 disables. Default off unless sensor texture is enabled')
     p.add_argument('--glow', type=float, default=.65, help='HUD bloom strength, 0-1')
-    p.add_argument('--seed', type=int, default=42, help='Reproducible procedural waveform and grain seed')
+    p.add_argument('--seed', type=int, default=42, help='Reproducible colors, glyphs, procedural waveform, and grain seed (default: 42)')
     p.add_argument('--overwrite', action='store_true', help='Replace an existing output after successful conversion')
     return p
 
@@ -458,6 +470,10 @@ def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     try:
+        # Reject invalid color settings before opening media or loading models.
+        resolve_colors(PALETTES, palette=args.palette, palette_colors=args.palette_colors,
+                       hud_theme=args.hud_theme, hud_colors=args.hud_colors,
+                       random_colors=args.random_colors, seed=args.seed)
         if args.doctor:
             from runtime import environment_info, semantic_diagnostics
             from render import load_glyph_font

@@ -8,6 +8,7 @@ __pycache__/
 .env.*
 00_project_files/
 outputs/
+.yautja-gallery-*/
 tmp/
 dist/
 *.mp4
