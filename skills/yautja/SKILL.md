@@ -64,7 +64,7 @@ Original **Yautja** colors are the default in every mode, including Detailed. `-
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.
 - `--palette green-phosphor`: a green night-vision-style display.
 - `--palette amber-phosphor`: a warm amber display.
-- `--palette white-hot` or `--palette black-hot`: grayscale, with simulated warm regions light or dark.
+- `--palette white-hot` or `--palette black-hot`: grayscale, with simulated warm regions light or dark. Black Hot defaults to black ink for the waveform and every HUD element.
 
 Use `--grain` for fine animated noise (bare flag: 0.035), or set a strength such as `--grain 0.02`; `--grain 0` disables it. Use `--pixelation` for chunky pixels (bare flag: longest grid edge 96), or `--pixelation 80` for larger blocks. The supported grid range is 32–640; `--pixelation 0` disables it. `--crt-lines` and `--no-crt-lines` control horizontal CRT lines across the final picture and HUD; `--scanlines` / `--no-scanlines` remain aliases.
 
@@ -76,7 +76,7 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 
 For a figure list or a selected tracking triangle, read [targets.md](references/targets.md). First scan with `yautja "clip.mov" "figures.json" --list-figures` using cached semantic models, then inspect the generated contact sheet. Resolve the user's chosen figure to its shot-local ID and render with `--figures "figures.json" --target S001-F003`. Reuse that catalog for later color/effect changes. IDs are detected tracks, not identities. Check `targets_seen` and `targets_unseen` in the conversion report.
 
-The three-blade triangle contracts into a compact reticle at the selected figure's center, with thick sides and open corners. It lands in red, then flashes red/white by default. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
+The three-blade triangle contracts into a compact reticle at the selected figure's center, with thick sides and open corners. It lands in red, then flashes red/white by default; Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
 
 Use `--heat-glow 0.6` for moving bloom on hot regions with **any palette**; strength is 0–1 and defaults to 0. `--heat-glow-speed` ranges 0–5 (default 1); 0 freezes the pattern. This is independent of `--glow`, which controls HUD bloom. Use `--motion-blur 0.4` for video frame persistence and `--crt-bleed 0.4` for horizontal phosphor smear; both range 0–1 and default to 0. They affect the picture and HUD, leaving audio unchanged.
 
@@ -90,7 +90,7 @@ waveform, scale, glyphs, timecode, callouts, leaders, and target markers, even i
 the video soundtrack remain active. Waveform analysis is skipped. HUD is on by
 default; `--hud` restores it. This works for both images and videos.
 
-Keep the standard red/cyan HUD, or Abyss's muted cyan, unless the user chooses another theme. `--hud-theme muted-cyan` also works with any other palette. Use
+Keep Black Hot's black HUD, Abyss's muted cyan, or the standard red/cyan HUD for other palettes unless the user chooses another theme. `--hud-theme muted-cyan` also works with any palette. Use
 `--hud-theme palette` to coordinate every HUD element with the selected thermal
 palette, such as `--palette green-phosphor --hud-theme palette` for greens.
 Use `--palette custom --palette-colors "#000000,#0033ff,#ff2200"` for 2–16

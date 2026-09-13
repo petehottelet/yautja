@@ -39,7 +39,7 @@ Three beveled blades contract into a compact reticle centered on the selected bo
 | `--target-flash` / `--no-target-flash` | Flashing on by default for videos; off holds the primary color |
 | `--target-flash-rate 1.5` | Full red/white cycles per second; 0–3; 0 disables flashing |
 
-`--no-target-flash` keeps the assembly animation. Equal colors also hold a constant hue. The target honors `--hud-theme palette`, `--hud-theme random`, and custom `target` / `target-flash` HUD keys. An explicit `--target-colors` pair overrides those two theme colors. Defaults on Abyss remain red/white against its muted cyan HUD. Virtual Boy keeps standard/matched targets red-only; explicit target colors or custom/random HUD themes can introduce other hues.
+`--no-target-flash` keeps the assembly animation. Equal colors also hold a constant hue. The target honors `--hud-theme palette`, `--hud-theme random`, and custom `target` / `target-flash` HUD keys. An explicit `--target-colors` pair overrides those two theme colors. Defaults on Abyss remain red/white against its muted cyan HUD. Black Hot uses black for both target states with standard or palette-matched HUD colors. Virtual Boy keeps standard/matched targets red-only; explicit target colors or custom/random HUD themes can introduce other hues.
 
 ```bash
 yautja "clip.mov" "abyss-target.mp4" --thermal cinematic --palette abyss --figures "figures.json" --target S001-F003 --no-target-flash --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65

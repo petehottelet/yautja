@@ -240,8 +240,8 @@ class Renderer:
         for value, high, flag in ((crt_strength, 1, 'crt-strength'), (heat_glow, 1, 'heat-glow'), (heat_glow_speed, 5, 'heat-glow-speed')):
             if not math.isfinite(value) or not 0 <= value <= high:
                 raise ValueError(f'--{flag} must be between 0 and {high}')
-        # Custom ink uses alpha so even black or very dark hex colors remain visible.
-        self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' else 'RGB'
+        # Alpha draws black ink over the image; screen blending would erase it.
+        self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         if self.thermal != 'classic':
             from .thermal import HeatField, CinematicHeatField, SurfaceHeatField

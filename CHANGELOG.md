@@ -2,6 +2,7 @@
 
 ## 2.1.0 — pending publication
 
+- Make Black Hot's default and palette-matched waveform, glyphs, timecode, callouts, and targets black. Draw black HUD ink with alpha compositing, retain explicit color overrides, and refresh its small/large palette GIFs.
 - Reduce the landed target radius by 70%, retain heavier sides at the smaller size, and open all three corners through the full stroke. Keep the acquisition sweep, configurable size/colors, and red/white flash; refresh small/large target GIFs.
 - Sharpen Rorschach waveform edges using short audio peaks and troughs, retaining the thick mirrored core and shading. Let `--wave-detail` control edge intensity as well as lobe complexity, and refresh all three small/large animated examples.
 - Add three optional audio-reactive Rorschach waveform shapes: filled mirrored lobes, separated inkblots, and hollow pockets. Expose column width, full-height layout, and lobe complexity; keep the aligned thin trace as the default. Include matched small/large animated examples.

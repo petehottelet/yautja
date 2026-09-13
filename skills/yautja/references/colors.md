@@ -18,9 +18,11 @@ python -m yautja "photo.jpg" "ironbow.png" --palette ironbow --hud-theme palette
 
 `--hud-theme palette` takes coordinated highlights and accents from the thermal
 palette, with dimmer scale lines. Green Phosphor uses greens; Amber Phosphor uses
-ambers; White Hot and Black Hot use gray/white HUD ink. It also works with custom
-and random thermal palettes. `--hud-theme standard` retains the familiar red/cyan
-HUD, with a muted cyan default for the Abyss palette. `--hud-theme muted-cyan`
+ambers; White Hot uses gray/white ink. Black Hot uses black for the waveform and
+all HUD elements in both `standard` and `palette` modes, including both target
+states. Black ink is alpha-composited so it remains visible against light regions.
+Matching also works with custom and random thermal palettes. `--hud-theme standard`
+uses red/cyan for other palettes, with a muted cyan default for Abyss. `--hud-theme muted-cyan`
 selects that subdued theme with any palette. Abyss maps blue-black scenery through
 amber and white-hot regions. Matching remains optional; the original Yautja palette
 and HUD defaults are unchanged. Heat glow is independent: add `--heat-glow 0.6`
@@ -72,6 +74,8 @@ or `--target-colors` allow other HUD colors with its red thermal palette.
 Selected triangles use `target` and `target-flash`, including in matched and random
 themes. `--target-colors "#ff302b,#ffffff"` overrides both keys directly.
 Use `--no-target-flash` or equal colors to keep the primary color after assembly.
+Custom, random, or muted-cyan HUD themes and explicit target color pairs take
+precedence over Black Hot's black default.
 See [targets.md](targets.md) for scanning, selecting figures, animation, and display effects.
 
 ## Random colors
