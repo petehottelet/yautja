@@ -53,7 +53,7 @@ def variants():
         'target-outline': {'thermal': 'cinematic', 'target_stroke': 5, 'target_stroke_colors': '#660b12,#687a8d'},
         'target-blur': {'thermal': 'cinematic', 'hud_blur_elements': 'target=8'},
         'target-wave-blur': {'thermal': 'cinematic', 'wave_style': 'rorschach',
-                             'wave_width': .14, 'wave_height': 1., 'hud_blur_elements': 'waveform=6',
+                             'wave_width': .14, 'wave_height': 1., 'hud_blur_elements': 'waveform=6,target=6',
                              'hud_theme': 'custom', 'hud_colors': 'waveform=#ff302b,timecode=#ff302b',
                              'target_colors': '#ff302b,#ff302b'},
         'target-hud-blur': {'thermal': 'cinematic', 'hud_blur': 3,

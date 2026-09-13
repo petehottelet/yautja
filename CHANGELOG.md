@@ -2,7 +2,7 @@
 
 ## 2.1.0 — pending publication
 
-- Add shared and per-element HUD opacity, including separate target flash opacity when requested. Apply transparency to outlines and glow as well as artwork, preserve existing defaults, and report resolved values. Match waveform, reticle, and timecode red in the Rorschach blur example; add small/large transparency GIFs.
+- Add shared and per-element HUD opacity, including separate target flash opacity when requested. Apply transparency to outlines and glow as well as artwork, preserve existing defaults, and report resolved values. Match waveform, reticle, and timecode red in the Rorschach example, with blur on both waveform and reticle; add small/large transparency GIFs.
 
 - Add an optional inward reticle outline with adjustable width and independent landing/flash colors. Add HUD-only Gaussian blur with a shared radius and separate controls for every HUD element, including targets and all waveform styles. Keep both effects off by default, preserve sharp zero overrides and black ink, report resolved settings, and include small/large animated comparisons.
 
