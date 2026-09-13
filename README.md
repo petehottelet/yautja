@@ -13,7 +13,7 @@
   <a href="https://yautja.ai"><img alt="Website: yautja.ai" src="https://img.shields.io/badge/web-yautja.ai-ef4444.svg"></a>
 </p>
 
-# Yautja is sci-fi segmentation, re-skinning, annotation
+# Yautja is sci-fi segmentation, re-skinning, and annotation for video and images. 
 
 Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skill** for creating thermal-imaging-style output.
 
