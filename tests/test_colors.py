@@ -12,11 +12,10 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from colors import HUD_DEFAULTS, resolve_colors
-from render import PALETTES, Renderer
-from semantic import Subject
-from yautja import main
+from yautja.colors import HUD_DEFAULTS, resolve_colors
+from yautja.render import PALETTES, Renderer
+from yautja.semantic import Subject
+from yautja.cli import main
 
 
 class ColorTests(unittest.TestCase):
@@ -121,7 +120,7 @@ class ColorTests(unittest.TestCase):
             output = Path(directory) / 'keep.png'
             output.write_bytes(b'keep this output')
             for options in bad:
-                with self.subTest(options=options), patch('yautja.semantic_tracker') as tracker, \
+                with self.subTest(options=options), patch('yautja.cli.semantic_tracker') as tracker, \
                         patch('sys.stderr', new_callable=io.StringIO) as error:
                     self.assertEqual(main(['missing.jpg', str(output), '--thermal', 'detailed', '--overwrite', *options]), 1)
                     tracker.assert_not_called()

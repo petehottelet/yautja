@@ -1,10 +1,10 @@
 # Dependency and model licensing
 
-Yautja uses the root MIT license. Dependencies and model weights keep their upstream terms. The portable skill includes the fixed runtime manifest, without dependency wheels, model weights, or FFmpeg binaries.
+Yautja uses the root MIT license. Dependencies and model weights keep their upstream terms. The release skill includes one Yautja wheel. Dependency wheels, model weights and FFmpeg binaries are installed separately. Base, tracking, semantic and development dependencies are declared in the repository's `pyproject.toml`; the semantic model revisions remain fixed in the installed `yautja.runtime` module.
 
-## New semantic dependencies
+## Semantic dependencies
 
-The following upstream licenses were checked on 2026-09-11. Model revisions are pinned in `scripts/runtime.py` (also exported by `scripts/semantic.py`), and loading uses safetensors without remote Python code.
+The following upstream licenses were checked on 2026-09-11. Model revisions are pinned in `yautja.runtime` (also exported by `yautja.semantic`), and loading uses safetensors without remote Python code.
 
 | Component | License | Source |
 | --- | --- | --- |
@@ -13,12 +13,11 @@ The following upstream licenses were checked on 2026-09-11. Model revisions are 
 | ViTPose base simple weights/configuration (checked 2026-09-12) | Apache-2.0 | [Publisher model card at the pinned revision](https://huggingface.co/usyd-community/vitpose-base-simple/blob/a93ac0c67e0b7e2c55287d21d4c460c8f3c54d45/README.md) |
 | SciPy (1.17.1 validated for the pose preview) | BSD-3-Clause | [Versioned license](https://github.com/scipy/scipy/blob/v1.17.1/LICENSE.txt) |
 | Transformers 4.57.6 | Apache-2.0 | [Upstream license](https://github.com/huggingface/transformers/blob/v4.57.6/LICENSE) |
-| PyTorch 2.6.0 / torchvision 0.21.0 (phase 1 comparison) | BSD-3-Clause | [PyTorch versioned license](https://github.com/pytorch/pytorch/blob/v2.6.0/LICENSE), [torchvision versioned license](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE) |
+| PyTorch 2.6.0 / torchvision 0.21.0 (historical comparison) | BSD-3-Clause | [PyTorch versioned license](https://github.com/pytorch/pytorch/blob/v2.6.0/LICENSE), [torchvision versioned license](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE) |
 | OpenCV 4.10+ | Apache-2.0 | [Upstream license](https://github.com/opencv/opencv/blob/4.x/LICENSE) |
 
 This separation permits an MIT project to use these independently licensed components while retaining their upstream terms. Redistribution of an Apache-licensed component requires its license, relevant attribution and NOTICE information, and notices for modified upstream files. See [Apache-2.0, section 4](https://www.apache.org/licenses/LICENSE-2.0). The dependency packages may also include components with their own notices; retain the licenses supplied with each distribution if bundling them. Do not label a bundle containing these dependencies as entirely MIT.
 
-SAM 3 was considered in the attached design discussion but is not used. Its [custom SAM license](https://github.com/facebookresearch/sam3/blob/main/LICENSE) is distinct from SAM 2's Apache-2.0 license.
 
 ## Existing runtime
 

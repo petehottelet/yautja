@@ -4,13 +4,13 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-from pathlib import Path
+from importlib.resources import files
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
-from thermal import resolve_thermal
-from colors import resolve_colors
+from .thermal import resolve_thermal
+from .colors import resolve_colors
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -160,7 +160,7 @@ def load_glyph_font():
     from fontTools.fontBuilder import FontBuilder
     from fontTools.pens.ttGlyphPen import TTGlyphPen
     selected = {}
-    shapes = json.loads((Path(__file__).resolve().parent.parent / 'assets' / 'glyphs.json').read_text())
+    shapes = json.loads(files('yautja').joinpath('assets/glyphs.json').read_text(encoding='utf-8'))
     for item in shapes:
         char = item['character']
         pen = TTGlyphPen(None)
@@ -211,7 +211,7 @@ class Renderer:
         self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' else 'RGB'
         self.annotation_positions = {}
         if self.thermal != 'classic':
-            from thermal import HeatField, CinematicHeatField, SurfaceHeatField
+            from .thermal import HeatField, CinematicHeatField, SurfaceHeatField
             field = {'silhouette': HeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField}[self.thermal]
             self.heat_field = field(width, height, sensor_resolution, seed=seed)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
@@ -270,7 +270,7 @@ class Renderer:
 
     def callout_geometry(self):
         if self.callout_segments is None:
-            shapes = json.loads((Path(__file__).resolve().parent.parent / 'assets' / 'glyphs.json').read_text())
+            shapes = json.loads(files('yautja').joinpath('assets/glyphs.json').read_text(encoding='utf-8'))
             # Reuse the broad, nine-segment geometry already bundled in the HUD.
             self.callout_segments = next(item['contours'] for item in shapes if item['character'] == '9')
         return self.callout_segments
@@ -439,7 +439,7 @@ class Renderer:
         # Texture is a display treatment; it must not change the HUD readouts.
         readout_luma = luma
         if self.pixelation or self.grain or self.sensor_texture:
-            from thermal import sensor_size
+            from .thermal import sensor_size
             size = sensor_size(self.width, self.height, self.pixelation) if self.pixelation else (self.width, self.height)
             samples = np.asarray(Image.fromarray(luma).resize(size, Image.Resampling.BOX), dtype=np.float32)
             if self.grain:

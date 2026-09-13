@@ -17,9 +17,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
-from render import Renderer, PALETTES
-from colors import HUD_THEMES, resolve_colors
-from thermal import THERMAL_MODES, resolve_thermal
+from . import __version__
+from .render import Renderer, PALETTES
+from .colors import HUD_THEMES, resolve_colors
+from .thermal import THERMAL_MODES, resolve_thermal
 
 
 class ConversionError(RuntimeError):
@@ -170,7 +171,7 @@ def output_paths(args, suffix):
 def semantic_tracker(args):
     if args.thermal == 'classic':
         return None
-    from semantic import GroundedSegmenter, SemanticTracker
+    from .semantic import GroundedSegmenter, SemanticTracker
     print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
@@ -236,7 +237,7 @@ def convert_image(args):
         if output.exists() and not args.overwrite:
             raise ConversionError('Output appeared during conversion; refusing to overwrite it.')
         os.replace(temporary, output)
-    from runtime import environment_info
+    from .runtime import environment_info
     report = {'report_version': 1, 'media_type': 'image', 'input_format': input_format,
               'output': str(output), 'output_format': 'PNG', 'width': width, 'height': height,
               'frames': 1, 'waveform': 'procedural-static' if args.hud else 'off', 'audio_preserved': False,
@@ -397,7 +398,7 @@ def convert_video(args):
                           sensor_texture=args.sensor_texture, palette=renderer.palette_name,
                           grain=renderer.grain, pixelation=renderer.pixelation, scanlines=renderer.scanlines,
                           crt_lines=renderer.scanlines, vhs=renderer.vhs)
-            from runtime import environment_info
+            from .runtime import environment_info
             report.update(report_version=1, environment=environment_info(),
                           timings={key: round(value, 3) for key, value in timings.items()},
                           processing_fps=round(frames / max(timings['processing_seconds'], .001), 3),
@@ -421,7 +422,7 @@ def convert_video(args):
 
 def parser():
     p = argparse.ArgumentParser(description='Re-skin a local image or video with a sci-fi thermal-imaging look and HUD. Optional segmentation, anatomy-guided coloring, and glyph annotations. For entertainment only; colors are algorithmically generated with some randomness, not measured temperatures.')
-    version = (Path(__file__).resolve().parent.parent / 'VERSION').read_text(encoding='utf-8').strip()
+    version = __version__
     p.add_argument('--version', action='version', version=f'Yautja {version}')
     p.add_argument('input', nargs='?', type=Path, help='Local JPEG/PNG image or video')
     p.add_argument('output', nargs='?', type=Path, help='PNG for a still image; MP4 for a video')
@@ -476,8 +477,8 @@ def main(argv=None):
                        hud_theme=args.hud_theme, hud_colors=args.hud_colors,
                        random_colors=args.random_colors, seed=args.seed)
         if args.doctor:
-            from runtime import environment_info, semantic_diagnostics
-            from render import load_glyph_font
+            from .runtime import environment_info, installation_info, semantic_diagnostics
+            from .render import load_glyph_font
             _, chars = load_glyph_font()
             media = media_kind(args)
             tools = {}
@@ -489,11 +490,11 @@ def main(argv=None):
             semantic = semantic_diagnostics(args.device, args.precision)
             ready = args.thermal == 'classic' or semantic['ready']
             print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), 'media_type': media, **tools,
-                              'environment': environment_info(), 'thermal': args.thermal,
+                              'environment': environment_info(), 'installation': installation_info(), 'thermal': args.thermal,
                               'ready': ready, 'semantic': semantic}, indent=2))
             return 0 if ready else 1
         if args.download_models:
-            from semantic import GroundedSegmenter, MODELS
+            from .semantic import GroundedSegmenter, MODELS
             model = GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects, device=args.device,
                                       precision=args.precision, download=True)
             print(json.dumps({'downloaded': MODELS, 'device': model.device, 'license': 'Apache-2.0'}, indent=2))

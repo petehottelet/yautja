@@ -1,4 +1,6 @@
-# GPU/runtime implementation and validation — 2026-09-11
+# Historical CPU/CUDA performance validation — 2026-09-11
+
+These measurements describe the earlier renderer and runtime, not a benchmark of the 2.0 package. Commands below use the current installed-package layout; rendering defaults have since evolved.
 
 The complete ten-second demo averages **55.92 seconds on CUDA versus 228.68 seconds on CPU: 4.09× faster**. Full precision remains the default. This increment improves execution, diagnosis, and reproducibility; it does not change the optical-flow tracker or heat synthesis and does not establish a higher visual-quality rating.
 
@@ -8,8 +10,8 @@ The complete ten-second demo averages **55.92 seconds on CUDA versus 228.68 seco
 - Semantic conversion checks actual CUDA execution before loading models, reports device/precision/backend and synchronized inference timing, and produces useful memory/driver errors without retrying on CPU. Failed or cancelled conversion preserves an existing output and removes scratch files.
 - Added explicit `--precision fp32|bf16`; fp32 remains the default and bf16 requires supported CUDA. Model forwards use autocast only when requested.
 - Reports separate model setup, audio analysis, frame processing, and audio mux time, with processing fps, settings, environment versions, and peak allocated/reserved CUDA memory.
-- Added repository-only `scripts/benchmark.py` and `scripts/compare_precision.py`. Benchmarks use new directories, source SHA-256 hashes, exact command arrays, per-run logs/reports, output probes, and full decode checks. No model downloads occur.
-- Created isolated `.venv-gpu` and `.venv-classic` environments. Preserved the existing `.venv`, which inherits system packages. Added environment ignores and `scripts/runtime.py` to the portable archive manifest.
+- Added repository-only `tools/benchmark.py` and `tools/compare_precision.py`. Benchmarks use new directories, source SHA-256 hashes, exact command arrays, per-run logs/reports, output probes, and full decode checks. No model downloads occur.
+- Created isolated `.venv-gpu` and `.venv-classic` environments. Preserved the existing `.venv`, which inherits system packages. Recorded the runtime environment alongside each conversion.
 
 ## Workload and results
 
@@ -55,13 +57,13 @@ Local evidence:
 
 ## Reproduce
 
-Follow the [isolated CUDA setup](semantic.md#isolated-cuda-environment-on-windows). The comparison additionally pinned the shared package versions listed above during optional-dependency installation. Existing pinned weights were reused; no model download was required. Use a local clip if the private fixture is unavailable. Run benchmark commands sequentially:
+Follow the [isolated CUDA setup](../skills/yautja/references/semantic.md#isolated-cuda-environment-on-windows). The comparison additionally pinned the shared package versions listed above during optional-dependency installation. Existing pinned weights were reused; no model download was required. Use a local clip if the private fixture is unavailable. Run benchmark commands sequentially:
 
 ```powershell
-.venv\Scripts\python.exe scripts/benchmark.py "00_project_files/create_a_video_of_explorers_wa.mp4" --device cpu --runs 2
-.venv-gpu\Scripts\python.exe scripts/benchmark.py "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --runs 2
-.venv-gpu\Scripts\python.exe scripts/benchmark.py "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --precision bf16 --runs 2
-.venv-gpu\Scripts\python.exe scripts/compare_precision.py "00_project_files/create_a_video_of_explorers_wa.mp4" --times 0 2 4 6 8
+.venv\Scripts\python.exe -m tools.benchmark "00_project_files/create_a_video_of_explorers_wa.mp4" --device cpu --runs 2
+.venv-gpu\Scripts\python.exe -m tools.benchmark "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --runs 2
+.venv-gpu\Scripts\python.exe -m tools.benchmark "00_project_files/create_a_video_of_explorers_wa.mp4" --device cuda --precision bf16 --runs 2
+.venv-gpu\Scripts\python.exe -m tools.compare_precision "00_project_files/create_a_video_of_explorers_wa.mp4" --times 0 2 4 6 8
 ```
 
 For an independently installed CPU environment, select the matching CPU wheel pair from the official versioned installer. The historical `.venv` above is preserved for this machine's comparison; it should not be copied as an installation template. For identical rendering settings, use the saved report's `settings` object, along with its thermal/timecode/verbose values, if defaults later change.
@@ -78,6 +80,6 @@ Before implementation, all **27 existing tests passed**. After implementation:
 
 ## Remaining work
 
-Video-memory tracking, persistent heat fields, look presets, segmentation caching, and cross-platform CI remain future phases. The image predictor still emits the existing upstream `sam2_video` configuration versus `sam2` class warning; both pinned models nevertheless executed successfully in these CPU/CUDA checks. Evaluate the actual video model/processor API in phase 2 rather than treating this image path as video memory.
+Cross-platform CI and three selectable thermal looks have since shipped. Video-memory tracking, persistent heat fields and segmentation caching remain future work; see [the roadmap](ROADMAP.md). The image predictor still emits the existing upstream `sam2_video` configuration versus `sam2` class warning; both pinned models nevertheless executed successfully in these CPU/CUDA checks. Evaluate the actual video model/processor API in a future tracking experiment rather than treating this image path as video memory.
 
 The next quality experiment needs annotated crossings, occlusion, entry/exit, and true cuts, with ID-switch/lost-mask metrics and bounded history storage. The pinned Transformers version already supplies a video session API, but its feature-cache limit does not bound all frame and per-object history. GPU speed and sampled precision agreement do not establish those tracking properties.

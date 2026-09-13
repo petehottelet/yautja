@@ -12,9 +12,8 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from render import Renderer, vhs_frame
-from yautja import main, parser
+from yautja.render import Renderer, vhs_frame
+from yautja.cli import main, parser
 
 
 class AnalogTests(unittest.TestCase):

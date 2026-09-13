@@ -8,24 +8,24 @@ Cinematic (`--thermal cinematic`) is the middle ground: it softens the same surf
 
 ## Setup and use
 
-Keep the lightweight environment if you only need classic mode. For semantic mode, install the optional dependencies in a virtual environment:
+Keep the lightweight environment if you only need classic mode. For semantic mode, install the `semantic` extra in the selected virtual environment. Before the first PyPI publication use the source/wheel route in [runtime setup](runtime.md#install-one-runtime); after publication:
 
 ```bash
-python -m pip install -r requirements-semantic.txt
-python scripts/yautja.py --download-models
-python scripts/yautja.py "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
-python scripts/yautja.py "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
+python -m pip install "yautja[semantic]>=2,<3"
+python -m yautja --download-models
+python -m yautja "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
+python -m yautja "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
 ```
 
-Use your environment's Python executable for these commands. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose adds about 344 MB to the earlier semantic setup; existing installations should reinstall the semantic requirements (including SciPy) and run `--download-models` once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The archive does not include weights, Python packages, or FFmpeg. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
+Use your environment's Python executable for these commands. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose adds about 344 MB to the earlier semantic setup; existing installations should upgrade the semantic extra (including SciPy) and run `--download-models` once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The release skill includes the Yautja wheel, but not model weights, dependency wheels, Python or FFmpeg. Follow the [complete offline setup](runtime.md#offline-install) for a disconnected machine. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
 
 `--device auto` selects CUDA if available, otherwise CPU. A CUDA-capable card also needs CUDA-enabled PyTorch; CPU-only PyTorch will use CPU even if a GPU is installed. Install a compatible PyTorch/torchvision pair using the [official PyTorch installer](https://pytorch.org/get-started/locally/). Start with a five-second sample. CPU processing is substantially slower than classic mode.
 
 ### Diagnose before conversion
 
 ```bash
-python scripts/yautja.py --doctor
-python scripts/yautja.py --doctor --thermal semantic --device cuda
+python -m yautja --doctor
+python -m yautja --doctor --thermal semantic --device cuda
 ```
 
 Doctor reports the executable, environment, package versions and import failures, CUDA build, selected device and reason, GPU name/VRAM, and required files from all three pinned model snapshots. A selected CUDA device must complete a small tensor operation. It never downloads weights or performs model inference; `ready` means the prerequisites passed, not that weight integrity or a real model render has been verified. Missing or broken optional ML packages remain nonfatal for the default classic check. A semantic check exits with status 1 if prerequisites fail.
@@ -34,17 +34,17 @@ Conversions print the actual device and selection reason. An explicit CUDA reque
 
 ### Isolated CUDA environment on Windows
 
-The phase 1 comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0 CUDA 12.4, matching the historical CPU versions. This is a reproducible comparison pair, not a claim that it is the newest release. The pair and wheel index are listed in the [official versioned installation instructions](https://pytorch.org/get-started/previous-versions/#v260). Preserve your working environment:
+The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0 CUDA 12.4, matching the historical CPU versions. This is a reproducible comparison pair, not a claim that it is the newest release. The pair and wheel index are listed in the [official versioned installation instructions](https://pytorch.org/get-started/previous-versions/#v260). Preserve your working environment:
 
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install -r requirements-semantic.txt
-.venv-gpu\Scripts\python.exe scripts/yautja.py --doctor --thermal semantic --device cuda
-.venv-gpu\Scripts\python.exe scripts/yautja.py "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2,<3"
+.venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
+.venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```
 
-Do not add `--system-site-packages`. CUDA-specific wheels stay separate from portable requirements. The regular Hugging Face model cache can be shared with the CPU environment; if doctor finds missing files, run `--download-models` explicitly with the new environment's Python. The converter neither downloads a driver nor changes your existing environment.
+Do not add `--system-site-packages`. CUDA-specific wheels stay separate from base dependencies. The regular Hugging Face model cache can be shared with the CPU environment; if doctor finds missing files, run `--download-models` explicitly with the new environment's Python. The converter neither downloads a driver nor changes your existing environment.
 
 Full precision (`--precision fp32`) remains the default. `--precision bf16` enables experimental CUDA bfloat16 autocast on compatible hardware and fails clearly on CPU or unsupported GPUs. Compare masks and final footage before adopting it; reduced precision can change detections and silhouettes.
 

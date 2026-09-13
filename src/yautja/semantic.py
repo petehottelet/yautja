@@ -13,8 +13,8 @@ import time as clock
 import numpy as np
 from PIL import Image
 
-from thermal import SURFACE_RULES, sensor_size
-from runtime import MODELS, select_device, validate_execution, execution_error
+from .thermal import SURFACE_RULES, sensor_size
+from .runtime import MODELS, select_device, validate_execution, execution_error
 DEFAULT_WARM = 'person,bird,cat,dog,horse,sheep,cow,elephant,bear,zebra,giraffe'
 
 
@@ -52,7 +52,7 @@ class GroundedSegmenter:
                                       Sam2Model, VitPoseForPoseEstimation)
             import scipy.ndimage  # ViTPose's affine crop and heatmap decoding.
         except (ImportError, OSError, RuntimeError) as exc:
-            raise ValueError('Semantic dependencies could not load; install requirements-semantic.txt and check '
+            raise ValueError('Semantic dependencies could not load; install yautja[semantic]>=2,<3 and check '
                              'the PyTorch/torchvision pair with --doctor --thermal semantic. ' + str(exc)) from exc
         self.torch, self.confidence = torch, confidence
         self.surfaces = surfaces
@@ -270,7 +270,7 @@ class SemanticTracker:
         try:
             import cv2
         except ImportError as exc:
-            raise ValueError('Semantic tracking requires opencv-python-headless; install requirements-semantic.txt.') from exc
+            raise ValueError('Semantic tracking requires opencv-python-headless; install yautja[semantic]>=2,<3.') from exc
         self.cv2, self.detector, self.interval = cv2, detector, interval
         self.previous = None
         self.tracks = []

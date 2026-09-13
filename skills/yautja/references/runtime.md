@@ -1,20 +1,60 @@
 # Runtime and conversion details
 
-## Setup
+## Install one runtime
 
-Requires Python 3.10+ and the packages in `requirements.txt`. Video conversion also requires FFmpeg/ffprobe 6+ with libx264 and AAC; still images do not. Python 3.11 is the tested baseline. Create the environment inside the installed skill or repository:
+Requires Python 3.10+; Python 3.10 and 3.11 are covered by CI. Classic needs only the base package. Silhouette, Cinematic, and Detailed also need the `semantic` extra and explicit model setup in [semantic.md](semantic.md). The `tracking` extra supplies OpenCV for tracker development but does not install the models.
+
+**Before the first PyPI publication:** use a locally built wheel, or install the GitHub source with `python -m pip install "yautja @ git+https://github.com/petehottelet/yautja.git@main"`. Add `[semantic]` after `yautja` for segmentation. This source path requires Git. Do not assume a missing PyPI project means the name is reserved. After publication, use the compatible package-index commands below.
+
+Choose the first usable route:
+
+1. **pipx:** `pipx install "yautja>=2,<3"`, or `pipx install "yautja[semantic]>=2,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for any later extras or GPU setup; a different Python installs into a different environment. A dedicated venv is easier for a custom CUDA stack.
+2. **Dedicated venv outside the skill:** create and use the environment below. All `python` examples thereafter mean its exact executable, or the activated environment.
+3. **User site:** `python -m pip install --user "yautja>=2,<3"` only when supported. Invoke `python -m yautja` using that same Python if the console script is not on PATH. If Python is externally managed (PEP 668), use route 2. Never use `--break-system-packages`.
 
 ```bash
-python -m venv .venv
+python -m venv .venv-yautja
 # macOS/Linux
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python scripts/yautja.py --doctor
-# Windows
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe scripts/yautja.py --doctor
+.venv-yautja/bin/python -m pip install "yautja>=2,<3"
+.venv-yautja/bin/python -m yautja --version
+.venv-yautja/bin/python -m yautja --doctor
 ```
 
-For an image-only setup, add `--media image` to doctor to skip video tool checks. For semantic coloring, also add `--thermal semantic` and install the requirements and cached models described in [semantic.md](semantic.md).
+```powershell
+# Windows, after creating the venv
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2,<3"
+.venv-yautja\Scripts\python.exe -m yautja --version
+.venv-yautja\Scripts\python.exe -m yautja --doctor
+```
+
+Confirm a stable version in `>=2,<3` before using this skill. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
+
+## Offline install
+
+The release skill zip contains one application wheel in `yautja/wheels/`. It does **not** contain dependency wheels, model weights, Python, or FFmpeg. On a connected computer with the same OS, architecture, Python version and ABI as the destination, extract the bundle and run these commands from its `yautja/` directory. The environment must have no preinstalled Yautja; pinning to the supplied wheel keeps the application bytes exact:
+
+```bash
+python -c "from pathlib import Path; import subprocess,sys; w, = Path('wheels').glob('*.whl'); subprocess.run([sys.executable,'-m','pip','download','--only-binary=:all:','--dest','wheelhouse',str(w)],check=True)"
+```
+
+For segmentation, change `str(w)` to `str(w) + '[semantic]'` in the preparation command. For cross-platform preparation, specify pip's `--platform`, `--python-version`, `--implementation`, and `--abi` together; preparing on a matching target is easier. Keep the upstream licenses packaged with each wheel.
+
+Transfer the extracted bundle and complete wheelhouse. In a fresh target venv, from `yautja/`, run:
+
+<!-- offline-install: tested from the extracted skill by tools.verify_install -->
+```bash
+python -m pip install --no-index --no-cache-dir --find-links wheelhouse --find-links wheels "yautja>=2,<3"
+yautja --version
+yautja --doctor --media image
+```
+
+Use `"yautja[semantic]>=2,<3"` in that install for a semantic wheelhouse. If a dependency is missing, stop and complete the wheelhouse on the connected computer; do not drop `--no-index`. Model use is independently offline: transfer the complete cache of the three pinned snapshots after an explicit connected `yautja --download-models`, then set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and run `yautja --doctor --thermal cinematic`. These variables do not disable pip networking. For videos separately install FFmpeg/ffprobe and their system libraries before going offline.
+
+## Updates
+
+Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL until PyPI publication; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
+
+## Video tools
 
 FFmpeg for video must be installed separately. Use the user's package manager when available: `sudo apt install ffmpeg` on Debian/Ubuntu or `winget install Gyan.FFmpeg` on Windows. On macOS, use [Homebrew's full build](https://formulae.brew.sh/formula/ffmpeg-full) for the `zscale` filter needed by HDR inputs:
 

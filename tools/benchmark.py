@@ -11,7 +11,7 @@ import sys
 import tempfile
 import time
 
-from yautja import binary
+from yautja.cli import binary
 
 
 def fingerprint(path):
@@ -50,7 +50,7 @@ def main(argv=None):
     status = 0
     for index in range(1, args.runs + 1):
         output = directory / f'run-{index}.mp4'
-        command = [str(args.python), str(Path(__file__).with_name('yautja.py')), str(source), str(output),
+        command = [str(args.python), '-m', 'yautja', str(source), str(output),
                    '--thermal', 'semantic', '--device', args.device, '--precision', args.precision,
                    '--max-size', str(args.max_size), '--fps', str(args.fps), '--start', str(args.start),
                    '--verbose', '--timecode']

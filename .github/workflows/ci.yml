@@ -36,6 +36,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
+          cache-dependency-path: pyproject.toml
       - name: Install FFmpeg on Linux
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
@@ -47,14 +48,29 @@ jobs:
       - name: Install FFmpeg on Windows
         if: runner.os == 'Windows'
         run: choco install ffmpeg --yes --no-progress
-      - name: Install classic dependencies
-        run: python -m pip install -r requirements.txt
+      - name: Install package and explicit build tools
+        run: python -m pip install -e '.[dev]'
       - name: Install optional offline tracking dependency
         if: matrix.mode == 'tracking'
-        run: python -m pip install 'opencv-python-headless>=4.10,<5'
+        run: python -m pip install -e '.[tracking]'
       - name: Validate runtime
-        run: python scripts/yautja.py --doctor
-      - name: Test conversion, tracking, and extracted archive
+        run: |
+          yautja --doctor
+          python -m yautja --version
+      - name: Build, validate, and reproduce release artifacts
+        run: python -m tools.prepare_release
+      - name: Test conversion, tracking, and packaged runtime
         run: python -m unittest discover -s tests -v
-      - name: Build portable skill
-        run: python scripts/package_skill.py --zip dist/yautja.zip
+      - name: Verify clean wheel, offline skill, and sdist installs
+        run: python -m tools.verify_install
+      - name: Save validated build artifacts
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: yautja-build
+          if-no-files-found: error
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/yautja-skill.zip
+            dist/SHA256SUMS.txt

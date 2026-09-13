@@ -12,9 +12,9 @@ import tempfile
 import numpy as np
 from PIL import Image
 
-from render import Renderer, PALETTES
-from semantic import GroundedSegmenter, SemanticTracker
-from yautja import (AudioAnalysis, ConversionError, audio_filter, binary, dimensions,
+from yautja.render import Renderer, PALETTES
+from yautja.semantic import GroundedSegmenter, SemanticTracker
+from yautja.cli import (AudioAnalysis, ConversionError, audio_filter, binary, dimensions,
                     number, probe, read_frame, run, stop_process)
 
 

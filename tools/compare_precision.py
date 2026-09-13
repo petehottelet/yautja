@@ -9,10 +9,10 @@ import sys
 import numpy as np
 from PIL import Image
 
-from benchmark import fingerprint
-from runtime import validate_execution
-from semantic import GroundedSegmenter, mask_iou
-from yautja import binary
+from .benchmark import fingerprint
+from yautja.runtime import validate_execution
+from yautja.semantic import GroundedSegmenter, mask_iou
+from yautja.cli import binary
 
 
 def compare(reference, candidate):

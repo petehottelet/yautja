@@ -9,10 +9,9 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from render import Renderer
-from semantic import Subject, SurfacePart, SemanticTracker
-from thermal import SurfaceHeatField
+from yautja.render import Renderer
+from yautja.semantic import Subject, SurfacePart, SemanticTracker
+from yautja.thermal import SurfaceHeatField
 
 
 def mask(x, y, w, h):

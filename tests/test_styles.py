@@ -12,11 +12,10 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from render import Renderer, PALETTES
-from semantic import Subject, SurfacePart
-from thermal import HeatField, CinematicHeatField, SurfaceHeatField
-from yautja import main, parser
+from yautja.render import Renderer, PALETTES
+from yautja.semantic import Subject, SurfacePart
+from yautja.thermal import HeatField, CinematicHeatField, SurfaceHeatField
+from yautja.cli import main, parser
 
 
 def sample_person():
@@ -150,7 +149,7 @@ class IndependentEffectsTests(unittest.TestCase):
         self.assertEqual((args.grain, args.pixelation, args.scanlines), (.035, 96, False))
         for options in [('--grain', 'nan'), ('--grain', '-.1'), ('--pixelation', '31'),
                         ('--pixelation', '-1'), ('--pixelation', '641'), ('--thermal', 'typo')]:
-            with self.subTest(options=options), patch('yautja.convert') as convert, patch('sys.stderr', new_callable=io.StringIO):
+            with self.subTest(options=options), patch('yautja.cli.convert') as convert, patch('sys.stderr', new_callable=io.StringIO):
                 with self.assertRaises(SystemExit) as result:
                     main(['input.mp4', 'output.mp4', *options])
                 self.assertEqual(result.exception.code, 2)
@@ -165,7 +164,7 @@ class IndependentEffectsTests(unittest.TestCase):
             for mode in ('silhouette', 'cinematic', 'detailed'):
                 detector = SimpleNamespace(device='cpu', device_reason='test fixture', precision='fp32',
                     detect=lambda frame: [sample_person()], report=lambda: {})
-                with patch('semantic.GroundedSegmenter', return_value=detector) as constructor, \
+                with patch('yautja.semantic.GroundedSegmenter', return_value=detector) as constructor, \
                      patch('sys.stdout', new_callable=io.StringIO) as output, patch('sys.stderr', new_callable=io.StringIO):
                     status = main([str(source), str(root / (mode + '.png')), '--thermal', mode,
                                    '--verbose', '--grain', '.02', '--pixelation', '80', '--palette', 'green-phosphor'])

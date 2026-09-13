@@ -3,7 +3,30 @@ from __future__ import annotations
 
 from importlib import import_module, metadata
 from pathlib import Path
+import os
+import shutil
 import sys
+import sysconfig
+
+
+def installation_info():
+    """Describe this interpreter; do not assume the shell's CLI uses it."""
+    from . import __version__
+    scripts = Path(sysconfig.get_path('scripts')).resolve()
+    search = {Path(p).resolve() for p in os.environ.get('PATH', '').split(os.pathsep) if p}
+    found = shutil.which('yautja')
+    in_venv = sys.prefix != sys.base_prefix
+    return {
+        'distribution': 'yautja', 'version': __version__,
+        'package': str(Path(__file__).resolve().parent),
+        'python': sys.executable, 'prefix': sys.prefix,
+        'kind': 'virtual-environment' if in_venv else 'system-or-user-site',
+        'scripts_directory': str(scripts), 'scripts_on_path': scripts in search,
+        'cli_on_path': found,
+        'cli_matches_environment': Path(found).resolve().parent == scripts if found else False,
+        'module_command': [sys.executable, '-m', 'yautja'],
+        'externally_managed': not in_venv and (Path(sysconfig.get_path('stdlib')) / 'EXTERNALLY-MANAGED').exists(),
+    }
 
 MODELS = {
     'detector': ('IDEA-Research/grounding-dino-tiny', 'a2bb814dd30d776dcf7e30523b00659f4f141c71'),
@@ -111,7 +134,7 @@ def semantic_diagnostics(requested='auto', precision='fp32'):
             dependencies[name] = {'importable': True, 'version': getattr(module, '__version__', None)}
         except Exception as exc:
             dependencies[name] = {'importable': False, 'error': str(exc)}
-            errors.append(f'{name}: {exc}. Install requirements-semantic.txt in this Python environment.')
+            errors.append(f'{name}: {exc}. Install yautja[semantic]>=2,<3 in this Python environment.')
     device = {'requested': requested, 'selected': None, 'precision': precision,
               'cuda_available': None, 'cuda_build': None, 'tensor_check': 'not_run'}
     if torch is not None:

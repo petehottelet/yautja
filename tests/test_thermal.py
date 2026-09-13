@@ -10,11 +10,10 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'scripts'))
-from thermal import HeatField
-from semantic import Subject, SemanticTracker
-from render import Renderer
-from yautja import main
+from yautja.thermal import HeatField
+from yautja.semantic import Subject, SemanticTracker
+from yautja.render import Renderer
+from yautja.cli import main
 
 
 def subject(x=60, y=30, width=70, height=120, shape=(180, 320), label='person', hot=False):
@@ -289,7 +288,7 @@ class TrackingTests(unittest.TestCase):
 class ArgumentTests(unittest.TestCase):
     def test_invalid_semantic_options_fail_before_conversion(self):
         for options in [('--verbose',), ('--sensor-resolution', '0'), ('--detect-interval', 'nan'), ('--confidence', '2')]:
-            with self.subTest(options=options), patch('yautja.convert') as convert, patch('sys.stderr', new_callable=io.StringIO):
+            with self.subTest(options=options), patch('yautja.cli.convert') as convert, patch('sys.stderr', new_callable=io.StringIO):
                 with self.assertRaises(SystemExit) as caught:
                     main(['input.mp4', 'output.mp4', *options])
                 self.assertEqual(caught.exception.code, 2)

@@ -9,9 +9,8 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'scripts'))
-from render import Renderer, lcd_timecode, load_glyph_font, procedural_wave, timecode
-from yautja import AudioAnalysis, audio_filter, dimensions, read_frame
+from yautja.render import Renderer, lcd_timecode, load_glyph_font, procedural_wave, timecode
+from yautja.cli import AudioAnalysis, audio_filter, dimensions, read_frame
 
 
 class SignalTests(unittest.TestCase):
@@ -126,15 +125,15 @@ class ConversionTests(unittest.TestCase):
         cls.temp.cleanup()
 
     @staticmethod
-    def call(args):
-        result = subprocess.run(args, capture_output=True, text=True)
+    def call(args, **kwargs):
+        result = subprocess.run(args, capture_output=True, text=True, **kwargs)
         if result.returncode:
             raise AssertionError(result.stderr)
         return result.stdout
 
     def convert(self, source, name, *options):
         output = self.root / name
-        report = json.loads(self.call([sys.executable, str(ROOT / 'scripts' / 'yautja.py'), str(source), str(output),
+        report = json.loads(self.call([sys.executable, '-m', 'yautja', str(source), str(output),
                                       '--preset', 'ultrafast', '--grain', '0', *options]))
         info = json.loads(self.call(['ffprobe', '-v', 'error', '-count_frames', '-show_streams', '-of', 'json', str(output)]))
         return report, info, output
@@ -244,32 +243,45 @@ class ConversionTests(unittest.TestCase):
     def test_existing_output_and_corrupt_input_are_protected(self):
         output = self.root / 'protected.mp4'
         output.write_bytes(b'keep this')
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/yautja.py'), str(self.video), str(output)], capture_output=True)
+        result = subprocess.run([sys.executable, '-m', 'yautja', str(self.video), str(output)], capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(output.read_bytes(), b'keep this')
         source = self.root / 'corrupt.mov'
         source.write_bytes(b'not a video')
         missing_output = self.root / 'must-not-exist.mp4'
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/yautja.py'), str(source), str(missing_output)], capture_output=True)
+        result = subprocess.run([sys.executable, '-m', 'yautja', str(source), str(missing_output)], capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(missing_output.exists())
         self.assertFalse(list(self.root.glob('.yautja-*')))
 
     def test_archive_only_contains_portable_manifest(self):
         import zipfile
-        from package_skill import FILES
+        from tools.build_skill_bundle import manifest
+        from yautja import __version__
         archive = self.root / 'skill.zip'
-        self.call([sys.executable, str(ROOT / 'scripts/package_skill.py'), '--zip', str(archive)])
+        entries = manifest()
+        self.call([sys.executable, '-m', 'tools.build_skill_bundle', '--zip', str(archive)])
         with zipfile.ZipFile(archive) as z:
-            self.assertEqual(set(z.namelist()), {'yautja/' + name for name in FILES})
+            self.assertEqual(set(z.namelist()), {'yautja/' + name for name in entries})
             self.assertTrue(all(not name.endswith(('.mp4', '.env')) for name in z.namelist()))
+            wheels = [name for name in z.namelist() if name.endswith('.whl')]
+            self.assertEqual(len(wheels), 1)
+            self.assertEqual(z.read(wheels[0]), entries[wheels[0].removeprefix('yautja/')].read_bytes())
+            for item in z.infolist():
+                self.assertEqual(item.date_time, (1980, 1, 1, 0, 0, 0))
+                self.assertEqual(item.create_system, 3)
+                self.assertEqual(item.external_attr >> 16, 0o100644)
             z.extractall(self.root / 'portable')
-        cli = self.root / 'portable/yautja/scripts/yautja.py'
-        self.assertEqual(self.call([sys.executable, str(cli), '--version']).strip(),
-                         'Yautja ' + (ROOT / 'VERSION').read_text().strip())
-        self.assertTrue(json.loads(self.call([sys.executable, str(cli), '--doctor']))['ready'])
-        result = json.loads(self.call([sys.executable, str(cli), str(self.video),
-                                       str(self.root / 'portable.mp4'), '--duration', '.25', '--timecode']))
+        installed = self.root / 'installed'
+        self.call([sys.executable, '-m', 'pip', 'install', '--no-index', '--no-deps', '--target', str(installed),
+                   str(self.root / 'portable' / wheels[0])])
+        self.assertEqual(self.call([sys.executable, '-m', 'yautja', '--version'], cwd=installed).strip(),
+                         'Yautja ' + __version__)
+        doctor = json.loads(self.call([sys.executable, '-m', 'yautja', '--doctor'], cwd=installed))
+        self.assertTrue(doctor['ready'])
+        self.assertTrue(Path(doctor['installation']['package']).resolve().is_relative_to(installed.resolve()))
+        result = json.loads(self.call([sys.executable, '-m', 'yautja', str(self.video),
+                                       str(self.root / 'portable.mp4'), '--duration', '.25', '--timecode'], cwd=installed))
         self.assertEqual(result['frames'], 3)
         self.assertTrue(result['audio_preserved'])
 

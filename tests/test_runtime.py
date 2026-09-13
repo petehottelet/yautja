@@ -12,10 +12,9 @@ import unittest
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'scripts'))
-from runtime import MODELS, MODEL_FILES, model_cache_status, select_device, validate_execution
-from semantic import GroundedSegmenter
-from yautja import main, stop_process
+from yautja.runtime import MODELS, MODEL_FILES, model_cache_status, select_device, validate_execution
+from yautja.semantic import GroundedSegmenter
+from yautja.cli import main, stop_process
 
 
 def fake_torch(available=False, cuda_build=None, bf16=False):
@@ -29,14 +28,14 @@ class DiagnosticsTests(unittest.TestCase):
     def test_missing_ml_packages_are_nonfatal_only_for_classic_doctor(self):
         missing = {key: {'cached': False} for key in MODELS}
         for mode, expected in [('classic', 0), ('semantic', 1)]:
-            with self.subTest(mode=mode), patch('runtime.import_module', side_effect=ImportError('not installed')), \
-                    patch('runtime.model_cache_status', return_value=missing), patch('sys.stdout', new_callable=io.StringIO) as output:
+            with self.subTest(mode=mode), patch('yautja.runtime.import_module', side_effect=ImportError('not installed')), \
+                    patch('yautja.runtime.model_cache_status', return_value=missing), patch('sys.stdout', new_callable=io.StringIO) as output:
                 self.assertEqual(main(['--doctor', '--thermal', mode]), expected)
                 result = json.loads(output.getvalue())
                 self.assertEqual(result['ready'], mode == 'classic')
                 self.assertFalse(result['semantic']['ready'])
                 self.assertEqual(result['environment']['executable'], sys.executable)
-                self.assertIn('requirements-semantic.txt', ' '.join(result['semantic']['errors']))
+                self.assertIn('yautja[semantic]>=2,<3', ' '.join(result['semantic']['errors']))
 
     def test_partial_cache_and_empty_weights_are_not_ready(self):
         with tempfile.TemporaryDirectory() as td:
@@ -137,8 +136,8 @@ class FailureCleanupTests(unittest.TestCase):
                 model._detect = Mock(side_effect=failure)
                 tracker = SimpleNamespace(detector=model, update=lambda frame, time: model.detect(frame))
                 with self.subTest(failure=type(failure).__name__), \
-                        patch('semantic.GroundedSegmenter', return_value=model), \
-                        patch('semantic.SemanticTracker', return_value=tracker), \
+                        patch('yautja.semantic.GroundedSegmenter', return_value=model), \
+                        patch('yautja.semantic.SemanticTracker', return_value=tracker), \
                         patch('sys.stderr', new_callable=io.StringIO), patch('sys.stdout', new_callable=io.StringIO):
                     result = main([str(source), str(destination), '--thermal', 'semantic', '--device', 'cuda', '--overwrite'])
                 self.assertEqual(result, expected)

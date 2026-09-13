@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 — pending publication
+
+- **Breaking:** install Yautja with pip/pipx and invoke `yautja` or `python -m yautja`. The copied-script entrypoint has been removed. The package uses a standard source layout, bundled glyph resources and a single version in `pyproject.toml`.
+- Move the thin agent skill into `skills/yautja/`; build `yautja-skill.zip` with its matching application wheel. Add explicit same-environment and complete offline-wheelhouse setup, reproducible wheel/bundle checks, clean installs on every CI platform, and gated PyPI Trusted Publishing.
+- Add installation context and PATH diagnostics to doctor. Keep all current flags, dependency constraints, model revisions, rendering modes and media safeguards.
 
 - Add `--no-hud` to hide every overlay while retaining thermal coloring, textures, and sound. It overrides timecode and annotations, skips waveform analysis and glyph loading, and has linked small/large GIF examples. HUD remains enabled by default.
 - Add optional palette-matched HUD colors, custom hex ramps and nine independent HUD element colors, and seeded random colors for the thermal palette, HUD, or both. Reports include the resolved color values; colors stay fixed throughout a video. Standard colors remain unchanged.
@@ -26,4 +30,4 @@
 - Explicit model downloads, CPU/CUDA selection, runtime checks, and support for trims, aspect ratio, and rotation.
 - Reproducible release packages, offline tests, and CI on Windows, macOS, and Linux.
 
-Yautja uses the MIT license. Separately installed dependencies and model weights retain their upstream terms; see [dependency details](references/dependencies.md).
+Yautja uses the MIT license. Separately installed dependencies and model weights retain their upstream terms; see [dependency details](skills/yautja/references/dependencies.md).

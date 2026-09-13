@@ -12,8 +12,8 @@ Use `--hud` to restore overlays. Reports distinguish effective `hud`, `timecode`
 ## Match the HUD to the selected palette
 
 ```bash
-python scripts/yautja.py "clip.mov" "green.mp4" --palette green-phosphor --hud-theme palette --timecode
-python scripts/yautja.py "photo.jpg" "ironbow.png" --palette ironbow --hud-theme palette
+python -m yautja "clip.mov" "green.mp4" --palette green-phosphor --hud-theme palette --timecode
+python -m yautja "photo.jpg" "ironbow.png" --palette ironbow --hud-theme palette
 ```
 
 `--hud-theme palette` takes coordinated highlights and accents from the thermal
@@ -53,7 +53,7 @@ antialiasing, opacity, and glow still apply.
 Full example, with an independent thermal palette and every HUD element assigned:
 
 ```bash
-python scripts/yautja.py "clip.mov" "custom.mp4" --thermal cinematic --verbose --timecode --palette custom --palette-colors "#020518,#173d8f,#10b7ad,#fbad43,#fff1c7" --hud-theme custom --hud-colors "waveform=#ffb347,waveform-axis=#684323,waveform-ticks=#9c6535,waveform-glyphs=#ffd28a,readout=#7fe8ff,timecode=#d6f7ff,callouts=#77ffd0,leaders=#399e83,markers=#ffffff"
+python -m yautja "clip.mov" "custom.mp4" --thermal cinematic --verbose --timecode --palette custom --palette-colors "#020518,#173d8f,#10b7ad,#fbad43,#fff1c7" --hud-theme custom --hud-colors "waveform=#ffb347,waveform-axis=#684323,waveform-ticks=#9c6535,waveform-glyphs=#ffd28a,readout=#7fe8ff,timecode=#d6f7ff,callouts=#77ffd0,leaders=#399e83,markers=#ffffff"
 ```
 
 Custom HUD ink uses normal alpha compositing so black and dark colors work.
@@ -66,9 +66,9 @@ allow other HUD colors with its red thermal palette.
 ## Random colors
 
 ```bash
-python scripts/yautja.py "clip.mov" "random.mp4" --random-colors --seed 137
-python scripts/yautja.py "clip.mov" "random-thermal.mp4" --palette random --hud-theme palette --seed 137
-python scripts/yautja.py "photo.jpg" "random-hud.png" --palette green-phosphor --hud-theme random --seed 137
+python -m yautja "clip.mov" "random.mp4" --random-colors --seed 137
+python -m yautja "clip.mov" "random-thermal.mp4" --palette random --hud-theme palette --seed 137
+python -m yautja "photo.jpg" "random-hud.png" --palette green-phosphor --hud-theme random --seed 137
 ```
 
 `--random-colors` selects a random thermal palette **and** independent random

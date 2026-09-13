@@ -1,40 +1,146 @@
-name: Release portable skill
+name: Build and publish release
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to validate, or main for a dry run'
+        required: true
+        default: main
+      publish:
+        description: 'Publish after validation (requires PyPI setup and a version tag)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
-  package:
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
+      actions: read
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     env:
       HF_HUB_OFFLINE: '1'
       TRANSFORMERS_OFFLINE: '1'
-      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      RELEASE_REF: ${{ github.event.release.tag_name || inputs.tag }}
+      WANT_PUBLISH: ${{ github.event_name == 'release' || inputs.publish }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_REF }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.11'
-      - name: Verify release version
-        run: python -c "import os; from pathlib import Path; assert os.environ['RELEASE_TAG'] == 'v' + Path('VERSION').read_text().strip(), 'Release tag must match VERSION'"
-      - name: Install test runtime
-        run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
-          python -m pip install -r requirements.txt 'opencv-python-headless>=4.10,<5'
-      - name: Test before packaging
-        run: python -m unittest discover -s tests -v
-      - name: Build archive and checksum
-        run: |
-          python scripts/package_skill.py --zip dist/yautja.zip
-          python -c "import hashlib; from pathlib import Path; p = Path('dist/yautja.zip'); Path('dist/SHA256SUMS.txt').write_text(hashlib.sha256(p.read_bytes()).hexdigest() + '  yautja.zip\n')"
-      - name: Attach portable skill to release
+      - name: Validate release reference and successful cross-platform CI
+        id: version
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$RELEASE_TAG" dist/yautja.zip dist/SHA256SUMS.txt --clobber
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+          tag = 'v' + version
+          if os.environ['WANT_PUBLISH'] == 'true':
+              assert os.environ['RELEASE_REF'] == tag, 'Publish only a matching version tag'
+              commit = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
+              runs = json.loads(subprocess.check_output(['gh','run','list','--workflow','ci.yml','--commit',commit,'--status','success','--json','conclusion'], text=True))
+              assert runs, 'The release commit needs successful cross-platform CI'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('tag=' + tag + '\n')
+          PY
+      - name: Install build and test runtime
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          python -m pip install -e '.[dev,tracking]'
+      - name: Prepare all artifacts before publishing
+        run: python -m tools.prepare_release
+      - name: Test source and clean package installs
+        run: |
+          python -m unittest discover -s tests -v
+          python -m tools.verify_install
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-files
+          if-no-files-found: error
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/yautja-skill.zip
+            dist/SHA256SUMS.txt
+
+  publish:
+    needs: prepare
+    if: vars.PYPI_PUBLISH_ENABLED == 'true' && (github.event_name == 'release' || inputs.publish)
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/yautja/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-files
+          path: artifacts
+      - name: Verify checksums and any already-published bytes
+        run: |
+          cd artifacts
+          sha256sum --check SHA256SUMS.txt
+          python - <<'PY'
+          from email.parser import BytesParser
+          import hashlib, json, shutil, urllib.error, urllib.request, zipfile
+          from pathlib import Path
+          wheel, = Path('.').glob('*.whl')
+          with zipfile.ZipFile(wheel) as archive:
+              metadata = BytesParser().parsebytes(archive.read(next(n for n in archive.namelist() if n.endswith('.dist-info/METADATA'))))
+          try:
+              with urllib.request.urlopen(f"https://pypi.org/pypi/{metadata['Name']}/{metadata['Version']}/json", timeout=30) as response:
+                  existing = {item['filename']: item['digests']['sha256'] for item in json.load(response)['urls']}
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404: raise
+              existing = {}
+          Path('pypi').mkdir()
+          for path in [wheel, *Path('.').glob('*.tar.gz')]:
+              assert path.name not in existing or existing[path.name] == hashlib.sha256(path.read_bytes()).hexdigest(), 'Published bytes differ; do not overwrite a version'
+              shutil.copyfile(path, Path('pypi') / path.name)
+          PY
+      - name: Publish exact validated distributions with OIDC
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          packages-dir: artifacts/pypi/
+          skip-existing: true
+
+  attach:
+    needs: [prepare, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-files
+          path: dist
+      - name: Attach the same artifacts to GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          cd dist
+          sha256sum --check SHA256SUMS.txt
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" ./*.whl ./*.tar.gz yautja-skill.zip SHA256SUMS.txt --clobber

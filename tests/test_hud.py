@@ -12,10 +12,9 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
-from render import Renderer, vhs_frame
-from semantic import Subject
-from yautja import main, parser
+from yautja.render import Renderer, vhs_frame
+from yautja.semantic import Subject
+from yautja.cli import main, parser
 
 
 class HudTests(unittest.TestCase):
@@ -33,7 +32,7 @@ class HudTests(unittest.TestCase):
         mask[40:210, 120:190] = 1
         subjects = [Subject(mask, 'person', .95, track_id=1)]
         for mode in ('classic', 'silhouette', 'cinematic', 'detailed'):
-            with self.subTest(mode=mode), patch('render.load_glyph_font') as font:
+            with self.subTest(mode=mode), patch('yautja.render.load_glyph_font') as font:
                 renderer = Renderer(320, 240, hud=False, show_timecode=True, verbose=True, thermal=mode,
                                     palette='green-phosphor', hud_theme='random')
                 field = renderer.heat_field.build(frame, subjects) if mode != 'classic' else np.full((240, 320), 97, np.uint8)
@@ -89,7 +88,7 @@ class HudTests(unittest.TestCase):
                     if enabled:
                         status = main([str(source), str(output), '--timecode'])
                     else:
-                        with patch('yautja.AudioAnalysis', side_effect=AssertionError('Unused waveform analysis')):
+                        with patch('yautja.cli.AudioAnalysis', side_effect=AssertionError('Unused waveform analysis')):
                             status = main([str(source), str(output), '--timecode', '--no-hud'])
                 self.assertEqual(status, 0)
                 data = json.loads(report.getvalue())

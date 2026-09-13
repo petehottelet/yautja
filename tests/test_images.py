@@ -15,8 +15,7 @@ import numpy as np
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'scripts'))
-from yautja import main
+from yautja.cli import main
 
 
 class ImageTests(unittest.TestCase):
@@ -33,7 +32,7 @@ class ImageTests(unittest.TestCase):
     def call(self, source, output, *options):
         with patch('sys.stdout', new_callable=io.StringIO) as stdout, \
                 patch('sys.stderr', new_callable=io.StringIO) as stderr, \
-                patch('yautja.binary', side_effect=AssertionError('Images must not require FFmpeg')):
+                patch('yautja.cli.binary', side_effect=AssertionError('Images must not require FFmpeg')):
             status = main([str(source), str(output), *options])
         return status, stdout.getvalue(), stderr.getvalue()
 
@@ -168,14 +167,14 @@ class ImageTests(unittest.TestCase):
         env = {**os.environ, 'PATH': '', 'HF_HUB_OFFLINE': '1', 'TRANSFORMERS_OFFLINE': '1'}
         for options in [[str(self.source), str(self.root / 'subprocess.png')],
                         ['--doctor', '--media', 'image']]:
-            result = subprocess.run([sys.executable, str(ROOT / 'scripts/yautja.py'), *options],
+            result = subprocess.run([sys.executable, '-m', 'yautja', *options],
                                     capture_output=True, text=True, env=env)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['media_type'], 'image')
 
     @unittest.skipUnless(importlib.util.find_spec('cv2'), 'Optional tracking runtime is not installed')
     def test_realistic_cli_and_texture_toggle_reach_the_shared_renderer(self):
-        from semantic import Subject, SurfacePart
+        from yautja.semantic import Subject, SurfacePart
         def detect(frame):
             mask = np.zeros((frame.height, frame.width), dtype=np.float32)
             mask[45:160, 100:155] = 1
@@ -184,7 +183,7 @@ class ImageTests(unittest.TestCase):
             return [Subject(mask, 'person', .99, parts=[SurfacePart(part, 'face', .9)])]
         detector = SimpleNamespace(device='cpu', device_reason='test fixture', precision='fp32',
                                    surfaces=True, detect=detect, report=lambda: {})
-        with patch('semantic.GroundedSegmenter', return_value=detector) as constructor:
+        with patch('yautja.semantic.GroundedSegmenter', return_value=detector) as constructor:
             clean, a = self.convert(self.source, 'realistic-clean.png', '--thermal', 'realistic', '--verbose')
             textured, b = self.convert(self.source, 'realistic-textured.png', '--thermal', 'realistic',
                                        '--verbose', '--sensor-texture')
@@ -205,7 +204,7 @@ class ImageTests(unittest.TestCase):
 
     @unittest.skipUnless(importlib.util.find_spec('cv2'), 'Optional tracking runtime is not installed')
     def test_semantic_image_detects_once_and_preserves_cool_background(self):
-        from semantic import Subject
+        from yautja.semantic import Subject
         calls = []
         def detect(frame):
             calls.append(frame.size)
@@ -214,7 +213,7 @@ class ImageTests(unittest.TestCase):
             return [Subject(mask, 'person', .99)]
         detector = SimpleNamespace(device='cpu', device_reason='test fixture', precision='fp32',
                                    detect=detect, report=lambda: {})
-        with patch('semantic.GroundedSegmenter', return_value=detector):
+        with patch('yautja.semantic.GroundedSegmenter', return_value=detector):
             report, pixels = self.convert(self.source, 'semantic.png', '--thermal', 'semantic',
                                           '--verbose', '--grain', '0')
         self.assertEqual(calls, [(321, 181)])

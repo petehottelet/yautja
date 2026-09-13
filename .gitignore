@@ -11,6 +11,14 @@ outputs/
 .yautja-gallery-*/
 tmp/
 dist/
+build/
+*.egg-info/
+IMPLEMENTATION_PLAN.md
+REVIEW.md
+HANDOFF.md
+PLAN.md
+TODO.md
+NOTES.md
 *.mp4
 *.mov
 *.mkv
