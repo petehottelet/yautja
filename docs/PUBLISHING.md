@@ -1,6 +1,6 @@
 # Build and publish Yautja
 
-The first PyPI publication is **not enabled**. The source can be installed with pip from GitHub or from a locally built wheel. A completed local build or green CI does not mean PyPI publication has happened.
+Releases publish to [PyPI](https://pypi.org/project/yautja/) through GitHub Trusted Publishing. The repository variable **PYPI_PUBLISH_ENABLED** controls uploads. A completed local build or green CI does not mean PyPI publication has happened; confirm the version on PyPI and the matching GitHub release.
 
 ## Build and validate
 
@@ -33,4 +33,4 @@ With the gate disabled, requested publication is skipped and artifacts remain av
 
 Re-run failed jobs in the same workflow run so they reuse the prepared artifacts. The publish job checks the stored checksums and compares any existing PyPI filenames and hashes before using `skip-existing`; different published bytes fail. Never delete and recreate a version or rebuild changed source under the same tag. If PyPI succeeds but GitHub attachment fails, re-run the attachment job using that run's `release-files` artifact. If the artifact has expired, recover the exact wheel/sdist from PyPI and the original skill/checksum files from retained build output before restoring attachments. Do not replace their checksums with a fresh, unverified rebuild.
 
-After the first successful publication, replace the temporary source-install status in README and the runtime guide with the standard pip/pipx instructions already provided, update the changelog date, and verify the live PyPI page, GitHub downloads, and skill bootstrap.
+Prepare the README, runtime guide, and dated changelog before the release build so the published package contains its final installation instructions. After publication, verify the live PyPI page, GitHub downloads, and skill bootstrap using the exact published artifacts.

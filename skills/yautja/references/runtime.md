@@ -4,7 +4,7 @@
 
 Requires Python 3.10+; Python 3.10 and 3.11 are covered by CI. Classic needs only the base package. Silhouette, Cinematic, and Detailed also need the `semantic` extra and explicit model setup in [semantic.md](semantic.md). The `tracking` extra supplies OpenCV for tracker development but does not install the models.
 
-**Before the first PyPI publication:** use a locally built wheel, or install the GitHub source with `python -m pip install "yautja @ git+https://github.com/petehottelet/yautja.git@main"`. Add `[semantic]` after `yautja` for segmentation. This source path requires Git. Do not assume a missing PyPI project means the name is reserved. After publication, use the compatible package-index commands below.
+Use the [PyPI package](https://pypi.org/project/yautja/) with the compatible commands below, or the matching wheel from a [GitHub release](https://github.com/petehottelet/yautja/releases). For development, install the GitHub source with `python -m pip install "yautja @ git+https://github.com/petehottelet/yautja.git@main"`. Add `[semantic]` after `yautja` for segmentation. The source route requires Git and can include changes beyond the latest release.
 
 Choose the first usable route:
 
@@ -52,7 +52,7 @@ Use `"yautja[semantic]>=2.1,<3"` in that install for a semantic wheelhouse. If a
 
 ## Updates
 
-Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2.1,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2.1,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL until PyPI publication; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
+Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2.1,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2.1,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL to follow development; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
 
 ## Video tools
 

@@ -13,7 +13,7 @@ Use the installed Yautja CLI. This skill contains instructions; pip installs the
 
 Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.1,<3` for the three segmented looks, or `yautja>=2.1,<3` for Classic. A base pipx install does not include segmentation.
 
-The first PyPI publication needs maintainer setup. Until it is available, install the built release wheel or the GitHub source as described in the runtime guide; do not substitute a similarly named package.
+Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
 Use the same executable for installation, extras, diagnosis, conversion, and upgrades. For a virtual environment, `python -m yautja` below means that environment's exact Python path. If a pipx console command is absent from PATH, find its environment with `pipx environment --value PIPX_LOCAL_VENVS`, then use that environment's Python. Do not fall back to an unrelated system Python. Never bypass an externally managed Python with `--break-system-packages`; create a virtual environment.
 

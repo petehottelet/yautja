@@ -1,6 +1,8 @@
 # Changelog
 
-## 2.1.0 — pending publication
+## 2.1.0 — 2026-09-13
+
+- First PyPI release of the pip-first runtime, with the matching wheel and portable agent skill bundle on GitHub. Includes the 2.0 architecture changes below.
 
 - Add shared and per-element HUD opacity, including separate target flash opacity when requested. Apply transparency to outlines and glow as well as artwork, preserve existing defaults, and report resolved values. Match waveform, reticle, and timecode red in the Rorschach example, with blur on both waveform and reticle; add small/large transparency GIFs.
 
@@ -16,7 +18,7 @@
 - Add independent, adjustable heat glow for every palette with configurable movement speed; retain the separate HUD glow control. Add adjustable video frame persistence, horizontal CRT phosphor bleed, and vertical CRT stripes, with shared line-strength control for either direction. All new effects default off.
 - Document the complete selection workflow and controls in the CLI and thin skill. Raise its minimum runtime to 2.1, and add labelled small/large GIFs for targets, Abyss, glow in several palettes, vertical lines, and softer/stronger trails and bleed.
 
-## 2.0.0 — pending publication
+## 2.0 architecture — included in 2.1.0
 
 - **Breaking:** install Yautja with pip/pipx and invoke `yautja` or `python -m yautja`. The copied-script entrypoint has been removed. The package uses a standard source layout, bundled glyph resources and a single version in `pyproject.toml`.
 - Move the thin agent skill into `skills/yautja/`; build `yautja-skill.zip` with its matching application wheel. Add explicit same-environment and complete offline-wheelhouse setup, reproducible wheel/bundle checks, clean installs on every CI platform, and gated PyPI Trusted Publishing.
