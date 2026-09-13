@@ -208,7 +208,7 @@ class SurfaceHeatField(HeatField):
             if priority == 1 and garment_shading:
                 # Only segmented garments get low-frequency fold/shading cues.
                 # Normalize within the garment: visible dark cloth is not colder.
-                radius = max(1.2, span * .015)
+                radius = max(1.2, float(span * .015))
                 weight = np.asarray(Image.fromarray(np.uint8(mask * 255)).filter(ImageFilter.GaussianBlur(radius)), dtype=np.float32) / 255
                 blurred = np.asarray(Image.fromarray(np.uint8(gray * mask * 255)).filter(ImageFilter.GaussianBlur(radius)), dtype=np.float32) / 255
                 smooth = blurred / np.maximum(weight, .01)
@@ -256,7 +256,7 @@ class CinematicHeatField(SurfaceHeatField):
         # Mask-normalized blur avoids drawing a cold fringe inside the body.
         surface = super().detailed_surface(frame, subject, hard, garment_shading=False)
         rows = np.nonzero(hard)[0]
-        radius = max(.9, (rows.max() - rows.min() + 1) * .025)
+        radius = max(.9, float((rows.max() - rows.min() + 1) * .025))
         support = Image.fromarray(np.uint8(hard) * 255)
         weight = np.asarray(support.filter(ImageFilter.GaussianBlur(radius)), dtype=np.float32) / 255
         samples = Image.fromarray(np.uint8(np.clip(surface * hard, 0, 1) * 255))
