@@ -138,6 +138,8 @@ class TargetOverlay:
             # Lock onto the figure's center with a compact reticle, rather than
             # enclosing its full silhouette. Keep the broad acquisition sweep.
             lock_radius = min(radius, max(width, height) * .65) * .30
+            if self.shape not in ('triangle', 'triangle-dots'):
+                lock_radius *= .85
             stroke_radius = lock_radius + (max(width, height) * .75 - lock_radius) * (1 - ease)
             radius = stroke_radius + lock_radius * .30 * ease
             angle = -.17 * (1 - ease)

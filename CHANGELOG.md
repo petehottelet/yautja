@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.7 — 2026-09-13
+
+- Reduce the final locked size of Circular crosshair, Hollow Cross, Round with lock dot, and all four square reticles by 15%. Preserve the acquisition starting size, lock timing, and both triangle designs. Refresh all seven examples in both GIF sizes with versioned README URLs. The agent skill now requires runtime 2.5.7+.
+
 ## 2.5.6 — 2026-09-13
 
 - Add four evenly spaced gaps to the Round with lock dot outline (`--target-shape round-dot`). Keep its circular size, line thickness, center dot, and lock animation. Refresh both GIF sizes and version their README URLs. Update the agent skill to require runtime 2.5.6+.
