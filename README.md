@@ -89,7 +89,32 @@ Use your virtual environment's Python. PNG output selects still-image mode autom
 
 Images retain their aspect ratio and EXIF orientation, with a longest edge of at most 1920 pixels and no upscaling. `--max-size` changes that limit. Transparent areas are flattened onto black before coloring; output is an RGB PNG without source metadata. Animated PNG and video-only timing/audio controls are rejected. Existing output and source files are protected.
 
-## Four thermal looks
+## Style presets and individual options
+
+A **style preset** is the broadest visual option: a named bundle of settings for the overall appearance. It can combine thermal detail, a color palette, thermal levels, HUD styling, waveform and reticle designs, and effects. Each visual setting remains individually configurable, and you can save your combination as a new style preset. You can also configure individual options without selecting a preset.
+
+| Part of a style preset | Individual controls | What it changes |
+| --- | --- | --- |
+| Thermal detail | `--thermal` | How much subject and scenery detail is preserved |
+| Color palette | `--palette`, `--palette-colors` | The colors assigned from cold to hot |
+| Thermal levels and tone | `--thermal-levels`, `--thermal-band-softness`, black/white points, gamma, softness | Color bands, transitions, contrast, and smoothing |
+| HUD styling | `--hud`, `--hud-theme`, colors, blur, opacity, `--neon` | Overlay visibility and appearance, including individual element overrides |
+| Waveform and targets | `--wave-style`, waveform dimensions, `--target-shape`, target colors and lock timing | The waveform and reticle designs and behavior |
+| Display effects | `--heat-glow`, grain, pixelation, CRT patterns, VHS, motion blur | Glow and image texture |
+
+Choose a built-in style preset with **`--stylepreset NAME`**, or load a saved style preset with **`--preset-file "my-style.json"`**. Use one selector at a time; a JSON file can name a built-in preset as its starting point. Settings the preset does not specify use the normal defaults.
+
+**Individual options override the preset, regardless of argument order.** For example, this keeps HotTropic's colors and thermal levels while selecting Very Detailed, enabling the HUD, and adding heat glow:
+
+```bash
+yautja "clip.mov" "my-tropic.mp4" --stylepreset hottropic --thermal very-detailed --hud --heat-glow 0.6
+```
+
+For a JSON preset, the order is **defaults → optional built-in base → saved settings → explicit command-line options**; later values take priority. Overrides affect the current command. Use `--save-preset` to save the resulting visual settings. Group controls still apply: for example, `--no-hud` hides all HUD elements, and neon tuning takes effect when `--neon` is enabled.
+
+Presets store **visual settings only**. Choose input/output files, figure catalogs and selected targets, trims, output size/frame rate, encoding, audio-track selection/muting, and model/device setup separately for each conversion. The encoder's `--preset fast` controls compression and is separate from `--stylepreset`.
+
+### Four thermal detail modes
 
 Choose the level of detail separately from the color palette. All four examples use the **original Yautja colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
 
@@ -109,7 +134,7 @@ All four use anatomy-guided fallback when estimates are uncertain. Cinematic, De
 
 Existing commands still work: `--thermal silhouette` and `--thermal semantic` now select Low Detail, and `--thermal realistic` remains an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
 
-### Presets - HotTropic
+### HotTropic style preset
 
 This preset uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture.
 
@@ -120,11 +145,9 @@ This preset uses eleven colors from black and deep blue through cyan, green, yel
 
 Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--thermal-levels 0` for continuous color, and `--thermal-band-softness 0` for hard bands. Soft transitions and optional glow add intermediate visible colors; twelve representative levels does not limit a GIF to twelve RGB colors. Explicit options override the recipe regardless of argument order. For example, add `--hud --thermal very-detailed` to use its colors and levels with more source detail and overlays. [Exact recipe and grading controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
-### Create your own presets
+### Create your own style presets
 
-A **preset** saves a combination of colors, thermal detail, levels, HUD styling, and effects. A **palette** is the color ramp inside it. Every existing palette now has a Cinematic starter preset, and HotTropic is a complete look.
-
-List the built-ins, customize one, and save your version:
+Start from a built-in preset, a saved preset, or individual options. Customize the settings, then save your own named style preset:
 
 ```bash
 yautja --list-presets
@@ -132,16 +155,18 @@ yautja --stylepreset hottropic --hud --hud-theme palette --heat-glow 0.6 --timec
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 ```
 
-Saving needs no source or models. Share the JSON file with another person or agent, then override individual choices when using it, such as `--heat-glow 0.2`. Existing saves require `--overwrite`. Presets remember visual settings; choose input/output files, target figures, and encoding per conversion.
+Saving needs no source or models. `--save-preset` writes a complete snapshot of the resolved visual settings, including defaults, so the exported file can be reused without its starting preset. Share the JSON file with another person or agent, then override individual choices when using it, such as `--heat-glow 0.2`. Existing saves require `--overwrite`.
 
-| Tropic Glow · a custom HotTropic preset |
+| Tropic Glow · custom style preset example |
 | --- |
 | [![Tropic Glow: HotTropic with coordinated HUD colors and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif) |
 | [Editable JSON preset](skills/yautja/assets/presets/tropic-glow.json) · [Creation, schema, and sharing guide](skills/yautja/references/presets.md) |
 
-### Palette presets
+Tropic Glow is another style preset, created by customizing HotTropic with HUD elements and heat glow. The editable JSON example uses HotTropic as an optional base to keep the file short; presets exported with `--save-preset` contain the full settings.
 
-**Yautja remains the default palette.** Each starter below selects Cinematic plus its named colors; optional timecode and subject callouts are enabled in these previews. All use identical segmentation and no added texture. Use `--palette NAME` to change only the colors within any preset. The existing encoder `--preset` option remains separate.
+### Style presets based on palettes
+
+**Yautja remains the default palette.** Each palette has a built-in style preset that selects Cinematic plus its named colors; other settings use the normal defaults. These are the same kind of visual bundle as HotTropic, with fewer settings specified. Use `--stylepreset white-hot` to select the White Hot starter, or `--palette white-hot` to change the colors while keeping your thermal detail and other choices. HUD colors follow each palette's default theme unless customized. Optional timecode and subject callouts are enabled in these previews; all use identical segmentation and no added texture.
 
 | Redline · red, blue, and black | Virtual Boy · red only |
 | --- | --- |
