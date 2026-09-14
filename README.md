@@ -51,7 +51,7 @@ python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
 ```
 
-The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic, while the built-in style presets select Cinematic and need this setup unless you override them with `--thermal classic`. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Ghost Signal uses segmented outlines and needs the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, and titles require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
 
 ### Video
 
@@ -117,9 +117,11 @@ A **style preset** is the broadest visual option: a named bundle of settings for
 | Part of a style preset | Individual controls | What it changes |
 | --- | --- | --- |
 | Thermal detail | `--thermal` | How much subject and scenery detail is preserved |
+| Scene treatment | `--scene-mode`, `--scene-tint`, tint strength and exposure | Thermal recoloring or the original scene with a color grade |
 | Color palette | `--palette`, `--palette-colors` | The colors assigned from cold to hot |
 | Thermal levels and tone | `--thermal-levels`, `--thermal-band-softness`, black/white points, gamma, softness | Color bands, transitions, contrast, and smoothing |
-| HUD styling | `--hud`, `--hud-theme`, colors, blur, opacity, `--neon` | Overlay visibility and appearance, including individual element overrides |
+| HUD styling | `--hud`, `--HUDglyphs`, `--hud-theme`, colors, blur, opacity, `--neon` | Glyph set, overlay visibility and appearance, including individual element overrides |
+| Subject overlays | `--subject-outline`, `--subject-code`, `--subject-labels`, code size/speed/density | Silhouette outlines, rising code, overhead glyph titles and carets |
 | Waveform and targets | `--wave-style`, waveform dimensions, `--target-shape`, target colors and lock timing | The waveform and reticle designs and behavior |
 | Display effects | `--heat-glow`, grain, pixelation, CRT patterns, VHS, motion blur | Glow and image texture |
 
@@ -154,6 +156,25 @@ Choose the level of detail separately from the color palette. All four examples 
 All four use anatomy-guided fallback when estimates are uncertain. Cinematic, Detailed, and Very Detailed reuse the same models for extra surface segmentation; they take longer as the number of people increases. Very Detailed preserves features that are visible in the input; small, blurred, or obscured faces cannot gain missing detail. Small objects, distant hands, eyewear, and overlaps can still be missed or misclassified. These are generated visual effects, not measured temperatures or material properties.
 
 Existing commands still work: `--thermal silhouette` and `--thermal semantic` now select Low Detail, and `--thermal realistic` remains an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
+
+### Ghost Signal style preset
+
+**Ghost Signal** keeps the recognizable scene under a dark green tint, with **warm-red neon HUD and silhouette outlines**, **Cyber code raining upward inside detected people and animals**, and **cyan overhead titles with yellow downward carets**. It uses red `#FD5550`, cyan `#41E8EF`, and yellow `#FFC442`. The larger carets and titles have consistent clearance above each head. It requires the segmented setup above (Yautja 2.6.0+).
+
+[![Ghost Signal: green scenery, red outlined figures with rising Cyber code and yellow overhead carets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-ghost-signal.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-ghost-signal.gif?v=2.6.0)
+
+```bash
+yautja "clip.mov" "ghost-signal.mp4" --stylepreset ghost-signal
+```
+
+Choose the glyph set independently with **`--HUDglyphs cyber`** or **`--HUDglyphs yautja`**. Cyber contains 192 generated vector glyphs and is the default for Ghost Signal. The choice applies to every alien HUD readout, waveform glyph, callout, subject title, and code stream; human-readable timecode stays numeric. It also works with other style presets.
+
+```bash
+yautja "clip.mov" "cyber-thermal.mp4" --stylepreset yautja --HUDglyphs cyber
+yautja "clip.mov" "custom-signal.mp4" --stylepreset ghost-signal --code-speed 1.5 --code-density 0.8
+```
+
+Outlines use freshly segmented contours on each frame, while optical flow predicts their positions between detections. This reduces boundary drift during movement, with additional processing time. Titles are decorative labels that stay with a track. A fixed glyph grid lights up in rising streams with bright heads, fading tails, and occasional character changes, clipped within each mask. Glow can extend past the edge. `--code-speed 0` freezes the rain. `--no-subject-code`, `--no-subject-outline`, and `--no-subject-labels` switch those parts off independently; `--no-hud` hides them all. Tracking and occlusion quality depend on the input footage. [Complete controls and preset customization](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/cyber.md).
 
 ### HotTropic style preset
 
@@ -333,18 +354,25 @@ Click any preview for its large animated GIF. Grid is equivalent to enabling `--
 
 All of these controls are independent of VHS, grain, pixelation, and the sensor-texture preset. Click each preview for the large animated GIF.
 
-### Rorschach waveforms
+### Waveforms
 
-For a thick, full-height, mirrored inkblot display, choose one of three waveform transformations. These examples use **Redline**, with `--wave-width 0.14 --wave-height 1 --wave-gain 4` (extra audio gain for this quiet clip). The occupied width follows the soundtrack; GIFs are silent.
+Choose a Rorschach inkblot or one of three **digital distortion** waveforms. These examples use **Redline**, with `--wave-width 0.14 --wave-height 1 --wave-gain 4` (extra audio gain for this quiet clip). The occupied width follows the soundtrack; GIFs are silent.
 
 | Filled · broad connected lobes | Split · separated inkblots | Hollow · dark interior pockets |
 | --- | --- | --- |
 | [![Filled mirrored Rorschach waveform spanning the image height](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach.gif) | [![Separated mirrored inkblots responding to the soundtrack](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-split.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-split.gif) | [![Hollow mirrored waveform lobes with dark pockets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-hollow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-hollow.gif) |
 | `--wave-style rorschach` | `--wave-style rorschach-split` | `--wave-style rorschach-hollow` |
 
-`--wave-width` sets maximum width as a fraction of the frame (0.02–0.3, default 0.12); `--wave-height` sets height (0.1–1, default 0.96). `--wave-detail` goes from broad and smooth at 0 to sharper edge spikes and more intricate lobes at 1 (default 0.6). The shapes keep a thick mirrored core, with pointed, irregular edges driven by short peaks and troughs in the waveform. Quiet ambience is amplified for visibility, and louder audio fills more of the column. Silent pauses within audible tracks stay empty; the existing fallback for an absent or entirely silent soundtrack remains procedural.
+The digital styles use crisp square pixels and distinct geometries: stacked blocks with square cutouts, scattered data packets, or a stepped circuit ladder. They require Yautja 2.6.0+.
 
-The original `--wave-style trace` stays the default. Rorschach replaces the left trace, scale, and flanking glyph rows. It uses the existing waveform color, works with all HUD themes, and leaves timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
+| Bitcrush Blocks | Packet Shards | Circuit Ladder |
+| --- | --- | --- |
+| [![Chunky stacked waveform blocks with square notches](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-blocks.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-blocks.gif?v=2.6.0) | [![Scattered unequal pixel packets responding to audio](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-shards.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-shards.gif?v=2.6.0) | [![Stepped waveform rails with rungs and square junctions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-circuit.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-circuit.gif?v=2.6.0) |
+| `--wave-style digital-blocks` | `--wave-style digital-shards` | `--wave-style digital-circuit` |
+
+`--wave-width` sets maximum width as a fraction of the frame (0.02–0.3, default 0.12); `--wave-height` sets height (0.1–1, default 0.96). In Rorschach styles, `--wave-detail` goes from broad and smooth at 0 to sharper edge spikes and more intricate lobes at 1 (default 0.6). These shapes keep a thick mirrored core, with pointed, irregular edges driven by short peaks and troughs in the waveform. Quiet ambience is amplified for visibility, and louder audio fills more of the column. Silent pauses within audible tracks stay empty; the existing fallback for an absent or entirely silent soundtrack remains procedural.
+
+In digital styles, `--wave-detail` controls pixel density: lower values make larger chunks, higher values make finer blocks. The original `--wave-style trace` stays the default. All six styled waveforms replace the left trace, scale, and flanking glyph rows. They use the existing waveform color, work with all HUD themes, blur, opacity, and neon, and leave timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
 
 ### Target shapes
 
@@ -483,7 +511,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.8,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.8,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.6.0,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.6.0,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 

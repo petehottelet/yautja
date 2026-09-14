@@ -20,6 +20,10 @@ HUD_DEFAULTS = {
     'markers': (65, 232, 239),
     'target': (255, 48, 43),
     'target-flash': (255, 255, 255),
+    'subject-outline': (255, 48, 43),
+    'subject-code': (255, 48, 43),
+    'subject-labels': (255, 48, 43),
+    'subject-carets': (255, 196, 66),
 }
 HUD_THEMES = ('standard', 'palette', 'muted-cyan', 'custom', 'random')
 
@@ -139,6 +143,8 @@ def resolve_colors(palettes, *, palette='auto', palette_colors=None, hud_theme='
         hud['waveform-axis'] = tuple(round(c * .36) for c in primary)
         hud['waveform-ticks'] = tuple(round(c * .43) for c in primary)
         hud['target'], hud['target-flash'] = primary, light
+        hud.update({'subject-outline': primary, 'subject-code': primary,
+                    'subject-labels': primary, 'subject-carets': light})
     elif hud_theme == 'custom':
         hud.update(hud_hexes(hud_colors))
     elif hud_theme == 'random':

@@ -1,6 +1,6 @@
 # Future improvements
 
-Yautja already supports three segmented looks, still images, configurable color/HUD themes, and independent display textures. Further work should improve consistency and usability without changing those defaults accidentally.
+Yautja supports four segmented looks, still images, configurable color/HUD themes, source-scene grading, Cyber glyphs, silhouette code overlays, and independent display textures. Further work should improve consistency and usability without changing those defaults accidentally.
 
 - **Measure tracking stability.** Evaluate crossings, occlusion, entries/exits and true cuts with annotated clips, lost-mask and ID-switch metrics. Compare the current optical-flow tracker with SAM video memory only when bounded memory and measured improvements justify it. Exposure changes can still reset tracking.
 - **Cache segmentation for visual iteration.** Reuse masks and pose for palette/HUD experiments, keyed by source content, preprocessing, model revisions and inference settings, with explicit invalidation and storage limits.

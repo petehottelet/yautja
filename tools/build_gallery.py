@@ -40,6 +40,7 @@ def variants():
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
+        'look-ghost-signal': {'look_preset': 'ghost-signal'},
         'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')},
@@ -75,7 +76,7 @@ def variants():
                                     'hud_opacity_elements': 'waveform=0.3,target=0.7,timecode=0.9'},
         **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
                                'wave_width': .14, 'wave_height': 1.}
-           for style in ('rorschach', 'rorschach-split', 'rorschach-hollow')},
+           for style in ('rorschach', 'rorschach-split', 'rorschach-hollow', 'digital-blocks', 'digital-shards', 'digital-circuit')},
     })
     # Preserve the published image URLs while replacing the old sight geometry.
     result['target-shape-iron-sights']['target_shape'] = 'hollow-cross'
@@ -132,17 +133,26 @@ def main():
     video_start = number(video.get('start_time'), container_start)
     seek = max(0., args.start + video_start - container_start)
     destination.mkdir(parents=True, exist_ok=True)
-    tracker = SemanticTracker(GroundedSegmenter(device=args.device, surfaces=True))
+    resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
+    tracker = SemanticTracker(GroundedSegmenter(device=args.device,
+                              surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
+                              refine_masks=any(o.get('subject_outline') and o.get('hud', True) for o in resolved_settings))
+    def gallery_options(options):
+        resolved = resolve_look(options.get('look_preset'), options)
+        if 'timecode' in resolved:
+            resolved['show_timecode'] = resolved.pop('timecode')
+        return {'verbose': True, 'show_timecode': True, **resolved}
+
     renderers = {name: Renderer(*( (large_width, large_height) if name.startswith('large/') else
                                   (width, height) if name == 'hero' else (gif_width, gif_height)),
-                                **{'verbose': True, 'show_timecode': True, **options})
+                                **gallery_options(options))
                  for name, options in settings.items()}
     def field_key(renderer):
         return renderer.thermal, renderer.sensor_resolution, renderer.transfer.levels is None
 
     fields = {field_key(r): Renderer(width, height, thermal=r.thermal, sensor_resolution=r.sensor_resolution,
                                     thermal_levels=None if r.transfer.levels is None else 0).heat_field
-              for r in renderers.values()}
+              for r in renderers.values() if r.signal.scene_mode != 'source'}
     results = {}
     with tempfile.TemporaryDirectory(prefix='.yautja-gallery-', dir=destination) as directory:
         temp = Path(directory)
@@ -182,8 +192,12 @@ def main():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
                             targets, shot = selected.at(args.start + time) if selected and name.removeprefix('large/').startswith('target-') else ([], tracker.scene_cuts + 1)
-                            image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), field_key(renderer))], time, wave, subjects,
-                                                          targets=targets, shot_id=shot)
+                            if renderer.signal.scene_mode == 'source':
+                                image = renderer.render(frame.resize((renderer.width, renderer.height), Image.Resampling.LANCZOS), time,
+                                                        wave, subjects, targets=targets, shot_id=shot)
+                            else:
+                                image = renderer.render_field(scaled_heat[((renderer.width, renderer.height), field_key(renderer))], time, wave, subjects,
+                                                              targets=targets, shot_id=shot)
                             image.save(temp / name / f'{count:04d}.png')
                             if name == 'hero' and count == 0:
                                 image.save(temp / 'poster.png')
@@ -216,6 +230,8 @@ def main():
                                      'size': list(check.size), 'bytes': gif.stat().st_size,
                                      'settings': settings[name], 'colors': renderers[name].colors.report(),
                                      'thermal_transfer': renderers[name].transfer.report()}
+                    results[name]['scene'] = renderers[name].signal.report()
+                    results[name]['hud_glyphs'] = renderers[name].hud_glyphs
                     if name.removeprefix('large/').startswith('target-'):
                         if not renderers[name].target_overlay.seen:
                             raise ConversionError('No selected targets appeared in the gallery range: ' + name)

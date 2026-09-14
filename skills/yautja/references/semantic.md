@@ -13,7 +13,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 The base `yautja` package provides Classic mode. To use the segmented gallery looks, install `yautja[semantic]` in the selected virtual environment; it can also be installed directly as your first Yautja installation. This skill uses the compatible version range below. Keep installation, model setup, diagnosis, and conversion in the same environment:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5.8,<3"
+python -m pip install "yautja[semantic]>=2.6.0,<3"
 python -m yautja --download-models
 python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "outputs/photo-cinematic.png" --thermal cinematic --verbose
@@ -44,7 +44,7 @@ The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.5.8,<3"
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.6.0,<3"
 .venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
 .venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```

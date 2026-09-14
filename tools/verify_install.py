@@ -89,7 +89,8 @@ def check_runtime(python, env, cwd, prefix):
                               '--wave-width', '.14', '--wave-height', '1', '--thermal-levels', '6',
                               '--thermal-band-softness', '.3', '--target-shape', 'square-mil', '--neon',
                               '--neon-intensity', '.8', '--neon-spread', '.4', '--neon-flicker', '.3',
-                              '--neon-elements', 'timecode=0,target=.5'], cwd, image_env))
+                              '--neon-elements', 'timecode=0,target=.5', '--HUDglyphs', 'cyber',
+                              '--neon-core-whiten', '0'], cwd, image_env))
     assert effects['palette'] == 'abyss' and effects['heat_glow'] == .6 and effects['crt_vertical_lines']
     assert effects['crt_bleed'] == .4 and effects['targets'] == []
     assert effects['crt_grid'] and effects['crt_crosshatch']
@@ -99,6 +100,7 @@ def check_runtime(python, env, cwd, prefix):
     assert effects['target_shape'] == 'square-mil'
     assert effects['neon'] and effects['neon_intensity'] == .8 and effects['neon_spread'] == .4
     assert effects['neon_flicker'] == .3 and effects['neon_intensities']['target-flash'] == .5
+    assert effects['hud_glyphs'] == 'cyber' and effects['neon_core_whiten'] == 0
     neon_preset = ROOT / 'skills/yautja/assets/presets/abyss-neon.json'
     run(['yautja', '--preset-file', neon_preset, '--thermal', 'classic', '--save-preset', 'neon.json'], cwd, image_env)
     neon = json.loads(run(['yautja', 'photo.jpg', 'neon.png', '--preset-file', 'neon.json'], cwd, image_env))

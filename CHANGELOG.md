@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0 — 2026-09-13
+
+- Add the Ghost Signal style preset: green-tinted source scenery, warm-red neon HUD and silhouette outlines, upward-flowing code clipped to detected people/animals, and stable overhead glyph titles with yellow downward carets. Add source tint/exposure and independent subject overlay, code size/speed/density, color, blur, opacity, and neon controls.
+- Add `--HUDglyphs cyber|yautja` for every alien HUD readout, waveform decoration, callout, subject title, and code stream. Bundle 192 Cyber vector glyphs with their MIT notice; human-readable timecode stays numeric. Add `--neon-core-whiten` to preserve colored cores when desired.
+- Save and restore all new visual choices in presets, publish matched small/large animated examples, and document the scene/palette/glyph hierarchy. Keep prior thermal rendering and default glyphs unchanged.
+- Use cyan overhead titles with consistent visible-artwork centering, larger yellow carets, and independent spacing controls. Refresh subject contours on each frame when outlines are enabled; render upward rain as bright heads and fading tails on a fixed glyph grid.
+- Rename the README section to Waveforms and add three digital-distortion options with animated examples: Bitcrush Blocks, Packet Shards, and Circuit Ladder.
+
 ## 2.5.9 — 2026-09-13
 
 - Make `pip install yautja` the primary README installation route, distinguish lightweight Classic from the segmented gallery setup, and present the agent skill as optional. Align environment and model setup guidance, retain working installations, and verify the README quick start in clean environments.

@@ -47,6 +47,7 @@ class HudOpacityTests(unittest.TestCase):
         subjects = [Subject(mask, 'person', .95, track_id=1)]
         def picture(key=None):
             renderer = Renderer(960, 540, show_timecode=True, verbose=True,
+                                subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_opacity_elements=None if key is None else key + '=0')
             return np.asarray(renderer.render_field(field, 1, subjects=subjects,
                               targets=self.targets, target_static=True))

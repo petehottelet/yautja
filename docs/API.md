@@ -18,6 +18,16 @@ with Image.open('photo.jpg') as source:
 
 This low-level example does not perform the CLI's orientation, metadata, input/output protection or atomic-write checks. Prefer the CLI for end-user conversion. Other helpers, classes and module internals are not a promised stable API merely because tests or repository tools import them.
 
+## 2.6 source scenes, subject code, and Cyber glyphs
+
+`--stylepreset ghost-signal` combines source-scene grading, automatic silhouette outlines, upward code, overhead glyph titles and carets, and warm-red neon styling. `--HUDglyphs cyber|yautja` selects the glyph set for all alien HUD text, code, and titles; timecode is unaffected. The JSON/experimental Python keyword is `hud_glyphs`. See [the full controls and recipe](../skills/yautja/references/cyber.md).
+
+New visual keys are `scene_mode`, `scene_tint`, `scene_tint_strength`, `scene_exposure`, `subject_outline`, `subject_code`, `subject_labels`, `subject_head_gap`, `subject_title_gap`, `subject_caret_scale`, `code_size`, `code_speed`, `code_density`, `hud_glyphs`, and `neon_core_whiten`. They participate in preset save/load, explicit override precedence, and conversion reports. The per-element styling maps add `subject-outline`, `subject-code`, `subject-labels`, and `subject-carets`. Their opacity, blur, color, and neon intensity are independently configurable; `--no-hud` hides all four.
+
+Subject outlines enable current-frame SAM contour refinement between detections. The semantic report adds `mask_refresh` (`frame` or `flow`) and `mask_refinement_frames`. The `wave_style` enum additionally accepts `digital-blocks`, `digital-shards`, and `digital-circuit`; they share non-trace waveform dimensions and styling controls.
+
+In `scene_mode='source'`, call `Renderer.render` with an RGB source frame at the renderer's dimensions. `render_field` rejects source mode because a scalar heat field cannot reconstruct source colors. Source mode uses tint/exposure rather than the thermal palette/transfer; display texture remains available. Experimental Python callers supply subject masks to activate overlays. The CLI enforces segmented-mode setup for subject overlays and reuses its tracked masks without requiring a figure catalog. `Renderer` preset configuration translates the CLI preset's `timecode` setting to its Python `show_timecode` keyword.
+
 ## 2.2 looks, levels, and reticle shapes
 
 `--thermal low-detail` replaces the simpler Silhouette presentation; `silhouette` and `semantic` remain aliases. `--thermal very-detailed` preserves resolved source facial and fabric features. All four segmented modes use the same model setup.

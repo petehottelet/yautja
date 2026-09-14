@@ -4,6 +4,8 @@ Use Yautja 2.5.2+ for the `--stylepreset` flag shown here. A **preset** combines
 
 ## Built-in presets
 
+**Ghost Signal** uses a green-tinted source scene, red neon outlines and HUD, rising Cyber rain inside detected subjects, and cyan overhead titles with yellow carets. Select it with `--stylepreset ghost-signal` (2.6.0+). Cyber is its glyph set, configurable through `--HUDglyphs cyber` or `--HUDglyphs yautja`. See [the recipe and individual controls](cyber.md). These settings, including source tint, subject overlays, code motion, glyph choice, and title/caret spacing, are saved with visual presets.
+
 ```bash
 yautja --list-presets
 yautja "clip.mov" "hottropic.mp4" --stylepreset hottropic

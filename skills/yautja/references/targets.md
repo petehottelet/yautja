@@ -101,7 +101,7 @@ Both options are off by default and work for images and videos. The reticle rema
 
 Stroke widths and blur radii are **reference pixels at a 1080px short edge**. A value of 4 becomes 2 output pixels at 960×540 and 1 at 480×270. The same scaling applies to portrait and still outputs. Very fine outlines may round away at low resolution. Large stroke widths can cover a narrow blade; they never expand its outer boundary or close its corner gaps. Explicit outline colors remain independent of fill colors and can introduce other hues in Virtual Boy when the stroke is enabled. Black Hot's automatic outline remains black; choose an explicit color for contrast.
 
-Available blur keys: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. The `waveform` key affects the trace itself or the selected Rorschach shape. Axis, ticks, and flanking glyph rows have separate controls; they are absent in Rorschach modes. `readout` means the upper-right alien glyph row. `target` softens both landing and flash states, including its optional outline. There is no separate `target-flash` blur key. Changing blur does not enable a disabled timecode, callout, or target.
+Available blur keys: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, `subject-outline`, `subject-code`, `subject-labels`, and `subject-carets`. The `waveform` key affects the trace itself or the selected Rorschach or digital shape. Axis, ticks, and flanking glyph rows have separate controls; they are absent in styled waveform modes. `readout` means the upper-right alien glyph row. `target` softens both landing and flash states, including its optional outline. There is no separate `target-flash` blur key. Changing blur does not enable a disabled timecode, callout, or target. The four subject elements are described in [Cyber and Ghost Signal](cyber.md).
 
 ```bash
 # Soft waveform and target; keep all other HUD artwork sharp.
@@ -160,7 +160,7 @@ Grid is equivalent to enabling vertical and horizontal lines together. Requestin
 
 VHS, grain, pixelation, and the sensor-texture preset remain independently available. Sensor texture enables its original horizontal lines; it does not enable vertical lines, grid, crosshatch, heat glow, motion blur, or CRT bleed. All new effects remain off unless requested.
 
-## Rorschach waveforms
+## Waveforms
 
 For a wide, mirrored inkblot column in place of the thin trace, select a Rorschach style. These work with every palette and HUD theme, using the existing `waveform` color key. The default `--wave-style trace` keeps the original waveform, its aligned glyph rows, and scale. Rorschach replaces that left panel with a nearly full-height column, leaving the upper-right readout, timecode, callouts, and targets alone.
 
@@ -169,8 +169,11 @@ For a wide, mirrored inkblot column in place of the thin trace, select a Rorscha
 | `--wave-style rorschach` | Broad, connected, mirrored lobes with shaded, spiky edges driven by waveform peaks |
 | `--wave-style rorschach-split` | Broken-up lobes separated by dark gaps |
 | `--wave-style rorschach-hollow` | Mirrored rings and lobes with dark interior pockets |
-| `--wave-width 0.14` | Maximum Rorschach column width as a frame fraction, 0.02–0.3; default 0.12 |
-| `--wave-height 1` | Rorschach height as a frame fraction, 0.1–1; default 0.96, vertically centered |
+| `--wave-style digital-blocks` | Bitcrush Blocks: broad pixel slabs with square cutouts (2.6.0+) |
+| `--wave-style digital-shards` | Packet Shards: detached, unequal pixel packets displaced around the axis (2.6.0+) |
+| `--wave-style digital-circuit` | Circuit Ladder: stepped dual rails, rungs, and square junctions (2.6.0+) |
+| `--wave-width 0.14` | Maximum styled waveform width as a frame fraction, 0.02–0.3; default 0.12 |
+| `--wave-height 1` | Styled waveform height as a frame fraction, 0.1–1; default 0.96, vertically centered |
 | `--wave-detail 0.6` | Detail, 0–1; 0 is broad/smooth, higher values strengthen audio-driven edge spikes and lobe complexity |
 
 ```bash
@@ -179,4 +182,6 @@ yautja "clip.mov" "inkblot.mp4" --thermal cinematic --palette redline --wave-sty
 
 The Rorschach transform mirrors, smooths, and compresses waveform energy so quiet ambience remains visible, shapes it into slowly drifting lobes, and optionally cuts gaps or interior pockets. Audio level controls the occupied width within the specified maximum. `--wave-gain` changes audio response and `--wave-window` changes its trailing time window. Silence inside an audible track stays empty. The existing `--waveform auto` fallback still uses a procedural signal for a wholly silent or missing track; `--waveform audio` keeps actual silence. `--waveform procedural` forces generated motion. The decorative contours are a stylized transformation, not a literal audio measurement.
 
-Stills show the time-zero procedural shape. `--no-hud` hides it entirely. `--glow` adjusts its HUD bloom; `--crt-bleed` softens it horizontally, and `--motion-blur` leaves video trails. Higher width/detail can occupy more of the scene, so inspect the result at the intended resolution. Width and height overrides require a Rorschach style. Reports include effective `wave_style`, `wave_width`, `wave_height`, and `wave_detail`, alongside requested settings.
+Digital styles quantize audio energy onto square pixel cells. Lower `--wave-detail` makes larger blocks, while higher values increase pixel density. Width, height, audio controls, HUD color, blur, opacity, and neon apply to all six styled waveforms. Digital silence is empty, and stronger audio increases the occupied width. Packet Shards also rearranges packets in seeded time steps.
+
+Stills show the time-zero procedural shape. `--no-hud` hides it entirely. `--glow` adjusts its HUD bloom; `--crt-bleed` softens it horizontally, and `--motion-blur` leaves video trails. Higher width/detail can occupy more of the scene, so inspect the result at the intended resolution. Width and height overrides require a non-trace style. Reports include effective `wave_style`, `wave_width`, `wave_height`, and `wave_detail`, alongside requested settings.

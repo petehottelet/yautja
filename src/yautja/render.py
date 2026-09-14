@@ -18,6 +18,7 @@ from .neon import NeonStyle
 from .waveform import WAVE_STYLES, inkblot_mask
 from .hud import HudPanel, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
+from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -202,7 +203,10 @@ def load_glyph_font():
 class Renderer:
     def __init__(self, width, height, *, look_preset=None, **options):
         self.look_preset = look_preset
-        self._configure(width, height, **resolve_look(look_preset, options))
+        settings = resolve_look(look_preset, options)
+        if 'timecode' in settings:
+            settings.setdefault('show_timecode', settings.pop('timecode'))
+        self._configure(width, height, **settings)
 
     def _configure(self, width, height, *, seed=42, grain=None, glow=.65,
                  show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
@@ -214,10 +218,21 @@ class Renderer:
                  heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
                  target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None,
                  hud_opacity=1., hud_opacity_elements=None, target_shape='triangle',
-                 neon=False, neon_intensity=1., neon_spread=.6, neon_flicker=0., neon_elements=None,
+                 neon=False, neon_intensity=1., neon_spread=.6, neon_flicker=0., neon_elements=None, neon_core_whiten=1.,
                  thermal_levels=None, thermal_band_softness=None, thermal_black_point=0.,
-                 thermal_white_point=1., thermal_gamma=1., thermal_softness=0.):
+                 thermal_white_point=1., thermal_gamma=1., thermal_softness=0., hud_glyphs='yautja',
+                 scene_mode='thermal', scene_tint='#548568', scene_tint_strength=.8, scene_exposure=.65,
+                 subject_outline=False, subject_code=False, subject_labels=False,
+                 code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
+                 subject_title_gap=18., subject_caret_scale=1.):
         self.width, self.height = width, height
+        if hud_glyphs not in ('yautja', 'cyber'):
+            raise ValueError('--HUDglyphs must be yautja or cyber')
+        self.hud_glyphs = hud_glyphs
+        self.signal = SignalStyle(scene_mode=scene_mode, scene_tint=scene_tint, scene_tint_strength=scene_tint_strength,
+                                  scene_exposure=scene_exposure, subject_outline=subject_outline, subject_code=subject_code,
+                                  subject_labels=subject_labels, code_size=code_size, code_speed=code_speed, code_density=code_density,
+                                  subject_head_gap=subject_head_gap, subject_title_gap=subject_title_gap, subject_caret_scale=subject_caret_scale)
         self.transfer = ThermalTransfer(thermal_levels, thermal_band_softness, thermal_black_point,
                                         thermal_white_point, thermal_gamma, thermal_softness)
         self.seed, self.glow = seed, glow
@@ -242,7 +257,7 @@ class Renderer:
         self.hud_opacity = hud_opacity
         self.hud_opacities = hud_opacities(hud_opacity, hud_opacity_elements)
         self.neon = bool(neon and hud)
-        self.neon_style = NeonStyle(neon_intensity, neon_spread, neon_flicker, neon_elements, seed)
+        self.neon_style = NeonStyle(neon_intensity, neon_spread, neon_flicker, neon_elements, seed, neon_core_whiten)
         self.neon_gain = 1.
         self.hud_blur_pixels = {key: value * min(width, height) / 1080 for key, value in self.hud_blurs.items()}
         self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale,
@@ -278,7 +293,7 @@ class Renderer:
         # Alpha keeps gray ink gray over highlights and makes black ink visible.
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
-        self.overlay_mode = 'RGBA' if self.neon or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -297,6 +312,7 @@ class Renderer:
                             'readout': max(2, .11 * max(10, round(25 * s))),
                             'timecode': 1.5, 'callouts': 1.5,
                             'leaders': max(1, 1.5 * s), 'markers': max(1.5, 2 * s)}
+        self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in SUBJECT_ELEMENTS})
         self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
         self.fonts, self.tiles = {}, {}
@@ -312,6 +328,13 @@ class Renderer:
     def glyph(self, value, height, numeral=False, element='waveform-glyphs'):
         height = max(8, round(height))
         color = self.hud_ink(element)
+        if self.hud_glyphs == 'cyber':
+            ink = code_glyph(value, height)
+            tile = Image.new('RGBA', ink.size, (*color[:3], 0))
+            tile.putalpha(ink)
+            if self.overlay_mode == 'RGB':
+                return ImageChops.multiply(tile.convert('RGB'), Image.merge('RGB', (ink,) * 3))
+            return tile
         key = (value, height, numeral, color)
         if key in self.tiles:
             return self.tiles[key]
@@ -351,7 +374,8 @@ class Renderer:
         image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
 
     def hud_panel(self, size, *elements):
-        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities, separate=self.neon)
+        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities,
+                        separate=self.neon or any(key in SUBJECT_ELEMENTS for key in elements))
 
     def composite_panel(self, image, panel, x, y):
         if self.neon:
@@ -373,6 +397,8 @@ class Renderer:
     def callout_glyph(self, pattern, height):
         """Dim full outlines behind shaded, illuminated segments."""
         height = max(8, round(height))
+        if self.hud_glyphs == 'cyber':
+            return code_glyph(pattern, height)
         key = (pattern, height, 'callout')
         if key in self.tiles:
             return self.tiles[key]
@@ -558,6 +584,8 @@ class Renderer:
             if self.previous_source is not None and np.abs(coarse - self.previous_source).mean() > 38:
                 self.display.reset()
             self.previous_source = coarse
+        if self.signal.scene_mode == 'source':
+            return self.render_source(frame, time, wave, subjects, targets=targets, shot_id=shot_id, target_static=target_static)
         # All modes are artistic effects, not actual heat measurement.
         if self.thermal != 'classic':
             luma = self.heat_field.build(frame, subjects)
@@ -571,6 +599,8 @@ class Renderer:
 
     def render_field(self, luma, time, wave=None, subjects=(), *, targets=(), shot_id=None, target_static=False):
         """Color an existing scalar heat field; useful for matched style galleries."""
+        if self.signal.scene_mode == 'source':
+            raise ValueError('Source scene mode needs an RGB frame; call Renderer.render(frame, ...)')
         if (luma.shape != (self.height, self.width) or
             (luma.dtype != np.uint8 and (self.transfer.levels is None or luma.dtype.kind != 'f')) or
             not np.isfinite(luma).all() or luma.min() < 0 or luma.max() > 255):
@@ -601,6 +631,30 @@ class Renderer:
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
             image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
+
+    def render_source(self, frame, time, wave, subjects, *, targets=(), shot_id=None, target_static=False):
+        if frame.size != (self.width, self.height):
+            raise ValueError('Source frame must match renderer dimensions')
+        image = self.signal.grade(frame)
+        if self.pixelation:
+            from .thermal import sensor_size
+            image = image.resize(sensor_size(self.width, self.height, self.pixelation), Image.Resampling.BOX).resize(image.size, Image.Resampling.NEAREST)
+        if self.grain:
+            rng = np.random.default_rng((self.seed + round(time * 1000)) & 0xffffffff)
+            rgb = np.asarray(image, np.float32) + rng.normal(0, self.grain * 255, (self.height, self.width, 1))
+            image = Image.fromarray(np.uint8(np.clip(rgb, 0, 255)))
+        if self.hud:
+            self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects, shot_id=shot_id)
+            image = self.target_overlay.draw(image, time, targets,
+                        (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id,
+                        static=target_static, neon_gain=self.neon_gain)
+        return self.display_effects(image, time, shot_id)
+
+    def code_mask(self, index, height):
+        if self.hud_glyphs == 'cyber':
+            return code_glyph(index, height)
+        tile = self.glyph(index, height)
+        return tile.getchannel('A') if tile.mode == 'RGBA' else tile.convert('L')
 
     def render_graded(self, luma, time, wave, subjects, targets, shot_id, target_static):
         u = self.transfer.normalize(luma)
@@ -694,6 +748,7 @@ class Renderer:
     def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None):
         if self.neon:
             self.neon_gain = self.neon_style.noise.gain(time, self.neon_style.flicker)
+        self.signal.draw(self, image, subjects, time, shot_id)
         s = self.scale
         size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.
@@ -739,7 +794,7 @@ class Renderer:
             for mask in self.crt_diagonals:
                 pixels[mask] *= 1 - self.crt_strength
             image = Image.fromarray(np.uint8(pixels))
-        if self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette')
+        if self.signal.scene_mode == 'thermal' and self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette')
                 and not self.target_color_override and not (self.target_overlay.stroke and self.target_overlay.stroke_colors))):
             # This palette is strictly red-only, including glyphs and defects.
             pixels = np.asarray(image).copy()

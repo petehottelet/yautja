@@ -11,13 +11,13 @@ from PIL import Image
 
 from yautja.cli import main, parser
 from yautja.render import Renderer, procedural_wave
-from yautja.waveform import WAVE_STYLES, inkblot_mask
+from yautja.waveform import RORSCHACH_STYLES, inkblot_mask
 
 
 class InkblotTests(unittest.TestCase):
     def test_mirrored_full_height_wide_lobes_and_three_distinct_forms(self):
         masks = []
-        for style in WAVE_STYLES[1:]:
+        for style in RORSCHACH_STYLES:
             mask = np.asarray(inkblot_mask(100, 360, np.ones(256), .7, style=style))
             np.testing.assert_array_equal(mask, mask[:, ::-1])
             self.assertGreater(np.count_nonzero(mask.max(axis=1) > 5), 260)
@@ -28,7 +28,7 @@ class InkblotTests(unittest.TestCase):
         self.assertGreater(np.count_nonzero(masks[0][:, 50]), np.count_nonzero(masks[2][:, 50]))
 
     def test_audio_silence_stays_empty_and_louder_audio_grows(self):
-        for style in WAVE_STYLES[1:]:
+        for style in RORSCHACH_STYLES:
             with self.subTest(style=style):
                 zero = inkblot_mask(100, 360, np.zeros(256), .7, style=style)
                 self.assertIsNone(zero.getbbox())

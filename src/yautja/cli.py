@@ -24,17 +24,18 @@ from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
 from .neon import NeonStyle
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
-from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS,
+from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, COMPLETE_PRESETS,
                     ThermalTransfer, resolve_look, merge_look, normalize_preset)
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES, resolve_target_shape
+from .signal import SIGNAL_OPTIONS, SignalStyle
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
-                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', *LEVEL_OPTIONS)
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS)
 
 
 def target_selection(args, source):
@@ -51,7 +52,8 @@ def extra_report(renderer, selection, *, static=False):
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
     outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
                                                             for key in ('target', 'target-flash'))
-    return {**renderer.transfer.report(), 'look_preset': renderer.look_preset,
+    return {**renderer.transfer.report(), **renderer.signal.report(), 'hud_glyphs': renderer.hud_glyphs,
+            'look_preset': renderer.look_preset,
             'target_shape': renderer.target_overlay.shape,
             'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
             'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
@@ -68,6 +70,7 @@ def extra_report(renderer, selection, *, static=False):
             'neon': renderer.neon,
             'neon_intensity': renderer.neon_style.intensity if renderer.neon else 0.,
             'neon_spread': renderer.neon_style.spread if renderer.neon else 0.,
+            'neon_core_whiten': renderer.neon_style.core_whiten,
             'neon_flicker': renderer.neon_style.flicker if renderer.neon else 0.,
             'neon_intensities': {key: value if renderer.neon else 0. for key, value in renderer.neon_style.intensities.items()},
             'neon_elements': {key: value if renderer.neon else 0. for key, value in renderer.neon_style.intensities.items()},
@@ -239,7 +242,8 @@ def semantic_tracker(args):
     print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
-                              surfaces=not args.list_figures and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')), args.detect_interval)
+                              surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
+                              args.detect_interval, refine_masks=args.hud and args.subject_outline and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -524,7 +528,7 @@ class LookParser(argparse.ArgumentParser):
             elif result.look_preset:
                 vars(result).update(resolve_look(result.look_preset, overrides))
                 result.preset_name = PRESET_LABELS[result.look_preset]
-                result.preset_kind = 'look' if result.look_preset == 'hottropic' else 'palette'
+                result.preset_kind = 'look' if result.look_preset in COMPLETE_PRESETS else 'palette'
         except (ValueError, OSError) as exc:
             self.error(str(exc))
         return result
@@ -542,7 +546,7 @@ def parser():
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
-    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Ghost Signal, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
     source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
     management = p.add_mutually_exclusive_group()
     management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
@@ -555,11 +559,26 @@ def parser():
     p.add_argument('--thermal-gamma', type=float, default=1., help='Thermal response exponent, 0.25–4; above 1 darkens intermediate warmth')
     p.add_argument('--thermal-softness', type=float, default=0., help='Scalar Gaussian softness, 0–8 pixels at a 1920px longest edge; separate from band transitions and glow')
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (white for White Hot, black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
+    p.add_argument('--HUDglyphs', dest='hud_glyphs', choices=['yautja', 'cyber'], default='yautja', help='Glyph set for all alien HUD text, subject titles, and silhouette code: Yautja or Cyber (192 generated glyphs). Human-readable timecode stays numeric')
+    p.add_argument('--scene-mode', choices=['thermal', 'source'], default='thermal', help='Color a thermal field (default) or retain the RGB source scene with configurable tint and exposure')
+    p.add_argument('--scene-tint', default='#548568', help='RGB hex tint for source scene mode; default muted green #548568')
+    p.add_argument('--scene-tint-strength', type=float, default=.8, help='Source tint blend, 0-1; 0 preserves source colors')
+    p.add_argument('--scene-exposure', type=float, default=.65, help='Source scene brightness multiplier, 0.1-2; default 0.65')
+    p.add_argument('--subject-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline detected subject silhouettes; requires a segmented mode')
+    p.add_argument('--subject-code', action=argparse.BooleanOptionalAction, default=False, help='Flow glyph code upward inside detected silhouettes; requires a segmented mode')
+    p.add_argument('--subject-labels', action=argparse.BooleanOptionalAction, default=False, help='Stable overhead glyph titles and downward carets for detected subjects; requires a segmented mode')
+    p.add_argument('--subject-head-gap', type=float, default=24., help='Head-to-caret clearance, 0-120 reference pixels at a 1080px short edge; default 24')
+    p.add_argument('--subject-title-gap', type=float, default=18., help='Caret-to-title clearance, 0-80 reference pixels at a 1080px short edge; default 18')
+    p.add_argument('--subject-caret-scale', type=float, default=1., help='Subject caret size multiplier, 0.25-3; Ghost Signal uses 1.35')
+    p.add_argument('--code-size', type=float, default=22., help='Code glyph size, 8-80 reference pixels at a 1080px short edge')
+    p.add_argument('--code-speed', type=float, default=1., help='Upward code speed multiplier, 0-5; 0 freezes code motion')
+    p.add_argument('--code-density', type=float, default=.65, help='Active code column fraction, 0-1; 0 hides silhouette code')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
-    p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
+    p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: ' + ', '.join(OPACITY_ELEMENTS) + '. Unspecified elements keep standard colors')
     p.add_argument('--neon', action=argparse.BooleanOptionalAction, default=False, help='Light every HUD element with a bright neon core and colored halo; replaces standard HUD bloom. Default off')
     p.add_argument('--neon-intensity', type=float, default=1., help='Neon brightness, 0-2; 0 disables neon treatment, 1 is normal, 2 is intense')
     p.add_argument('--neon-spread', type=float, default=.6, help='Halo radius relative to stroke width, 0-2; 0 is a tight rim, 2 is a wide wash')
+    p.add_argument('--neon-core-whiten', type=float, default=1., help='Bright core whitening, 0-1; 0 retains the selected ink hue, 1 uses the standard pale neon core')
     p.add_argument('--neon-flicker', type=float, default=0., help='Seeded neon hum, 0-1; 0 is steady. Stills show time zero')
     p.add_argument('--neon-elements', help='Comma-separated element=intensity overrides, 0-2; 0 disables neon for that element. Others inherit --neon-intensity. Elements: ' + ', '.join(BLUR_ELEMENTS) + '. Target applies to both flash states')
     p.add_argument('--hud-blur', type=float, default=0., help='Gaussian softness for all HUD artwork only, 0-20 reference pixels at a 1080px short edge; default 0 (sharp)')
@@ -602,10 +621,10 @@ def parser():
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
-    p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Standard trace or thick mirrored Rorschach column: filled, split lobes, or hollow pockets')
-    p.add_argument('--wave-width', type=float, help='Rorschach column maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
-    p.add_argument('--wave-height', type=float, help='Rorschach column height as a fraction of the frame, 0.1-1; default 0.96')
-    p.add_argument('--wave-detail', type=float, default=.6, help='Rorschach detail, 0-1; 0 is broad/smooth, higher values add sharper audio-driven edge spikes and more intricate lobes')
+    p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Trace, Rorschach filled/split/hollow, or digital distortion: blocks, shards, circuit')
+    p.add_argument('--wave-width', type=float, help='Styled waveform maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
+    p.add_argument('--wave-height', type=float, help='Styled waveform height as a fraction of the frame, 0.1-1; default 0.96')
+    p.add_argument('--wave-detail', type=float, default=.6, help='Detail, 0-1: sharper lobes in Rorschach styles or finer pixel blocks in digital styles')
     p.add_argument('--wave-window', type=float, default=.6, help='Trailing audio window in seconds')
     p.add_argument('--wave-gain', type=float, default=1., help='Audio waveform gain')
     p.add_argument('--audio-stream', type=int, default=0, help='Zero-based audio track used for waveform and output')
@@ -654,7 +673,10 @@ def main(argv=None):
         parse_stroke_colors(args.target_stroke_colors)
         hud_blurs(args.hud_blur, args.hud_blur_elements)
         hud_opacities(args.hud_opacity, args.hud_opacity_elements)
-        NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed)
+        NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed, args.neon_core_whiten)
+        SignalStyle(**{key: getattr(args, key) for key in SIGNAL_OPTIONS})
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels):
+            p.error('Subject outlines, code, and titles require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:
@@ -691,7 +713,7 @@ def main(argv=None):
         if args.hud and args.verbose and args.thermal == 'classic':
             p.error('--verbose requires --thermal low-detail, cinematic, detailed, or very-detailed')
         if args.wave_style == 'trace' and (args.wave_width is not None or args.wave_height is not None):
-            p.error('--wave-width and --wave-height require a Rorschach --wave-style')
+            p.error('--wave-width and --wave-height require a non-trace --wave-style')
         if args.precision != 'fp32' and args.thermal == 'classic' and not args.list_figures:
             p.error('--precision bf16 requires --thermal low-detail, cinematic, detailed, or very-detailed')
         checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),

@@ -64,12 +64,13 @@ def normalized_blur(mask, radius):
 
 class NeonStyle:
     """One frame gain, bounded mask cache, and local additive/subtractive light."""
-    def __init__(self, intensity=1., spread=.6, flicker=0., elements=None, seed=42):
+    def __init__(self, intensity=1., spread=.6, flicker=0., elements=None, seed=42, core_whiten=1.):
         self.intensities = neon_intensities(intensity, elements)
-        for name, value, upper in (('spread', spread, 2), ('flicker', flicker, 1)):
+        for name, value, upper in (('spread', spread, 2), ('flicker', flicker, 1), ('core-whiten', core_whiten, 1)):
             if not math.isfinite(value) or not 0 <= value <= upper:
                 raise ValueError(f'--neon-{name} must be finite and between 0 and {upper}')
         self.intensity, self.spread, self.flicker = intensity, spread, flicker
+        self.core_whiten = core_whiten
         self.noise = NeonFlicker(seed)
         self.cache = OrderedDict()
         self.cache_pixels = 0
@@ -130,7 +131,7 @@ class NeonStyle:
                 # larger. Avoid full-frame float RGB buffers for sparse ink.
                 pixels = np.asarray(core.crop(core_box), np.float32).copy()
                 left, top, right, bottom = core_box
-                heat = center[top:bottom, left:right, None] * (.85 * min(1., intensity) * gain)
+                heat = center[top:bottom, left:right, None] * (.85 * self.core_whiten * min(1., intensity) * gain)
                 pixels[..., :3] += heat * (255 - pixels[..., :3])
                 core.paste(Image.fromarray(np.uint8(np.clip(pixels, 0, 255))), core_box[:2])
         background = base.crop(region).convert('RGBA')

@@ -29,7 +29,7 @@ class PresetTests(unittest.TestCase):
             models.assert_not_called()
             convert.assert_not_called()
         presets = {entry['id']: entry for entry in report['presets']}
-        self.assertEqual(set(presets) - {'hottropic'}, set(PALETTES))
+        self.assertEqual(set(presets) - {'hottropic', 'ghost-signal'}, set(PALETTES))
         for name in PALETTES:
             args = parser().parse_args(['--stylepreset', name])
             self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'palette'))

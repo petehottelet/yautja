@@ -176,6 +176,54 @@ class GroundedSegmenter:
                     subject.parts = self.detect_surfaces(frame, subject)
         return subjects
 
+    def refine(self, frame, tracks):
+        """Refresh current-frame contours between detections, retaining track IDs."""
+        import cv2
+        candidates = []
+        for track in tracks:
+            rows, cols = np.nonzero(track.mask > .5)
+            if not len(rows):
+                continue
+            dx, dy = max(4., np.ptp(cols) * .04), max(4., np.ptp(rows) * .04)
+            box = [max(0., float(cols.min()) - dx), max(0., float(rows.min()) - dy),
+                   min(float(frame.width), float(cols.max()) + 1 + dx),
+                   min(float(frame.height), float(rows.max()) + 1 + dy)]
+            distance = cv2.distanceTransform(np.uint8(track.mask > .5), cv2.DIST_L2, 3)
+            points = []
+            for low, high in zip(np.linspace(rows.min(), rows.max() + 1, 4)[:-1],
+                                 np.linspace(rows.min(), rows.max() + 1, 4)[1:]):
+                region = distance[int(low):max(int(low) + 1, int(high))]
+                py, px = np.unravel_index(region.argmax(), region.shape)
+                points.append([float(px), float(py + int(low))])
+            candidates.append((track, box, points))
+        if not candidates:
+            return
+        started = clock.perf_counter()
+        try:
+            inputs = self.mask_processor(images=frame, input_boxes=[[box for _, box, _ in candidates]],
+                                         input_points=[[points for _, _, points in candidates]],
+                                         input_labels=[[[1, 1, 1] for _ in candidates]], return_tensors='pt').to(self.device)
+            with self.torch.inference_mode(), self.autocast():
+                output = self.segmenter(**inputs, multimask_output=False)
+            masks = self.mask_processor.post_process_masks(output.pred_masks.cpu(), inputs['original_sizes'].cpu())[0]
+            for (track, _, _), mask in zip(candidates, masks):
+                current = mask[0].numpy().astype(np.float32)
+                # Keep refinement local to the propagated silhouette. Large
+                # topology changes are handled by the full detector, avoiding
+                # box-prompt leaks into nearby scenery during partial occlusion.
+                support = cv2.dilate(np.uint8(track.mask > .5), np.ones((17, 17), np.uint8))
+                current *= support
+                area = float(current.sum())
+                # Reject empty masks and masks that jump to a different figure.
+                if area >= 8 and area <= max(16, float(track.mask.sum()) * 2) and mask_iou(track.mask, current) >= .1:
+                    track.mask = current
+            if self.device == 'cuda':
+                self.torch.cuda.synchronize()
+        except RuntimeError as exc:
+            raise execution_error(exc, self.device, 'mask refinement') from exc
+        self.inference_seconds += clock.perf_counter() - started
+        self.inference_calls += 1
+
     def detect_surfaces(self, frame, subject):
         """Ground visible surfaces inside each person crop with the cached models."""
         rows, cols = np.nonzero(subject.mask > .5)
@@ -266,12 +314,14 @@ class SemanticTracker:
     This is optical-flow tracking between SAM image masks, not SAM's video-memory
     predictor. IDs are temporary within a shot, not persistent identities.
     """
-    def __init__(self, detector, interval=.5):
+    def __init__(self, detector, interval=.5, *, refine_masks=False):
         try:
             import cv2
         except ImportError as exc:
             raise ValueError('Semantic tracking requires opencv-python-headless; install yautja[semantic]>=2,<3.') from exc
         self.cv2, self.detector, self.interval = cv2, detector, interval
+        self.refine_masks = refine_masks
+        self.refinement_frames = 0
         self.previous = None
         self.tracks = []
         self.last_detection = -math.inf
@@ -360,6 +410,11 @@ class SemanticTracker:
             self.tracks = detected + stale
             self.last_detection = time
             self.detection_frames += 1
+        elif self.refine_masks and self.tracks:
+            # Optical flow predicts prompt positions; current-frame SAM masks
+            # supply the visible contour, avoiding accumulated boundary drift.
+            self.detector.refine(frame, self.tracks)
+            self.refinement_frames += 1
         # Allow one missed detection, then fade over .5s. Expire old masks so
         # undetected subjects cannot leave permanent hot ghosts in a new scene.
         expiry = self.interval + .5
@@ -373,9 +428,12 @@ class SemanticTracker:
     def report(self):
         return {'models': {key: {'id': value[0], 'revision': value[1], 'license': 'Apache-2.0'} for key, value in MODELS.items()},
                 'device': self.detector.device, 'detection_frames': self.detection_frames,
+                'mask_refresh': 'frame' if self.refine_masks else 'flow',
+                'mask_refinement_frames': self.refinement_frames,
                 'scene_cuts': self.scene_cuts, 'max_subjects': self.max_subjects,
                 'backend': 'optical-flow',
                 'heat_model': ('segmented skin, clothing, and gear with pose-guided fallback'
                                if getattr(self.detector, 'surfaces', False) else 'pose-guided surface regions with seeded variation'),
                 'runtime': self.detector.report() if hasattr(self.detector, 'report') else {},
-                'tracking': 'optical-flow with periodic detection and SAM image masks'}
+                'tracking': ('optical-flow prompts with current-frame SAM contours' if self.refine_masks
+                             else 'optical-flow with periodic detection and SAM image masks')}

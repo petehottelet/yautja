@@ -1,15 +1,19 @@
-"""Mirrored inkblot transformations of audio or procedural waveform energy."""
+"""Inkblot and block-grid transformations of waveform energy."""
 import math
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
-WAVE_STYLES = ('trace', 'rorschach', 'rorschach-split', 'rorschach-hollow')
+RORSCHACH_STYLES = ('rorschach', 'rorschach-split', 'rorschach-hollow')
+DIGITAL_STYLES = ('digital-blocks', 'digital-shards', 'digital-circuit')
+WAVE_STYLES = ('trace', *RORSCHACH_STYLES, *DIGITAL_STYLES)
 
 
 def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, seed=42):
     """Return a symmetrical shaded L mask; zero input always produces zero ink."""
-    if style not in WAVE_STYLES[1:]:
+    if style in DIGITAL_STYLES:
+        return digital_mask(width, height, signal, time, style=style, detail=detail, seed=seed)
+    if style not in RORSCHACH_STYLES:
         raise ValueError('Choose a Rorschach waveform style.')
     # Supersample for antialiasing while retaining short, pointed audio peaks.
     rows, columns = height * 2, width * 2
@@ -50,3 +54,63 @@ def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, s
     shading = .70 + .30 * np.clip(1 - x / np.maximum(.01, outer[:, None]), 0, 1)
     mask = Image.fromarray(np.uint8(np.clip(ink * shading * 255, 0, 255)))
     return mask.resize((width, height), Image.Resampling.LANCZOS)
+
+
+def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
+    """Three distinct pixel geometries; signal amplitude controls occupied width."""
+    if style not in DIGITAL_STYLES:
+        raise ValueError('Choose a digital waveform style.')
+    pixel = max(2, round(width / (14 + detail * 18)))
+    columns = max(5, math.ceil(width / pixel))
+    rows = max(2, math.ceil(height / pixel))
+    canvas = Image.new('L', (columns, rows))
+    values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
+    if not len(values) or not values.max():
+        return Image.new('L', (width, height))
+    bins = np.linspace(0, len(values), rows + 1)
+    energy = np.array([values[int(lo):max(int(lo) + 1, math.ceil(hi))].max() for lo, hi in zip(bins, bins[1:])])
+    drive = np.clip(energy * 4, 0, 1) ** .35
+    center, half = columns // 2, (columns - 1) // 2
+    rng = np.random.default_rng((seed + int(time * 5) * 104729) & 0xffffffff)
+    draw = ImageDraw.Draw(canvas)
+    previous = None
+    for row in range(0, rows, 3):
+        strength = float(drive[row:row + 3].max())
+        if strength <= 0:
+            previous = None
+            continue
+        radius = max(1, round(half * strength))
+        if style == 'digital-blocks':
+            # Broad bit-crushed slabs, alternating widths, with square cutouts.
+            width_cells = max(1, radius - (row // 3 % 3))
+            draw.rectangle((center - width_cells, row, center + width_cells, row + 2), fill=235)
+            if row % 12 == 0 and width_cells > 3:
+                draw.rectangle((center - 1, row, center + 1, row), fill=0)
+            if row % 9 == 0:
+                draw.rectangle((center - width_cells, row + 2, center + width_cells, row + 2), fill=0)
+        elif style == 'digital-shards':
+            # Separated, unequal data packets displaced across the waveform axis.
+            for sign in (-1, 1):
+                span = max(1, round(radius * rng.uniform(.25, .65)))
+                offset = max(1, radius - span + 1)
+                left = center + offset if sign == 1 else center - offset - span + 1
+                draw.rectangle((left, row, left + span - 1, row + int(rng.integers(0, 2))),
+                               fill=int(rng.integers(175, 256)))
+            if row % 12 == 3:
+                draw.rectangle((center - 1, row, center, row + 1), fill=255)
+        else:
+            # Stepped dual rails joined by rungs and chunky junction squares.
+            radius = max(2, radius)
+            for sign in (-1, 1):
+                x = center + sign * radius
+                draw.rectangle((x - 1, row, x, row + 2), fill=220)
+                if previous is not None:
+                    old = center + sign * previous
+                    draw.rectangle((min(x, old) - 1, row, max(x, old), row), fill=220)
+                if row % 12 == 0:
+                    draw.rectangle((x - 1, row, x + 1, row + 1), fill=255)
+            if row % 9 == 0:
+                draw.rectangle((center - radius, row + 1, center + radius, row + 1), fill=235)
+            previous = radius
+    # Exact square raster cells; no bilinear smoothing or diagonal stair blur.
+    return canvas.resize((columns * pixel, rows * pixel), Image.Resampling.NEAREST).crop((0, 0, width, height))

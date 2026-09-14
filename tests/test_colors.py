@@ -56,7 +56,8 @@ class ColorTests(unittest.TestCase):
         subjects = [Subject(mask, 'person', .9, track_id=1)]
         field = np.full((360, 640), 100, np.uint8)
         all_green = ','.join(f'{key}=#00ff00' for key in HUD_DEFAULTS)
-        options = dict(hud_theme='custom', hud_colors=all_green, glow=0, verbose=True, show_timecode=True)
+        options = dict(hud_theme='custom', hud_colors=all_green, glow=0, verbose=True, show_timecode=True,
+                       subject_outline=True, subject_code=True, subject_labels=True)
         for key in HUD_DEFAULTS:
             with self.subTest(element=key):
                 original = Renderer(640, 360, **options)
