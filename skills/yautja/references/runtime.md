@@ -6,26 +6,41 @@ Requires Python 3.10+; Python 3.10 and 3.11 are covered by CI. Classic needs onl
 
 Use the [PyPI package](https://pypi.org/project/yautja/) with the compatible commands below, or the matching wheel from a [GitHub release](https://github.com/petehottelet/yautja/releases). For development, install the GitHub source with `python -m pip install "yautja @ git+https://github.com/petehottelet/yautja.git@main"`. Add `[semantic]` after `yautja` for segmentation. The source route requires Git and can include changes beyond the latest release.
 
-Choose the first usable route:
+Reuse a compatible installed runtime first, including one installed with pipx. Check `yautja --version` and use `--doctor` to confirm its environment before adding dependencies. Do not create a second installation just because another route is now preferred.
 
-1. **pipx:** `pipx install "yautja>=2.5.8,<3"`, or `pipx install "yautja[semantic]>=2.5.8,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for any later extras or GPU setup; a different Python installs into a different environment. A dedicated venv is easier for a custom CUDA stack.
-2. **Dedicated venv outside the skill:** create and use the environment below. All `python` examples thereafter mean its exact executable, or the activated environment.
-3. **User site:** `python -m pip install --user "yautja>=2.5.8,<3"` only when supported. Invoke `python -m yautja` using that same Python if the console script is not on PATH. If Python is externally managed (PEP 668), use route 2. Never use `--break-system-packages`.
+For a new installation, **pip in a virtual environment is the primary route**. Use an existing environment when it is suitable for this task, or create a dedicated one outside the skill folder. The public install command is `pip install yautja`; this skill uses the compatible range below. Install the `semantic` extra for segmented looks.
+
+### Virtual environment setup
+
+These commands create a dedicated environment and activate it so `pip`, `python`, and `yautja` select the same installation.
+
+macOS/Linux:
 
 ```bash
-python -m venv .venv-yautja
-# macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5.8,<3"
-.venv-yautja/bin/python -m yautja --version
-.venv-yautja/bin/python -m yautja --doctor
+python3 -m venv .venv-yautja
+source .venv-yautja/bin/activate
+python -m pip install "yautja>=2.5.8,<3"
+python -m yautja --version
+python -m yautja --doctor --media image
 ```
 
+Windows PowerShell:
+
 ```powershell
-# Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.8,<3"
-.venv-yautja\Scripts\python.exe -m yautja --version
-.venv-yautja\Scripts\python.exe -m yautja --doctor
+py -m venv .venv-yautja
+.\.venv-yautja\Scripts\Activate.ps1
+python -m pip install "yautja>=2.5.8,<3"
+python -m yautja --version
+python -m yautja --doctor --media image
 ```
+
+If activation is unavailable, use `.venv-yautja/bin/python` on macOS/Linux or `.venv-yautja\Scripts\python.exe` on Windows in place of `python`; `python -m pip` installs and `python -m yautja` runs the converter with that exact interpreter. Reactivate the environment in a new terminal, or keep using its full executable path. For video readiness, also run `python -m yautja --doctor` with FFmpeg installed.
+
+### Alternatives
+
+**pipx:** `pipx install "yautja>=2.5.8,<3"`, or `pipx install "yautja[semantic]>=2.5.8,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for later extras or GPU setup. A dedicated venv is easier for a custom CUDA stack.
+
+**User site:** `python -m pip install --user "yautja>=2.5.8,<3"` only when supported and a virtual environment or pipx is unsuitable. Invoke `python -m yautja` with that same Python if the console script is not on PATH. If Python is externally managed, create a virtual environment; never use `--break-system-packages`.
 
 Confirm a stable version in `>=2.5.8,<3` before using this skill. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
 

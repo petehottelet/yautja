@@ -10,16 +10,19 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 
 ## Setup and use
 
-Keep the lightweight environment if you only need classic mode. For semantic mode, install the `semantic` extra in the selected virtual environment. Use the same environment for the package and models:
+The base `yautja` package provides Classic mode. To use the segmented gallery looks, install `yautja[semantic]` in the selected virtual environment; it can also be installed directly as your first Yautja installation. This skill uses the compatible version range below. Keep installation, model setup, diagnosis, and conversion in the same environment:
 
 ```bash
 python -m pip install "yautja[semantic]>=2.5.8,<3"
 python -m yautja --download-models
-python -m yautja "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
-python -m yautja "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
+python -m yautja --doctor --media image --thermal cinematic
+python -m yautja "photo.jpg" "outputs/photo-cinematic.png" --thermal cinematic --verbose
+# Videos also require FFmpeg and ffprobe:
+python -m yautja --doctor --thermal cinematic
+python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
 ```
 
-Use your environment's Python executable for these commands. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose adds about 344 MB to the earlier semantic setup; existing installations should upgrade the semantic extra (including SciPy) and run `--download-models` once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The release skill includes the Yautja wheel, but not model weights, dependency wheels, Python or FFmpeg. Follow the [complete offline setup](runtime.md#offline-install) for a disconnected machine. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
+Use your environment's Python executable for these commands. Palettes can be used with Classic; built-in style presets currently select Cinematic and need segmentation unless explicitly overridden with `--thermal classic`. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose adds about 344 MB to the earlier semantic setup; existing installations should upgrade the semantic extra (including SciPy) and run `--download-models` once. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The release skill includes the Yautja wheel, but not model weights, dependency wheels, Python or FFmpeg. Follow the [complete offline setup](runtime.md#offline-install) for a disconnected machine. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
 
 `--device auto` selects CUDA if available, otherwise CPU. A CUDA-capable card also needs CUDA-enabled PyTorch; CPU-only PyTorch will use CPU even if a GPU is installed. Install a compatible PyTorch/torchvision pair using the [official PyTorch installer](https://pytorch.org/get-started/locally/). Start with a five-second sample. CPU processing is substantially slower than classic mode.
 

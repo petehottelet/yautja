@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/yautja/"><img alt="Install Yautja from PyPI" src="https://img.shields.io/pypi/v/yautja?color=3776ab&amp;label=PyPI"></a>
   <a href="https://github.com/petehottelet/yautja/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/petehottelet/yautja?display_name=tag&sort=semver&color=2da44e&label=release"></a>
   <a href="https://github.com/petehottelet/yautja/blob/main/LICENSE"><img alt="Code license: MIT" src="https://img.shields.io/badge/code%20license-MIT-green.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
@@ -15,27 +16,89 @@
 
 # Yautja is sci-fi segmentation, re-skinning, and annotation for video and images. 
 
-Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skill** with thermal-imaging-style output.
+Yautja is a **local Python tool for sci-fi-styled image segmentation, re-skinning, and annotation** with thermal-imaging-style output.
 
 **For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures. HUD elements are for entertainment/costume/cosplay purposes only. 
 
-Re-skin local images and video frames with cold blues, warm silhouettes, and alien HUD glyphs. Videos add an audio-reactive waveform. A small **agent skill for Claude and OpenAI Codex**, backed by an installable Python CLI and FFmpeg for video. [yautja.ai](https://yautja.ai).
+Re-skin local images and video frames with cold blues, warm silhouettes, and alien HUD glyphs. Videos add an audio-reactive waveform. Install the converter from PyPI and use it directly, or add the optional **agent skill for Claude and OpenAI Codex**. Videos use FFmpeg. [yautja.ai](https://yautja.ai).
 
 [![Cinematic thermal look in the original Yautja palette, with broad warm regions, shaded cyan glyph callouts, and compact LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hero.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif)
 
 A three-second loop from generated jungle-explorer footage, using **Cinematic** detail and the **original Yautja palette**, with texture off. The waveform follows the source audio; GIFs are silent. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png). The gallery reflects the 2.x source, including the centered waveform. The older [1.0 demo with sound](https://github.com/petehottelet/yautja/releases/download/v1.0.0/yautja-demo.mp4) uses the previous renderer.
 
+## Quick start
+
+**Install Yautja from [PyPI](https://pypi.org/project/yautja/).** Requires Python 3.10+. Use an activated virtual environment; [Windows and macOS/Linux setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#virtual-environment-setup) shows how to create one.
+
+**Classic — lightweight installation.** The base package provides the Classic effect. The segmented gallery looks use the extra setup immediately below. Try Classic on your own JPEG or PNG; images need no FFmpeg or model downloads.
+
+<!-- quick-start-classic: exercised by tools.verify_install -->
+```bash
+pip install yautja
+yautja --version
+yautja --doctor --media image
+yautja "photo.jpg" "photo-yautja.png"
+```
+
+### Segmented looks
+
+**For the gallery's Low Detail, Cinematic, Detailed, and Very Detailed looks**, install the `semantic` extra and explicitly download the models once. You can install this extra directly without installing the base command first. Use the same environment's Python throughout:
+
+```bash
+python -m pip install "yautja[semantic]"
+python -m yautja --download-models
+python -m yautja --doctor --media image --thermal cinematic
+python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
+```
+
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic, while the built-in style presets select Cinematic and need this setup unless you override them with `--thermal classic`. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+
+### Video
+
+Install [FFmpeg](https://ffmpeg.org/download.html) and ffprobe separately and put them on PATH. With the base package, convert a video using Classic:
+
+```bash
+yautja --doctor
+yautja "input.mov" "output-yautja.mp4"
+```
+
+After segmented setup, try a five-second Cinematic preview:
+
+```bash
+python -m yautja --doctor --thermal cinematic
+python -m yautja "clip.mov" "clip-preview.mp4" --thermal cinematic --verbose --timecode --duration 5
+```
+
+Remove `--duration 5` and choose a new output filename for the full video. Sound is retained unless `--mute` is used; `--timecode` adds elapsed time beneath the alien readout. Silent videos use a generated waveform. Existing files require explicit `--overwrite`.
+
+**Other installation options:** `pipx install yautja` (or `pipx install "yautja[semantic]"`) provides an isolated CLI. Existing compatible pipx installations can be reused. Source checkouts and offline release wheels are covered in the [runtime guide](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md). For upgrades, use the [original environment](#local-skill-bundles-and-updates).
+
+### Still images
+
+JPEG and PNG inputs save directly to PNG. With Yautja installed in the selected Python environment:
+
+```bash
+python -m yautja --doctor --media image
+python -m yautja "photo.jpg" "outputs/photo-yautja.png"
+# After segmented setup, use anatomy coloring and glyph callouts:
+python -m yautja "photo.jpg" "outputs/photo-cinematic.png" --thermal cinematic --verbose
+```
+
+Use your virtual environment's Python. PNG output selects still-image mode automatically; FFmpeg is not needed. The same renderer supplies the chosen look, palette, optional grain/pixelation, shaded glyphs, and a static procedural waveform. All four segmented looks work with still images. `--timecode` optionally displays a static clock at `--timecode-start` (zero by default).
+
+Images retain their aspect ratio and EXIF orientation, with a longest edge of at most 1920 pixels and no upscaling. `--max-size` changes that limit. Transparent areas are flattened onto black before coloring; output is an RGB PNG without source metadata. Animated PNG and video-only timing/audio controls are rejected. Existing output and source files are protected.
+
 ## Install the agent skill
+
+**Optional:** add instructions for Claude Code or Codex to operate Yautja. The converter can be used directly without an agent or this installer.
 
 ```bash
 npx skills add petehottelet/yautja --skill yautja --agent claude-code codex --global
 ```
 
-Then ask: **“Use Yautja’s Cinematic look with the original palette, glyph callouts, timecode, and the original sound. Keep the image clean.”** The skill checks Python and FFmpeg before converting. Subject segmentation needs the separate semantic setup below.
+Then ask: **“Use Yautja’s Cinematic look with the original palette, glyph callouts, timecode, and the original sound. Keep the image clean.”** The skill reuses a compatible installed runtime, checks prerequisites, and guides segmentation setup when needed.
 
-The installer copies only `skills/yautja/`; it does not copy the GIF gallery or converter source. The skill installs the runtime separately. New builds produce `yautja-skill.zip`, with the matching application wheel for offline setup; the existing 1.0 release predates this layout.
-
-Silent videos use the smoothly generated waveform from the original effect.
+The installer copies only `skills/yautja/`; it does not copy the converter or gallery. If the runtime is missing, the skill installs it separately from PyPI in a suitable environment. Release bundles include `yautja-skill.zip` with the matching application wheel; [offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install) also requires dependency wheels and, for segmentation, model caches.
 
 ## When to use Yautja
 
@@ -46,48 +109,6 @@ Silent videos use the smoothly generated waveform from the original effect.
 - Export a short preview or a complete local H.264/AAC MP4 while preserving aspect ratio and sound.
 
 The effect uses image segmentation and synthetic color fields, with seeded variation and optional sensor grain. It does not analyze infrared sensor data or provide identity/anonymity guarantees. Model files download explicitly; ordinary conversions process footage locally.
-
-## Quick start
-
-Python 3.10+ is required. For videos, also install [FFmpeg](https://ffmpeg.org/download.html) with ffprobe on PATH. Images do not need FFmpeg.
-
-Install a published release from [PyPI](https://pypi.org/project/yautja/) in an isolated environment:
-
-```bash
-python -m venv .venv-yautja
-# macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5.8,<3"
-.venv-yautja/bin/python -m yautja --doctor
-.venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
-```
-
-```powershell
-# Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.8,<3"
-.venv-yautja\Scripts\python.exe -m yautja --doctor
-.venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
-```
-
-For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
-
-Alternatively, use `pipx install "yautja>=2.5.8,<3"` or `pipx install "yautja[semantic]>=2.5.8,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
-
-Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
-
-### Still images
-
-JPEG and PNG inputs save directly to PNG. With Yautja installed in the selected Python environment:
-
-```bash
-python -m yautja --doctor --media image
-python -m yautja "photo.jpg" "outputs/photo-yautja.png"
-# After the semantic setup below, use anatomy coloring and glyph callouts:
-python -m yautja "photo.jpg" "outputs/photo-semantic.png" --thermal semantic --verbose
-```
-
-Use your virtual environment's Python. PNG output selects still-image mode automatically; FFmpeg is not needed. The same renderer supplies the chosen look, palette, optional grain/pixelation, shaded glyphs, and a static procedural waveform. All four segmented looks work with still images. `--timecode` optionally displays a static clock at `--timecode-start` (zero by default).
-
-Images retain their aspect ratio and EXIF orientation, with a longest edge of at most 1920 pixels and no upscaling. `--max-size` changes that limit. Transparent areas are flattened onto black before coloring; output is an RGB PNG without source metadata. Animated PNG and video-only timing/audio controls are rejected. Existing output and source files are protected.
 
 ## Style presets and individual options
 
@@ -438,9 +459,9 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5.8,<3"
+python -m pip install "yautja[semantic]"
 python -m yautja --download-models
-python -m yautja --doctor --thermal cinematic --device cuda
+python -m yautja --doctor --thermal cinematic
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
 ```
 

@@ -4,8 +4,8 @@ recursive-include tools *.py
 recursive-include tests *.py
 recursive-include skills/yautja *.md *.yaml *.json LICENSE
 recursive-include docs *.md
-exclude docs/PRD-neon-hud.md
 prune assets
 prune outputs
 prune 00_project_files
 global-exclude __pycache__ *.py[cod]
+global-exclude PLAN-*.md PRD-*.md IMPLEMENTATION_PLAN.md REVIEW.md HANDOFF.md PLAN.md TODO.md NOTES.md

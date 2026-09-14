@@ -11,7 +11,7 @@ Use the installed Yautja CLI. This skill contains instructions; pip installs the
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.5.8,<3` for the four segmented looks, or `yautja>=2.5.8,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, reuse that installation, including an existing pipx environment. For a new installation, read [runtime.md](references/runtime.md#install-one-runtime): prefer pip in a suitable existing virtual environment or create a dedicated one outside the skill folder. Offer pipx as an alternative. Install `yautja[semantic]>=2.5.8,<3` for the four segmented looks, or `yautja>=2.5.8,<3` for Classic. The base package does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -29,7 +29,7 @@ Resolve media paths from the user's workspace, and reference paths from this ski
    ```bash
    yautja "input.mov" "output-yautja.mp4"
    yautja "photo.jpg" "photo-yautja.png"
-   yautja "photo.jpg" "photo-yautja.png" --thermal silhouette --verbose
+   yautja "photo.jpg" "photo-yautja.png" --thermal low-detail --verbose
    yautja "clip.mov" "clip-cinematic.mp4" --thermal cinematic --verbose
    yautja "clip.mov" "clip-phosphor.mp4" --thermal detailed --palette green-phosphor --grain 0.03 --pixelation 96
    ```

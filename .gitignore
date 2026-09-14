@@ -14,6 +14,8 @@ dist/
 build/
 *.egg-info/
 IMPLEMENTATION_PLAN.md
+PLAN-*.md
+PRD-*.md
 REVIEW.md
 HANDOFF.md
 PLAN.md

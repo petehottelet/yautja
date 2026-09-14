@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.9 — 2026-09-13
+
+- Make `pip install yautja` the primary README installation route, distinguish lightweight Classic from the segmented gallery setup, and present the agent skill as optional. Align environment and model setup guidance, retain working installations, and verify the README quick start in clean environments.
+- Keep private plans and draft PRDs in the ignored `00_project_files/` directory, document the repository rule, and exclude planning-file patterns from source distributions.
+
 ## 2.5.8 — 2026-09-13
 
 - Give the round reticle three center dots arranged in a triangle, appearing only on lock. Preserve its reduced size, four outline gaps, and existing `--target-shape round-dot` setting. Rename the gallery label to Round with three lock dots, refresh both GIF sizes, and update the CLI, API, and skill documentation (runtime 2.5.8+).

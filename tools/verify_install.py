@@ -42,9 +42,21 @@ def environment(path):
     return python, env
 
 
+def classic_quickstart():
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    block = re.search(r'<!-- quick-start-classic:.*?-->\s*```bash\n(.*?)```', readme, re.S)
+    if block is None:
+        raise ValueError('README is missing its tested Classic quick-start block')
+    commands = [shlex.split(line) for line in block.group(1).strip().splitlines()]
+    if len(commands) != 4 or commands[0] != ['pip', 'install', 'yautja']:
+        raise ValueError('Classic quick start must install from pip, then check version, doctor, and an image')
+    return commands
+
+
 def check_runtime(python, env, cwd, prefix):
+    quickstart = classic_quickstart()
     version = 'Yautja ' + project()['version']
-    assert run(['yautja', '--version'], cwd, env).strip() == version
+    assert run(quickstart[1], cwd, env).strip() == version
     assert run([python, '-m', 'yautja', '--version'], cwd, env).strip() == version
     doctor = json.loads(run(['yautja', '--doctor'], cwd, env))
     assert doctor['ready']
@@ -61,9 +73,11 @@ def check_runtime(python, env, cwd, prefix):
     run(['ffmpeg', '-v', 'error', '-xerror', '-i', 'output-yautja.mp4', '-f', 'null', '-'], cwd, env)
     image_command = 'yautja "photo.jpg" "photo-yautja.png"'
     assert image_command in text
+    assert shlex.split(image_command) == quickstart[3]
     # Still conversion must not need FFmpeg, even when PATH has only the venv.
     image_env = dict(env, PATH=str(python.parent))
-    still = json.loads(run(shlex.split(image_command), cwd, image_env))
+    assert json.loads(run(quickstart[2], cwd, image_env))['ready']
+    still = json.loads(run(quickstart[3], cwd, image_env))
     assert still['frames'] == 1 and still['media_type'] == 'image'
     run([python, '-c', "from PIL import Image; im=Image.open('photo-yautja.png'); assert im.size==(320,180); im.verify()"], cwd, env)
     effects = json.loads(run(['yautja', 'photo.jpg', 'effects.png', '--palette', 'abyss', '--heat-glow', '.6',
@@ -126,8 +140,9 @@ def main():
             prefix = root / kind
             python, env = environment(prefix)
             if kind == 'wheel-venv':
-                run([python, '-m', 'pip', 'install', '--no-index', '--no-cache-dir',
-                     '--find-links', wheelhouse, wheel], cwd, env)
+                # Run the public install command verbatim against only this
+                # release's prepared wheelhouse; network access stays disabled.
+                run(classic_quickstart()[0], cwd, dict(env, PIP_FIND_LINKS=str(wheelhouse)))
             else:
                 reference = (skill / 'references/runtime.md').read_text(encoding='utf-8')
                 block = re.search(r'<!-- offline-install:.*?-->\s*```bash\n(.*?)```', reference, re.S).group(1)
