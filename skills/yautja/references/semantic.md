@@ -13,7 +13,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 Keep the lightweight environment if you only need classic mode. For semantic mode, install the `semantic` extra in the selected virtual environment. Use the same environment for the package and models:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.4,<3"
+python -m pip install "yautja[semantic]>=2.4.1,<3"
 python -m yautja --download-models
 python -m yautja "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
 python -m yautja "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
@@ -41,7 +41,7 @@ The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.4,<3"
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.4.1,<3"
 .venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
 .venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```
@@ -103,6 +103,6 @@ All display effects are independent of segmentation and palette, and default off
 
 The bundled checkpoint describes a SAM video configuration; Transformers may print a model-type warning when loading its compatible SAM image component. The pinned image inference path was verified on the demo clip.
 
-Verbose labels use six distinct decorative patterns built from the bundled broad, nine-segment geometry. Dim outlines preserve the complete shape, while selected segments receive shaded cyan highlights and the HUD's glow. A seeded shuffle assigns separate groups of patterns to consecutive track IDs, reducing repetition across nearby targets. Each track keeps its combination as it moves, independent of frame time or detection order; `--seed` changes the combinations. The symbols are fictional readouts, not a translation, literal numeric ID, or thermometer. Glyph rows sit beside each silhouette, with short connectors to its boundary. Labels follow track motion, reserve space for the main HUD, avoid subjects and other labels, and fade with lost tracks. Up to eight labels are shown; a label is omitted when there is no nearby clear space. Track IDs identify detections within a shot, not individual people; no face recognition is performed.
+Verbose labels use six distinct decorative patterns built from the bundled broad, nine-segment geometry. Dim outlines preserve the complete shape, while selected segments receive shaded cyan highlights and the HUD's glow. A seeded shuffle assigns separate groups of patterns to consecutive track IDs, reducing repetition across nearby targets. Each track keeps its combination as it moves, independent of frame time or detection order; `--seed` changes the combinations. The symbols are fictional readouts, not a translation, literal numeric ID, or thermometer. Glyph rows sit beside each silhouette, with connectors aimed at its smoothed center of area (an image-based approximation of center of mass). If that center falls outside a concave or partly occluded mask, the marker uses the nearest visible point. Labels retain their relative positions while clear, reserve space for the main HUD, avoid subjects and other labels, and fade with lost tracks. Time-based smoothing damps small mask changes with bounded lag during fast motion; cuts, reversed or repeated time, long frame gaps, and lost tracks reset its history. This stabilization is automatic in 2.4.1+. Up to eight labels are shown; a label is omitted when there is no nearby clear space. Track IDs identify detections within a shot, not individual people; no face recognition is performed.
 
 The JSON conversion report includes the selected mode, model revisions, device, detection-frame count, maximum concurrent subjects, and detected scene cuts. See [dependencies.md](dependencies.md) for licenses.

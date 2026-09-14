@@ -182,6 +182,8 @@ Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, 
 | [![Cinematic thermal output with the full HUD and annotations](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Cinematic thermal output with every HUD overlay hidden](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hud-off.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/hud-off.gif) |
 | Default HUD, with `--verbose --timecode` for annotations and clock | `--no-hud` |
 
+With `--verbose`, callout lines aim at a smoothed center of each visible silhouette—an image-based approximation of center of mass. Labels keep their position relative to the figure while that space remains clear, reducing jumps between moving arms and shoulders. If the center falls outside a concave or partly hidden silhouette, the marker uses the nearest visible point. This is automatic in 2.4.1+; no extra flag is needed.
+
 ```bash
 python -m yautja "clip.mov" "thermal-only.mp4" --thermal cinematic --no-hud
 python -m yautja "photo.jpg" "thermal-only.png" --palette green-phosphor --no-hud

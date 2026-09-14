@@ -272,6 +272,9 @@ class Renderer:
         # Alpha draws black ink over the image; screen blending would erase it.
         self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
+        self.annotation_centers = {}
+        self.annotation_time = None
+        self.annotation_shot = None
         if self.thermal != 'classic':
             from .thermal import LowDetailHeatField, CinematicHeatField, SurfaceHeatField, VeryDetailedHeatField
             field = {'low-detail': LowDetailHeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField,
@@ -388,8 +391,14 @@ class Renderer:
         deck = sorted(self.annotation_pool, key=lambda symbol: hashlib.sha256(salt + str(symbol).encode('ascii')).digest())
         return tuple(deck[row * 6:row * 6 + 6])
 
-    def annotation_layout(self, subjects):
-        """Place readable labels beside silhouettes with short boundary leaders."""
+    def annotation_layout(self, subjects, *, time=None, shot_id=None):
+        """Keep labels beside tracks and aim leaders at stable silhouette centers."""
+        dt = None if time is None or self.annotation_time is None else time - self.annotation_time
+        if shot_id != self.annotation_shot or (dt is not None and (dt <= 0 or dt > .5)):
+            self.annotation_positions = {}
+            self.annotation_centers = {}
+            dt = None
+        self.annotation_time, self.annotation_shot = time, shot_id
         s = self.scale
         left, top = round(116 * s), round(100 * s)
         right, bottom = self.width - round(18 * s), self.height - round(18 * s)
@@ -399,7 +408,9 @@ class Renderer:
         step = round(size * .85) + spacing
         label_w = step * 6 - spacing
         previous = self.annotation_positions
+        old_centers = self.annotation_centers
         self.annotation_positions = {}
+        self.annotation_centers = {}
         if size < 10 or label_w > right - left or size > bottom - top:
             return []
 
@@ -417,7 +428,22 @@ class Renderer:
             occupied |= np.asarray(Image.fromarray(mask).resize((grid_w, grid_h), Image.Resampling.NEAREST))
             sx, sy = self.width / mask.shape[1], self.height / mask.shape[0]
             bounds = (cols.min() * sx, rows.min() * sy, (cols.max() + 1) * sx, (rows.max() + 1) * sy)
-            center = (float(cols.mean()) * sx, float(rows.mean()) * sy)
+            center = np.array(((float(cols.mean()) + .5) * sx, (float(rows.mean()) + .5) * sy))
+            if dt is not None and subject.track_id in old_centers:
+                old_center = np.asarray(old_centers[subject.track_id])
+                # Dampen mask noise in seconds, independently of frame rate.
+                # Bound lag so fast motion cannot leave the pointer behind.
+                offset = (old_center - center) * math.exp(-dt / .10)
+                limit = max(2 * s, .08 * min(bounds[2] - bounds[0], bounds[3] - bounds[1]))
+                offset *= min(1., limit / max(1e-6, float(np.linalg.norm(offset))))
+                center += offset
+            self.annotation_centers[subject.track_id] = tuple(center)
+            mx, my = int(center[0] / sx), int(center[1] / sy)
+            if not (0 <= my < mask.shape[0] and 0 <= mx < mask.shape[1] and mask[my, mx]):
+                # Concave, clipped, or partly occluded masks can have a centroid
+                # outside the figure. Use its nearest visible pixel in that case.
+                nearest = np.argmin(((cols + .5) * sx - center[0]) ** 2 + ((rows + .5) * sy - center[1]) ** 2)
+                center = np.array(((cols[nearest] + .5) * sx, (rows[nearest] + .5) * sy))
             edge = mask.copy()
             edge[1:-1, 1:-1] &= ~(mask[:-2, 1:-1] & mask[2:, 1:-1] & mask[1:-1, :-2] & mask[1:-1, 2:])
             ey, ex = np.nonzero(edge)
@@ -439,8 +465,9 @@ class Renderer:
                 predicted = (px + cx - old_cx, py + cy - old_cy)
                 candidates.insert(0, predicted)
             best = None
-            for x, y in candidates:
-                x, y = round(np.clip(x, left, right - label_w)), round(np.clip(y, top, bottom - size))
+            for index, (x, y) in enumerate(candidates):
+                position = (float(np.clip(x, left, right - label_w)), float(np.clip(y, top, bottom - size)))
+                x, y = map(round, position)
                 rect = (x, y, x + label_w, y + size)
                 if any(x < other['rect'][2] + gap / 2 and x + label_w > other['rect'][0] - gap / 2
                        and y < other['rect'][3] + gap / 2 and y + size > other['rect'][1] - gap / 2 for other in placed):
@@ -457,27 +484,35 @@ class Renderer:
                 length_sq = float(distances[nearest])
                 if length_sq > min(72 * s, self.width * .08) ** 2:
                     continue
-                score = length_sq + .15 * (y + size / 2 - preferred_y) ** 2
+                target = (cx, cy)
+                anchor = tuple(np.clip(target, (x, y), (x + label_w, y + size)))
+                score = float(np.sum((np.asarray(anchor) - target) ** 2)) + .15 * (y + size / 2 - preferred_y) ** 2
                 if predicted is not None:
                     score += .3 * ((x - predicted[0]) ** 2 + (y - predicted[1]) ** 2)
                 if best is None or score < best[0]:
-                    best = (score, rect, tuple(points[nearest]), tuple(anchors[nearest]))
+                    best = (score, rect, target, anchor, position)
+                # A valid tracked placement wins even if another candidate gets
+                # slightly shorter as the silhouette changes shape.
+                if predicted is not None and index == 0:
+                    break
             if best is None:
                 continue
-            _, rect, target, anchor = best
-            self.annotation_positions[subject.track_id] = (*rect[:2], cx, cy)
+            _, rect, target, anchor, position = best
+            # Preserve fractional motion; rounding the history can make labels
+            # stick or drift at high frame rates and slow camera pans.
+            self.annotation_positions[subject.track_id] = (*position, cx, cy)
             placed.append(dict(subject=subject, rect=rect, target=target, anchor=anchor, size=size, step=step))
             if len(placed) == 8:
                 break
         return placed
 
-    def annotate(self, image, subjects):
+    def annotate(self, image, subjects, *, time=None, shot_id=None):
         s = self.scale
         panel = self.hud_panel(image.size, 'leaders', 'markers', 'callouts')
         leaders = ImageDraw.Draw(panel.layer('leaders'))
         markers = ImageDraw.Draw(panel.layer('markers'))
         layer = panel.layer('callouts')
-        for item in self.annotation_layout(subjects):
+        for item in self.annotation_layout(subjects, time=time, shot_id=shot_id):
             subject, size, step = item['subject'], item['size'], item['step']
             x, y = item['rect'][:2]
             cx, cy = item['target']
@@ -540,7 +575,7 @@ class Renderer:
         image = highlight_glow(image, readout_luma, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.colors.palette[-1].mean() < self.colors.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, readout_luma, time, wave, subjects)
+            self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id)
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
             image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static)
         return self.display_effects(image, time, shot_id)
@@ -566,7 +601,7 @@ class Renderer:
         image = highlight_glow(image, u * 255, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.palette[-1].mean() < self.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, luma, time, wave, subjects)
+            self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id)
             image = self.target_overlay.draw(image, time, targets,
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static)
         return self.display_effects(image, time, shot_id)
@@ -634,7 +669,7 @@ class Renderer:
         self.composite_panel(image, panel, 0, 0)
         return size, stats
 
-    def draw_hud(self, image, readout_luma, time, wave=None, subjects=()):
+    def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None):
         s = self.scale
         size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.
@@ -663,7 +698,7 @@ class Renderer:
             panel.layer('timecode').paste(clock, (rw - clock.width, size + round(7 * s)))
         self.composite_panel(image, panel, max(0, self.width - rw - pad), pad)
         if self.verbose:
-            self.annotate(image, subjects)
+            self.annotate(image, subjects, time=time, shot_id=shot_id)
 
     def display_effects(self, image, time, shot_id=None):
         # Tape/CRT treatments affect the final display, including the HUD.

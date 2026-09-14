@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.1 — 2026-09-13
+
+- Stabilize HUD callout leaders by aiming at each visible silhouette's smoothed center of area, with a nearby visible-point fallback for concave or occluded masks. Bound tracking lag during fast motion and reset history at cuts, time jumps, and track loss.
+- Retain clear label positions relative to their tracks instead of repeatedly choosing a new boundary point or marginally shorter placement. Preserve fractional motion so slow pans do not accumulate rounding drift.
+- Refresh the main and CRT example GIFs and document the updated default annotation behavior.
+
 ## 2.4.0 — 2026-09-13
 
 - Add optional CRT grid and 45-degree crosshatch patterns across the complete image and HUD, with shared strength control, independent disable flags, saved-preset support, and conversion reports. Keep both off by default.

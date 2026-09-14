@@ -137,7 +137,7 @@ class HeatTests(unittest.TestCase):
         np.testing.assert_array_equal(a[:, :50], plain[:, :50])
         np.testing.assert_array_equal(a[:45], plain[:45])
 
-    def test_large_callouts_stay_near_boundaries_without_covering_subjects(self):
+    def test_callout_labels_stay_clear_and_leaders_point_to_silhouette_centers(self):
         people = [subject(x=210, y=100, width=80, height=150, shape=(360, 640)),
                   subject(x=450, y=120, width=90, height=170, shape=(360, 640))]
         for track_id, person in enumerate(people, 1):
@@ -147,7 +147,8 @@ class HeatTests(unittest.TestCase):
         self.assertEqual(len(layout), 2)
         for item in layout:
             self.assertGreaterEqual(item['size'], 15)
-            self.assertLessEqual(np.linalg.norm(np.subtract(item['anchor'], item['target'])), 52)
+            rows, cols = np.nonzero(item['subject'].mask > .5)
+            np.testing.assert_allclose(item['target'], (cols.mean() + .5, rows.mean() + .5))
             x0, y0, x1, y1 = item['rect']
             self.assertGreaterEqual(x0, 65)
             self.assertGreaterEqual(y0, 50)
@@ -201,6 +202,60 @@ class HeatTests(unittest.TestCase):
         self.assertAlmostEqual(moved['rect'][1], first['rect'][1], delta=1)
         self.assertEqual(renderer.annotation_layout([]), [])
         self.assertEqual(renderer.annotation_positions, {})
+        self.assertEqual(renderer.annotation_centers, {})
+
+    def test_callout_centers_dampen_jitter_and_labels_keep_their_relative_position(self):
+        renderer = Renderer(640, 360, verbose=True)
+        raw, targets, offsets = [], [], []
+        for i in range(30):
+            one = subject(x=250 + (3 if i % 2 else -3), y=110, width=80, height=140, shape=(360, 640))
+            one.track_id = 7
+            item = renderer.annotation_layout([one], time=i / 30, shot_id=1)[0]
+            raw.append(np.nonzero(one.mask)[1].mean() + .5)
+            targets.append(item['target'][0])
+            offsets.append(np.subtract(item['rect'][:2], item['target']))
+        self.assertLess(np.std(targets[10:]), np.std(raw[10:]) * .3)
+        self.assertLess(np.ptp(np.asarray(offsets), axis=0).max(), 1.1)
+
+    def test_callout_smoothing_uses_time_and_limits_lag_during_fast_motion(self):
+        final = []
+        for fps in (12, 24, 60):
+            renderer = Renderer(640, 360, verbose=True)
+            one = subject(x=250, y=110, width=80, height=140, shape=(360, 640))
+            renderer.annotation_layout([one], time=0)
+            one.mask = np.roll(one.mask, 4, axis=1)
+            for i in range(1, fps // 2 + 1):
+                item = renderer.annotation_layout([one], time=i / fps)[0]
+            final.append(item['target'])
+        np.testing.assert_allclose(final, np.broadcast_to(final[0], (3, 2)), atol=1e-6)
+        for i in range(1, 6):
+            one.mask = np.roll(one.mask, 16, axis=1)
+            item = renderer.annotation_layout([one], time=.5 + i / 60)[0]
+            center = np.nonzero(one.mask)[1].mean() + .5
+            self.assertLessEqual(abs(item['target'][0] - center), 6.5)
+
+    def test_callout_history_resets_on_cuts_time_reversal_gaps_and_lost_tracks(self):
+        one = subject(x=250, y=110, width=80, height=140, shape=(360, 640))
+        one.track_id = 4
+        shifted = subject(x=254, y=110, width=80, height=140, shape=(360, 640))
+        shifted.track_id = 4
+        for time, shot in ((.12, 2), (.05, 1), (.1, 1), (1., 1)):
+            renderer = Renderer(640, 360, verbose=True)
+            renderer.annotation_layout([one], time=.1, shot_id=1)
+            actual = renderer.annotation_layout([shifted], time=time, shot_id=shot)[0]
+            expected = Renderer(640, 360, verbose=True).annotation_layout([shifted], time=time, shot_id=shot)[0]
+            self.assertEqual(actual['target'], expected['target'])
+            self.assertEqual(actual['rect'], expected['rect'])
+        renderer.annotation_layout([], time=1.1, shot_id=1)
+        self.assertEqual(renderer.annotation_centers, {})
+        self.assertEqual(renderer.annotation_positions, {})
+
+    def test_concave_subject_keeps_center_marker_on_visible_silhouette(self):
+        one = subject(x=240, y=100, width=120, height=160, shape=(360, 640))
+        one.mask[100:220, 260:340] = 0  # A U whose centroid lies in empty space.
+        item = Renderer(640, 360, verbose=True).annotation_layout([one])[0]
+        x, y = item['target']
+        self.assertTrue(one.mask[int(y), int(x)] > .5)
 
     def test_crowded_or_small_frames_never_force_labels_over_the_hud(self):
         for width, height in ((160, 90), (180, 320), (640, 360)):
