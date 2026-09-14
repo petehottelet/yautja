@@ -103,7 +103,7 @@ missing custom values, and conflicting color options fail before media processin
 or model setup.
 ## Thermal levels and reference preset
 
-`--look-preset hottropic` applies **HotTropic**. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
+`--stylepreset hottropic` applies **HotTropic**. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
 
 | Position | RGB |
 | --- | --- |
@@ -135,9 +135,9 @@ Grading controls require explicit levels (including 0) or a look preset. Spatial
 Explicit options override a preset regardless of order. `--thermal-levels 0` clears inherited band softness; explicitly combining continuous mode with band softness is an error. `--sensor-texture` enables its usual grain/pixels/horizontal-line defaults over the clean preset; explicit individual texture flags win. `--hud` enables overlays. Encoder `--preset` remains separate.
 
 ```bash
-yautja "clip.mov" "reference.mp4" --look-preset hottropic
-yautja "photo.jpg" "six-levels.png" --look-preset hottropic --thermal-levels 6 --thermal-band-softness 0
-yautja "clip.mov" "features.mp4" --look-preset hottropic --thermal very-detailed --thermal-levels 0 --hud
+yautja "clip.mov" "reference.mp4" --stylepreset hottropic
+yautja "photo.jpg" "six-levels.png" --stylepreset hottropic --thermal-levels 6 --thermal-band-softness 0
+yautja "clip.mov" "features.mp4" --stylepreset hottropic --thermal very-detailed --thermal-levels 0 --hud
 ```
 
 JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, or `banded`), all six grading values, scalar softness units, and resolved positioned palette colors. Built-in recipe values remain fixed; save a customized version as a separate JSON preset. See [presets.md](presets.md) for creation, sharing, and file validation.

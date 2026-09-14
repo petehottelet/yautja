@@ -1,13 +1,13 @@
 # Visual presets
 
-Available in Yautja 2.3+. A **preset** combines visual choices: a color palette, thermal detail and levels, HUD styling, waveform appearance, and optional effects. A **palette** is the color ramp inside that preset. Keep `--palette` when changing only colors; use `--look-preset` to start with a named look.
+Use Yautja 2.5.2+ for the `--stylepreset` flag shown here. A **preset** combines visual choices: a color palette, thermal detail and levels, HUD styling, waveform appearance, and optional effects. A **palette** is the color ramp inside that preset. Keep `--palette` when changing only colors; use `--stylepreset` to start with a named look.
 
 ## Built-in presets
 
 ```bash
 yautja --list-presets
-yautja "clip.mov" "hottropic.mp4" --look-preset hottropic
-yautja "clip.mov" "green.mp4" --look-preset green-phosphor
+yautja "clip.mov" "hottropic.mp4" --stylepreset hottropic
+yautja "clip.mov" "green.mp4" --stylepreset green-phosphor
 ```
 
 `--list-presets` prints JSON containing IDs, display names, kinds, settings, and aliases. It needs no media, FFmpeg, or segmentation models. Names are case-insensitive.
@@ -19,7 +19,7 @@ Every existing palette also has a starter preset: `yautja`, `ironbow`, `abyss`, 
 Explicit options override a preset regardless of argument order:
 
 ```bash
-yautja "clip.mov" "my-tropic.mp4" --look-preset hottropic --thermal very-detailed --hud --heat-glow 0.6
+yautja "clip.mov" "my-tropic.mp4" --stylepreset hottropic --thermal very-detailed --hud --heat-glow 0.6
 ```
 
 The encoder's existing `--preset fast` option remains separate and keeps its meaning.
@@ -29,7 +29,7 @@ The encoder's existing `--preset fast` option remains separate and keeps its mea
 Saving is a separate operation: omit input and output media paths. No inference or conversion runs.
 
 ```bash
-yautja --look-preset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja --stylepreset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 yautja "clip.mov" "less-glow.mp4" --preset-file "tropic-glow.json" --heat-glow 0.2
 ```
@@ -70,7 +70,7 @@ yautja "clip.mov" "abyss-neon.mp4" --preset-file "abyss-neon.json" --figures "fi
 yautja --preset-file "abyss-neon.json" --neon-spread 0.4 --save-preset "my-neon.json" --preset-name "My Neon"
 ```
 
-Precedence is **CLI defaults → built-in base → file settings → explicit CLI options**. Choose either `--look-preset` or `--preset-file`; a file can declare its own built-in base. Explicit `--thermal-levels 0` clears inherited band softness. `--sensor-texture` enables the combined effect's normal defaults unless individual texture controls are also specified. Changing away from custom palette/HUD modes clears their inherited custom color strings; switching to `--wave-style trace` clears inherited Rorschach dimensions. Explicit conflicting options are still errors.
+Precedence is **CLI defaults → built-in base → file settings → explicit CLI options**. Choose either `--stylepreset` or `--preset-file`; a file can declare its own built-in base. Explicit `--thermal-levels 0` clears inherited band softness. `--sensor-texture` enables the combined effect's normal defaults unless individual texture controls are also specified. Changing away from custom palette/HUD modes clears their inherited custom color strings; switching to `--wave-style trace` clears inherited Rorschach dimensions. Explicit conflicting options are still errors.
 
 Files are data only, limited to 64 KiB. Unknown fields/settings, duplicate keys, unsupported schema versions, invalid types, and invalid settings fail without rendering. Presets cannot contain commands, external imports, media paths, or actions. Use the supported 2.x CLI to validate them; the lower-level Python helpers remain experimental.
 

@@ -76,7 +76,7 @@ class PresetTests(unittest.TestCase):
                               r.display.motion_blur, r.display.crt_bleed, r.crt_vertical_lines)))
 
     def test_overrides_are_order_independent_and_continuous_clears_softness(self):
-        base = ['--look-preset', NAME]
+        base = ['--stylepreset', NAME]
         for flags in (['--thermal-levels', '6', '--hud', '--palette', 'ironbow'],
                       ['--thermal-levels', '0'], ['--sensor-texture'],
                       ['--sensor-texture', '--grain', '0'], ['--random-colors']):
@@ -98,7 +98,7 @@ class PresetTests(unittest.TestCase):
             source, output = Path(folder) / 'in.png', Path(folder) / 'out.png'
             Image.fromarray(np.tile(np.arange(256, dtype=np.uint8), (180, 1))).convert('RGB').save(source)
             with patch('sys.stdout', new_callable=io.StringIO) as stdout:
-                self.assertEqual(main([str(source), str(output), '--look-preset', NAME, '--thermal', 'classic']), 0)
+                self.assertEqual(main([str(source), str(output), '--stylepreset', NAME, '--thermal', 'classic']), 0)
             report = json.loads(stdout.getvalue())
             self.assertEqual((report['look_preset'], report['thermal_levels'], report['hud']), (NAME, 12, False))
             self.assertEqual(report['thermal'], 'classic')

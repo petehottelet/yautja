@@ -102,7 +102,7 @@ class ThermalTransfer:
             raise ValueError('Thermal white point must exceed black point by at least 0.01')
         if n is None and (thermal_band_softness is not None or thermal_black_point != 0 or
                           thermal_white_point != 1 or thermal_gamma != 1 or thermal_softness != 0):
-            raise ValueError('Thermal grading requires --thermal-levels or --look-preset')
+            raise ValueError('Thermal grading requires --thermal-levels or --stylepreset')
         if thermal_band_softness is not None and (not math.isfinite(thermal_band_softness) or not 0 <= thermal_band_softness <= 1):
             raise ValueError('--thermal-band-softness must be between 0 and 1')
         if n == 0 and thermal_band_softness is not None:

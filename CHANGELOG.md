@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.2 — 2026-09-13
+
+- Rename the built-in visual preset flag from `--look-preset` to `--stylepreset`, with no old flag alias. Update commands, help, examples, and the agent skill, which now requires runtime 2.5.2+. Preserve preset behavior, JSON preset files, the Python `look_preset` keyword and report key, and encoder `--preset`.
+
 ## 2.5.1 — 2026-09-13
 
 - Remove the old `thermal-spectrum-reference-v1` preset alias. Use `--look-preset hottropic` or `"base": "hottropic"` in a preset file. Keep HotTropic's appearance unchanged and remove the compatibility wording from current documentation.

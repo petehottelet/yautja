@@ -31,16 +31,16 @@ class PresetTests(unittest.TestCase):
         presets = {entry['id']: entry for entry in report['presets']}
         self.assertEqual(set(presets) - {'hottropic'}, set(PALETTES))
         for name in PALETTES:
-            args = parser().parse_args(['--look-preset', name])
+            args = parser().parse_args(['--stylepreset', name])
             self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'palette'))
         self.assertEqual(presets['hottropic']['name'], 'HotTropic')
-        self.assertEqual(parser().parse_args(['--look-preset', 'HotTropic']).look_preset, 'hottropic')
+        self.assertEqual(parser().parse_args(['--stylepreset', 'HotTropic']).look_preset, 'hottropic')
         self.assertEqual(presets['hottropic']['aliases'], [])
 
     def test_removed_reference_name_is_rejected_by_cli_api_and_preset_base(self):
         removed = 'thermal-spectrum-reference-v1'
         with patch('sys.stderr', new_callable=io.StringIO), self.assertRaises(SystemExit) as result:
-            parser().parse_args(['--look-preset', removed])
+            parser().parse_args(['--stylepreset', removed])
         self.assertEqual(result.exception.code, 2)
         with self.assertRaisesRegex(ValueError, 'Unknown look preset'):
             Renderer(320, 180, look_preset=removed)
@@ -49,6 +49,17 @@ class PresetTests(unittest.TestCase):
             preset.write_text(json.dumps({'schema_version': 1, 'name': 'Old base', 'base': removed, 'settings': {}}), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'Unknown look preset'):
                 load_preset(preset)
+
+    def test_stylepreset_replaces_old_flag_and_keeps_source_exclusivity(self):
+        args = parser().parse_args(['--stylepreset=white-hot'])
+        self.assertEqual((args.look_preset, args.palette, args.preset_name), ('white-hot', 'white-hot', 'White Hot'))
+        for flags in (['--look-preset', 'white-hot'],
+                      ['--stylepreset', 'white-hot', '--preset-file', 'custom.json']):
+            with self.subTest(flags=flags), patch('sys.stderr', new_callable=io.StringIO), \
+                    patch('yautja.cli.convert') as convert, self.assertRaises(SystemExit) as result:
+                main(['input.png', 'output.png', *flags])
+            self.assertEqual(result.exception.code, 2)
+            convert.assert_not_called()
 
     def test_save_load_matches_images_including_custom_colors_and_effects(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -163,7 +174,7 @@ class PresetTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=frequency=330:duration=0.5', '-c:v', 'libx264',
                             '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', str(source)], check=True)
             preset = root / 'video.json'
-            self.invoke(['--save-preset', preset, '--look-preset', 'white-hot', '--thermal', 'classic',
+            self.invoke(['--save-preset', preset, '--stylepreset', 'white-hot', '--thermal', 'classic',
                          '--target-shape', 'crosshair', '--motion-blur', '.3', '--crt-lines', '--timecode'])
             report = self.invoke([source, root / 'out.mp4', '--preset-file', preset])
             self.assertEqual((report['frames'], report['audio_preserved'], report['target_shape']), (6, True, 'crosshair'))

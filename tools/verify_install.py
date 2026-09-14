@@ -88,7 +88,7 @@ def check_runtime(python, env, cwd, prefix):
     assert neon['neon'] and neon['palette'] == 'abyss' and neon['target_colors'] == ['#267085', '#267085']
     presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
     assert any(p['id'] == 'hottropic' and p['name'] == 'HotTropic' for p in presets['presets'])
-    run(['yautja', '--look-preset', 'hottropic', '--thermal', 'classic',
+    run(['yautja', '--stylepreset', 'hottropic', '--thermal', 'classic',
          '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)
     preset = json.loads(run(['yautja', 'photo.jpg', 'preset.png', '--preset-file', 'saved-look.json'], cwd, image_env))
     assert preset['preset_name'] == 'Saved HotTropic' and preset['preset_kind'] == 'custom'

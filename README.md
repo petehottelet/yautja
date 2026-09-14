@@ -56,21 +56,21 @@ Install a published release from [PyPI](https://pypi.org/project/yautja/) in an 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.5.2,<3"
 .venv-yautja/bin/python -m yautja --doctor
 .venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.2,<3"
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 .venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-Alternatively, use `pipx install "yautja>=2.5,<3"` or `pipx install "yautja[semantic]>=2.5,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+Alternatively, use `pipx install "yautja>=2.5.2,<3"` or `pipx install "yautja[semantic]>=2.5.2,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -116,7 +116,7 @@ This preset uses eleven colors from black and deep blue through cyan, green, yel
 | HotTropic · complete preset | Thermal Spectrum · palette only |
 | --- | --- |
 | [![HotTropic: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-thermal-spectrum-reference-v1.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-thermal-spectrum-reference-v1.gif) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
-| `--look-preset hottropic` | `--palette thermal-spectrum` |
+| `--stylepreset hottropic` | `--palette thermal-spectrum` |
 
 Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--thermal-levels 0` for continuous color, and `--thermal-band-softness 0` for hard bands. Soft transitions and optional glow add intermediate visible colors; twelve representative levels does not limit a GIF to twelve RGB colors. Explicit options override the recipe regardless of argument order. For example, add `--hud --thermal very-detailed` to use its colors and levels with more source detail and overlays. [Exact recipe and grading controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
@@ -128,7 +128,7 @@ List the built-ins, customize one, and save your version:
 
 ```bash
 yautja --list-presets
-yautja --look-preset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja --stylepreset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 ```
 
@@ -146,19 +146,19 @@ Saving needs no source or models. Share the JSON file with another person or age
 | Redline · red, blue, and black | Virtual Boy · red only |
 | --- | --- |
 | [![Redline palette: near-black shadows, vivid blue cooler regions, and dominant red warmth with restrained pink highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-redline.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-redline.gif) | [![Virtual Boy palette: the scene and HUD rendered entirely in shades of red and black](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-virtualboy.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-virtualboy.gif) |
-| `--look-preset redline` | `--look-preset virtualboy` |
+| `--stylepreset redline` | `--stylepreset virtualboy` |
 
 Redline gives the movie-style red/blue/black treatment, with broad red warmth and small pink highlights. Virtual Boy uses only red and black, including the glyphs, waveform, and timecode, unless you explicitly choose custom or random HUD colors.
 
 | Yautja · original/default | Ironbow | Green Phosphor |
 | --- | --- | --- |
 | [![Original Yautja palette: cool blue and cyan through yellow and red](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Ironbow palette: purple, orange, and yellow-white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-ironbow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-ironbow.gif) | [![Green Phosphor palette: a monochrome green night-vision style](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-green-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-green-phosphor.gif) |
-| `--look-preset yautja` | `--look-preset ironbow` | `--look-preset green-phosphor` |
+| `--stylepreset yautja` | `--stylepreset ironbow` | `--stylepreset green-phosphor` |
 
 | Amber Phosphor | White Hot | Black Hot |
 | --- | --- | --- |
 | [![Amber Phosphor palette: warm amber display colors](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-amber-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: lighter warm regions with a white waveform and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-white-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-white-hot.gif) | [![Black Hot palette: simulated warm regions appear darker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-black-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-black-hot.gif) |
-| `--look-preset amber-phosphor` | `--look-preset white-hot` | `--look-preset black-hot` |
+| `--stylepreset amber-phosphor` | `--stylepreset white-hot` | `--stylepreset black-hot` |
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
 
@@ -169,7 +169,7 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 | Abyss · clean | Abyss · heat glow |
 | --- | --- |
 | [![Abyss palette with muted cyan HUD and no glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-abyss.gif) | [![Abyss palette with moving glow on the hot regions](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/glow-abyss.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/glow-abyss.gif) |
-| `--look-preset abyss` | `--look-preset abyss --heat-glow 0.75` |
+| `--stylepreset abyss` | `--stylepreset abyss --heat-glow 0.75` |
 
 `--hud-theme muted-cyan` makes the same subdued HUD available with any palette. Selecting `--hud-theme palette` instead matches its colors to that palette's ramp.
 
@@ -397,7 +397,7 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5,<3"
+python -m pip install "yautja[semantic]>=2.5.2,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
@@ -421,7 +421,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.2,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.2,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 
