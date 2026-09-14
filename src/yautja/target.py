@@ -7,19 +7,19 @@ from PIL import Image, ImageDraw, ImageFilter
 from .colors import parse_hex
 from .hud import blur_layer
 
-TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'vector-lock',
+TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'hollow-cross',
                  'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')
 
 
 def resolve_target_shape(shape):
-    shape = {'iron-sights': 'vector-lock'}.get(shape, shape)
+    shape = {'iron-sights': 'hollow-cross', 'vector-lock': 'hollow-cross'}.get(shape, shape)
     if shape not in TARGET_SHAPES:
         raise ValueError('Unknown target shape: ' + str(shape))
     return shape
 
 
 def detail_shapes(shape, radius, locked):
-    """Local vector paths (open/closed) and circles, in radius units."""
+    """Local paths and circles in radius units; hollow-cross contours are filled."""
     paths, circles = [], []
     if shape.startswith('square'):
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
@@ -43,16 +43,13 @@ def detail_shapes(shape, radius, locked):
                 for position in (-.38, -.25, .25, .38):
                     points = [(position, -.055), (position, .055)]
                     paths.append(([(y, x) for x, y in points] if axis else points, False))
-    elif shape == 'vector-lock':
-        for sign in (-1, 1):
-            # Separate angular guards leave the subject visible through the center.
-            paths.append(([(sign * .34, -.72), (sign * .63, -.72), (sign * .90, -.40),
-                           (sign * .90, .40), (sign * .63, .72), (sign * .34, .72)], False))
-            paths.append(([(sign * .67, -.22), (sign * .51, 0), (sign * .67, .22)], False))
-            paths.append(([(-.15, sign * .94), (.15, sign * .94)], False))
-            paths.append(([(-.13, sign * .39), (0, sign * .26), (.13, sign * .39)], False))
-        if locked:
-            paths.append(([(0, -.10), (.10, 0), (0, .10), (-.10, 0)], True))
+    elif shape == 'hollow-cross':
+        # Four solid, square-cornered L bands outline a plus. The center and
+        # the ends of all four arms stay open, as in the reference artwork.
+        quadrant = [(.21, .98), (.39, .98), (.39, .39),
+                    (.98, .39), (.98, .21), (.21, .21)]
+        for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            paths.append(([(x * px, y * py) for px, py in quadrant], True))
     elif shape == 'square-dot' and locked:
         circles = [(0, 0, .10)]
     elif shape == 'square-x':
@@ -178,6 +175,11 @@ class TargetOverlay:
 
             for path, closed in paths:
                 vertices = [point(x, y) for x, y in path]
+                if self.shape == 'hollow-cross':
+                    draw.polygon(vertices, fill=(*color, opacity))
+                    if outline_width:
+                        draw.polygon(vertices, outline=(*outline, opacity), width=outline_width)
+                    continue
                 if closed:
                     vertices.append(vertices[0])
                 draw.line(vertices, fill=(*(outline if outline_width else color), opacity), width=line_width, joint='curve')

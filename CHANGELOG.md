@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.2 — 2026-09-13
+
+- Replace Vector Lock with Hollow Cross: four solid, square-cornered L bands outlining an open plus, with a hollow center and uncapped arm ends. Preserve target colors, acquisition, flash, outline, blur, and opacity controls; old `vector-lock` and `iron-sights` commands and saved presets resolve to the replacement.
+- Rename the style in the CLI, README, and agent skill, and refresh both GIF sizes while preserving their published image URLs.
+
 ## 2.4.1 — 2026-09-13
 
 - Stabilize HUD callout leaders by aiming at each visible silhouette's smoothed center of area, with a nearby visible-point fallback for concave or occluded masks. Bound tracking lag during fast motion and reset history at cuts, time jumps, and track loss.

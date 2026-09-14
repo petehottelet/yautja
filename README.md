@@ -293,17 +293,17 @@ The original `--wave-style trace` stays the default. Rorschach replaces the left
 
 ### Target shapes
 
-Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. Triangle dots, the square center dot, and Vector Lock’s center diamond appear on lock and reset when the target is lost. Vector Lock replaces the old iron-sights design; `iron-sights` remains an alias for existing commands and saved presets.
+Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. Triangle dots and the square center dot appear on lock and reset when the target is lost. Hollow Cross replaces Vector Lock with four thick L-shaped bands, an open center, and uncapped arm ends. Existing `vector-lock` and `iron-sights` commands and saved presets resolve to Hollow Cross.
 
 | Triangle + three lock dots | Circular crosshair |
 | --- | --- |
 | [![Triangle + three lock dots animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-triangle-dots.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-triangle-dots.gif) | [![Circular crosshair animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-crosshair.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-crosshair.gif) |
 | `--target-shape triangle-dots` | `--target-shape crosshair` |
 
-| Vector Lock | Square brackets |
+| Hollow Cross | Square brackets |
 | --- | --- |
-| [![Vector Lock: angular guards, inward chevrons, and a center lock diamond](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-iron-sights.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-iron-sights.gif) | [![Square brackets animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square.gif) |
-| `--target-shape vector-lock` | `--target-shape square` |
+| [![Hollow Cross: four thick L-shaped bands with an open center and arm ends](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-iron-sights.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-iron-sights.gif) | [![Square brackets animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square.gif) |
+| `--target-shape hollow-cross` | `--target-shape square` |
 
 | Square + lock dot | Square + cross |
 | --- | --- |
