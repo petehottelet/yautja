@@ -17,7 +17,7 @@
 
 Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skill** with thermal-imaging-style output.
 
-**For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures.
+**For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures. HUD elements are for entertainment/costume/cosplay purposes only. 
 
 Re-skin local images and video frames with cold blues, warm silhouettes, and alien HUD glyphs. Videos add an audio-reactive waveform. A small **agent skill for Claude and OpenAI Codex**, backed by an installable Python CLI and FFmpeg for video. [yautja.ai](https://yautja.ai).
 
