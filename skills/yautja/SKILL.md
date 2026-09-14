@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.3.1,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.4,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.3.1,<3` for the four segmented looks, or `yautja>=2.3.1,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.4,<3` for the four segmented looks, or `yautja>=2.4,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -94,7 +94,7 @@ For an optional outline on each target blade, use `--target-stroke 3` (0–12; d
 
 Use `--heat-glow 0.6` for moving bloom on hot regions with **any palette**; strength is 0–1 and defaults to 0. `--heat-glow-speed` ranges 0–5 (default 1); 0 freezes the pattern. This is independent of `--glow`, which controls HUD bloom. Use `--motion-blur 0.4` for video frame persistence and `--crt-bleed 0.4` for horizontal phosphor smear; both range 0–1 and default to 0. They affect the picture and HUD, leaving audio unchanged.
 
-Use `--crt-vertical-lines` for vertical CRT stripes, independently of horizontal `--crt-lines`; both can be enabled together. `--crt-strength` controls stripe darkness from 0–1 (default 0.12). The existing sensor preset does not enable these new effects. See [targets.md](references/targets.md#independent-heat-glow-trails-and-crt-controls) for all ranges, aliases, and still/video behavior.
+Use `--crt-vertical-lines` for vertical CRT stripes, `--crt-grid` for horizontal and vertical lines together, or `--crt-crosshatch` for a grid at 45 degrees. Each is independently optional and works across the final picture and HUD. `--crt-strength` controls darkness from 0–1 (default 0.12); `--no-crt-grid` and `--no-crt-crosshatch` disable those patterns. The existing sensor preset does not enable these new effects. See [targets.md](references/targets.md#independent-heat-glow-trails-and-crt-controls) for combinations, aliases, and still/video behavior.
 
 ## HUD and custom colors
 

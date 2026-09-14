@@ -13,7 +13,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 Keep the lightweight environment if you only need classic mode. For semantic mode, install the `semantic` extra in the selected virtual environment. Use the same environment for the package and models:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.3.1,<3"
+python -m pip install "yautja[semantic]>=2.4,<3"
 python -m yautja --download-models
 python -m yautja "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
 python -m yautja "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
@@ -41,7 +41,7 @@ The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.3.1,<3"
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.4,<3"
 .venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
 .venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```
@@ -74,6 +74,9 @@ The JSON conversion report includes actual PyTorch/device/precision information,
 | `--grain` / `--grain 0.02` | Independent noise, bare flag 0.035; 0 disables |
 | `--pixelation` / `--pixelation 80` | Independent chunky pixels; bare flag longest edge 96, range 32–640; 0 disables |
 | `--crt-lines` / `--no-crt-lines` | Horizontal CRT lines over the finished image and HUD; `--scanlines` is an alias |
+| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid over the finished image and HUD; default off |
+| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees over the finished image and HUD; default off |
+| `--crt-strength 0.12` | Darkness of every enabled line pattern, 0–1 |
 | `--vhs` / `--no-vhs` | Analog color bleed, wobble, tape noise, dropouts, and tracking defects |
 | `--sensor-resolution 160` | More abstraction; default 256, range 64–640 on the longest edge |
 | `--warm-objects "person,dog,bird"` | Categories to simulate as warm |

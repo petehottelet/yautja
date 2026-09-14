@@ -29,7 +29,7 @@ from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, sa
 from .target import TARGET_SHAPES, resolve_target_shape
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
-                  'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
+                  'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset', *LEVEL_OPTIONS)
@@ -65,6 +65,7 @@ def extra_report(renderer, selection, *, static=False):
             'hud_opacity_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_opacities.items()},
             'hud_effect_units': 'stroke widths and blur radii: pixels at 1080px short edge, scaled with output size',
             'crt_bleed': renderer.display.crt_bleed, 'crt_vertical_lines': renderer.crt_vertical_lines,
+            'crt_grid': renderer.crt_grid, 'crt_crosshatch': renderer.crt_crosshatch,
             'crt_strength': renderer.crt_strength, 'heat_glow': renderer.heat_glow, 'heat_glow_speed': renderer.heat_glow_speed,
             'wave_style': renderer.wave_style if renderer.hud else 'off',
             'wave_width': renderer.wave_width if renderer.hud and renderer.wave_style != 'trace' else None,
@@ -571,7 +572,9 @@ def parser():
     p.add_argument('--motion-blur', type=float, default=0., help='Temporal motion trails/persistence strength, 0-1; 0 disables. Video only; stills have no preceding frames')
     p.add_argument('--crt-bleed', type=float, default=0., help='Horizontal phosphor color spread, 0-1; independent of VHS and CRT lines')
     p.add_argument('--crt-vertical-lines', '--vertical-crt-lines', dest='crt_vertical_lines', action=argparse.BooleanOptionalAction, default=False, help='Vertical CRT columns across image and HUD; combine with horizontal --crt-lines')
-    p.add_argument('--crt-strength', type=float, default=.12, help='Darkening strength of enabled horizontal/vertical CRT lines, 0-1')
+    p.add_argument('--crt-grid', action=argparse.BooleanOptionalAction, default=False, help='Horizontal and vertical CRT grid across image and HUD; default off')
+    p.add_argument('--crt-crosshatch', action=argparse.BooleanOptionalAction, default=False, help='CRT grid at 45 degrees across image and HUD; default off')
+    p.add_argument('--crt-strength', type=float, default=.12, help='Darkening strength of enabled CRT lines, grid, and crosshatch, 0-1')
     p.add_argument('--heat-glow', type=float, default=0., help='Animated bloom from synthetic hot regions in any palette, 0-1; independent of HUD --glow')
     p.add_argument('--heat-glow-speed', type=float, default=1., help='Heat-glow movement speed, 0-5; 0 freezes it. Stills show time zero')
     p.add_argument('--download-models', action='store_true', help='Download pinned Apache-2.0 semantic models once, then exit (no input needed)')

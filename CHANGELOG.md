@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.0 — 2026-09-13
+
+- Add optional CRT grid and 45-degree crosshatch patterns across the complete image and HUD, with shared strength control, independent disable flags, saved-preset support, and conversion reports. Keep both off by default.
+- Add labeled small and large animated examples and update the agent skill. Match the steady Abyss example's target to its muted cyan HUD.
+
 ## 2.3.1 — 2026-09-13
 
 - Replace the iron-sights reticle with Vector Lock: angular outer guards, inward chevrons, and a center diamond that appears on lock. Preserve acquisition, flash, color, outline, blur, and opacity controls; keep `iron-sights` as an alias in commands and saved presets.

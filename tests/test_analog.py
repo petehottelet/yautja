@@ -19,7 +19,8 @@ from yautja.cli import main, parser
 class AnalogTests(unittest.TestCase):
     def test_virtualboy_is_red_only_including_hud_and_all_effects(self):
         frame = Image.fromarray(np.random.default_rng(5).integers(0, 255, (180, 320, 3), dtype=np.uint8))
-        for options in ({}, {'grain': .04, 'pixelation': 80, 'scanlines': True, 'vhs': True}):
+        for options in ({}, {'grain': .04, 'pixelation': 80, 'scanlines': True, 'vhs': True,
+                             'crt_grid': True, 'crt_crosshatch': True}):
             renderer = Renderer(320, 180, palette='virtualboy', show_timecode=True, **options)
             image = np.array(renderer.render(frame, .5))
             self.assertEqual(image[..., 1:].max(), 0)
@@ -50,6 +51,46 @@ class AnalogTests(unittest.TestCase):
                            np.abs(a[30:120, 260:280].astype(float) - pixels[30:120, 260:280]).mean() * 2)
         self.assertGreater(a[50, 0, 0], a[50, 0, 2] * 4)
 
+    def test_grid_matches_both_line_directions_without_double_darkening(self):
+        for size in ((2, 2), (9, 17), (320, 180)):
+            frame = Image.new('RGB', size, (160, 100, 220))
+            both = Renderer(*size, scanlines=True, crt_vertical_lines=True, show_timecode=True).render(frame, 0)
+            for options in ({'crt_grid': True}, {'crt_grid': True, 'scanlines': True, 'crt_vertical_lines': True}):
+                grid = Renderer(*size, show_timecode=True, **options).render(frame, 0)
+                np.testing.assert_array_equal(grid, both)
+
+    def test_crosshatch_has_two_distinct_diagonals_and_adjustable_strength(self):
+        frame = Image.new('RGB', (17, 25), (200, 160, 120))
+        original = np.asarray(frame).copy()
+        pixels = np.asarray(Renderer(17, 25, crt_crosshatch=True, crt_strength=.5).display_effects(frame, 0))
+        # An X around an intersection: both diagonal arms are present, with
+        # untouched cells between them instead of a collapsed checkerboard.
+        self.assertEqual(pixels[8, 8, 0], 50)
+        for y, x in ((7, 7), (7, 9), (9, 7), (9, 9)):
+            self.assertEqual(pixels[y, x, 0], 100)
+        for y, x in ((8, 7), (8, 9), (7, 8), (9, 8), (8, 6)):
+            self.assertEqual(pixels[y, x, 0], 200)
+        stronger = np.asarray(Renderer(17, 25, crt_crosshatch=True, crt_strength=.8).display_effects(frame, 0))
+        self.assertTrue(np.all(stronger <= pixels))
+        np.testing.assert_array_equal(frame, original)
+        for options in ({'crt_grid': True}, {'crt_crosshatch': True}, {'crt_grid': True, 'crt_crosshatch': True}):
+            neutral = Renderer(17, 25, crt_strength=0, **options).display_effects(frame, 0)
+            np.testing.assert_array_equal(neutral, frame)
+        # Reusing a renderer does not make a fixed display pattern crawl.
+        renderer = Renderer(17, 25, crt_crosshatch=True)
+        np.testing.assert_array_equal(renderer.display_effects(frame, 0), renderer.display_effects(frame, 9))
+
+    def test_grid_and_crosshatch_flags_default_off_and_disable_independently(self):
+        for key in ('crt_grid', 'crt_crosshatch'):
+            self.assertFalse(getattr(parser().parse_args([]), key))
+            self.assertFalse(getattr(Renderer(320, 180, sensor_texture=True), key))
+        args = parser().parse_args(['--crt-grid', '--crt-crosshatch', '--no-crt-grid'])
+        self.assertFalse(args.crt_grid)
+        self.assertTrue(args.crt_crosshatch)
+        args = parser().parse_args(['--crt-grid', '--crt-crosshatch', '--no-crt-crosshatch'])
+        self.assertTrue(args.crt_grid)
+        self.assertFalse(args.crt_crosshatch)
+
     def test_vhs_preserves_dimensions_on_portrait_and_tiny_frames(self):
         for size in ((2, 2), (9, 17), (180, 320)):
             image = vhs_frame(Image.new('RGB', size, 'white'), 0, 42)
@@ -78,7 +119,7 @@ class AnalogTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000', '-t', '0.5',
                             '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', str(source)], check=True)
             decoded = []
-            for name, options in [('clean', []), ('analog', ['--vhs', '--crt-lines', '--palette', 'virtualboy'])]:
+            for name, options in [('clean', []), ('analog', ['--vhs', '--crt-lines', '--crt-grid', '--crt-crosshatch', '--palette', 'virtualboy'])]:
                 output = root / (name + '.mp4')
                 with patch('sys.stdout', new_callable=io.StringIO) as report, patch('sys.stderr', new_callable=io.StringIO):
                     status = main([str(source), str(output), *options])
@@ -88,6 +129,9 @@ class AnalogTests(unittest.TestCase):
                 self.assertTrue(data['audio_preserved'])
                 self.assertEqual(data['vhs'], name == 'analog')
                 self.assertEqual(data['crt_lines'], name == 'analog')
+                for key in ('crt_grid', 'crt_crosshatch'):
+                    self.assertEqual(data[key], name == 'analog')
+                    self.assertEqual(data['settings'][key], name == 'analog')
                 decoded.append(subprocess.run(['ffmpeg', '-v', 'error', '-i', str(output), '-map', '0:a:0',
                                '-f', 'f32le', '-ac', '1', '-ar', '8000', '-'], capture_output=True, check=True).stdout)
             self.assertEqual(decoded[0], decoded[1])

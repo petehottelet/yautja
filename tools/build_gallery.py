@@ -31,6 +31,8 @@ def variants():
         'crt-lines': {'scanlines': True}, 'sensor-texture': {'sensor_texture': True},
         'vhs': {'vhs': True}, 'vhs-crt': {'vhs': True, 'scanlines': True},
         'crt-vertical': {'crt_vertical_lines': True, 'crt_strength': .25},
+        'crt-grid': {'crt_grid': True, 'crt_strength': .25},
+        'crt-crosshatch': {'crt_crosshatch': True, 'crt_strength': .25},
         'motion-soft': {'motion_blur': .35}, 'motion-strong': {'motion_blur': .85},
         'bleed-soft': {'crt_bleed': .3}, 'bleed-strong': {'crt_bleed': .85},
         'heat-glow': {'heat_glow': .75},

@@ -67,12 +67,13 @@ def check_runtime(python, env, cwd, prefix):
     assert still['frames'] == 1 and still['media_type'] == 'image'
     run([python, '-c', "from PIL import Image; im=Image.open('photo-yautja.png'); assert im.size==(320,180); im.verify()"], cwd, env)
     effects = json.loads(run(['yautja', 'photo.jpg', 'effects.png', '--palette', 'abyss', '--heat-glow', '.6',
-                              '--heat-glow-speed', '0', '--crt-vertical-lines', '--crt-strength', '.25',
+                              '--heat-glow-speed', '0', '--crt-vertical-lines', '--crt-grid', '--crt-crosshatch', '--crt-strength', '.25',
                               '--crt-bleed', '.4', '--no-target-flash', '--wave-style', 'rorschach-hollow',
                               '--wave-width', '.14', '--wave-height', '1', '--thermal-levels', '6',
                               '--thermal-band-softness', '.3', '--target-shape', 'square-mil'], cwd, image_env))
     assert effects['palette'] == 'abyss' and effects['heat_glow'] == .6 and effects['crt_vertical_lines']
     assert effects['crt_bleed'] == .4 and effects['targets'] == []
+    assert effects['crt_grid'] and effects['crt_crosshatch']
     assert effects['hud_colors']['waveform'] == '#267085'
     assert effects['wave_style'] == 'rorschach-hollow' and effects['wave_height'] == 1
     assert effects['thermal_levels'] == 6 and effects['thermal_band_softness'] == .3

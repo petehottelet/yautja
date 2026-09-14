@@ -209,6 +209,7 @@ class Renderer:
                  palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True,
                  target_colors=None, target_acquire=.8, target_flash=True, target_flash_rate=1.5, target_scale=1.,
                  motion_blur=0., crt_bleed=0., crt_vertical_lines=False, crt_strength=.12,
+                 crt_grid=False, crt_crosshatch=False,
                  heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
                  target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None,
                  hud_opacity=1., hud_opacity_elements=None, target_shape='triangle',
@@ -247,6 +248,13 @@ class Renderer:
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
         self.crt_vertical_lines, self.crt_strength = crt_vertical_lines, crt_strength
+        self.crt_grid, self.crt_crosshatch = crt_grid, crt_crosshatch
+        self.crt_diagonals = ()
+        if crt_crosshatch:
+            y, x = np.ogrid[:height, :width]
+            # Four raster phases keep the +45/-45 degree lines distinct.
+            # A two-pixel diagonal period aliases both directions to one checkerboard.
+            self.crt_diagonals = ((x + y) % 4 == 0, (x - y) % 4 == 0)
         self.heat_glow, self.heat_glow_speed = heat_glow, heat_glow_speed
         if wave_style not in WAVE_STYLES:
             raise ValueError('Unknown waveform style: ' + wave_style)
@@ -662,12 +670,14 @@ class Renderer:
         image = self.display.apply(image, time, shot_id)
         if self.vhs:
             image = vhs_frame(image, time, self.seed)
-        if self.scanlines or self.crt_vertical_lines:
+        if self.scanlines or self.crt_vertical_lines or self.crt_grid or self.crt_crosshatch:
             pixels = np.asarray(image, dtype=np.float32).copy()
-            if self.scanlines:
+            if self.scanlines or self.crt_grid:
                 pixels[::2] *= 1 - self.crt_strength
-            if self.crt_vertical_lines:
+            if self.crt_vertical_lines or self.crt_grid:
                 pixels[:, ::2] *= 1 - self.crt_strength
+            for mask in self.crt_diagonals:
+                pixels[mask] *= 1 - self.crt_strength
             image = Image.fromarray(np.uint8(pixels))
         if self.palette_name == 'virtualboy' and (not self.hud or (self.hud_theme in ('standard', 'palette')
                 and not self.target_color_override and not (self.target_overlay.stroke and self.target_overlay.stroke_colors))):

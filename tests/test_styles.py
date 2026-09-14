@@ -128,7 +128,8 @@ class IndependentEffectsTests(unittest.TestCase):
         field = np.tile(np.arange(256, dtype=np.uint8), (180, 1))
         saved = field.copy()
         options = [{}, {'grain': .05}, {'pixelation': 64}, {'scanlines': True},
-                   {'sensor_texture': True}, {'heat_glow': .8}, {'crt_vertical_lines': True}, {'crt_bleed': .7}]
+                   {'sensor_texture': True}, {'heat_glow': .8}, {'crt_vertical_lines': True}, {'crt_bleed': .7},
+                   {'crt_grid': True}, {'crt_crosshatch': True}]
         for palette in PALETTES:
             layers = []
             for settings in options:

@@ -121,13 +121,17 @@ For HUD-only softness and target outlines, see [reticle stroke and independent H
 | `--crt-bleed 0.4` | Horizontal phosphor smear across the finished picture and HUD; strength 0–1, default 0 |
 | `--crt-vertical-lines` / `--no-crt-vertical-lines` | Vertical CRT stripes, off by default; `--vertical-crt-lines` is an alias |
 | `--crt-lines` / `--no-crt-lines` | Existing horizontal CRT stripes, independently selectable |
-| `--crt-strength 0.12` | Darkness of either stripe direction, 0–1; 0 hides the lines |
+| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid; off by default, requires 2.4+ |
+| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees, with two diagonal line directions; off by default, requires 2.4+ |
+| `--crt-strength 0.12` | Darkness of all enabled line patterns, 0–1; 0 hides them |
 
 Heat glow works with every palette, including custom and random ramps, before HUD composition. It follows synthetic heat rather than merely bright source pixels, and retains the palette's color channels. In inverted palettes such as Black Hot, it produces dark diffusion around hot regions. `--heat-glow 0` disables it. This is separate from `--glow`, the existing HUD bloom setting. Still images show a fixed glow pattern.
 
 Motion blur is a frame-persistence effect, not an optical-flow exposure reconstruction. Higher values leave longer trails on moving subjects and overlays. It resets at detected cuts, nonmonotonic timestamps, or frame gaps over half a second. It needs successive video frames; a still has no temporal trail. CRT bleed works on both stills and videos. Both affect the complete image including selected targets, and neither changes the soundtrack or detection.
 
-Vertical and horizontal lines can be combined. VHS, grain, pixelation, and the sensor-texture preset remain independently available. Sensor texture enables its original horizontal lines; it does not enable vertical lines, heat glow, motion blur, or CRT bleed. All new effects remain off unless requested.
+Grid is equivalent to enabling vertical and horizontal lines together. Requesting grid alongside either individual direction does not double that direction's darkening. Crosshatch can be combined with either direction or grid; intersections are darker. All line patterns are fixed to the display on both stills and videos, affect the HUD, and work with every palette. Save `crt_grid` and `crt_crosshatch` as booleans in custom presets; their independent disable flags override saved settings. Conversion reports include both resolved values and requested settings.
+
+VHS, grain, pixelation, and the sensor-texture preset remain independently available. Sensor texture enables its original horizontal lines; it does not enable vertical lines, grid, crosshatch, heat glow, motion blur, or CRT bleed. All new effects remain off unless requested.
 
 ## Rorschach waveforms
 

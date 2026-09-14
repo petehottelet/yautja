@@ -253,11 +253,14 @@ All comparison GIFs use the same three-second slice at 12 fps, with the original
 | [![Original Yautja palette with moving heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-heat-glow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-heat-glow.gif) | [![Green Phosphor with palette-matched HUD and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/glow-green.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/glow-green.gif) |
 | `--heat-glow 0.75` | `--palette green-phosphor --hud-theme palette --heat-glow 0.75` |
 
-**Vertical CRT lines** can be enabled independently or together with horizontal lines. `--crt-strength` sets their darkness from **0–1** (default 0.12); 0 hides them. These stripes affect the complete picture, including the HUD.
+**CRT patterns** include vertical lines, a horizontal/vertical **grid**, and **crosshatch** (a grid at 45 degrees). `--crt-strength` sets their darkness from **0–1** (default 0.12); 0 hides them. These patterns affect the complete picture, including the HUD, and work with every palette on images and videos.
 
-[![Vertical CRT lines at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-vertical.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-vertical.gif)
+| Vertical lines | Grid | Crosshatch · 45° |
+| --- | --- | --- |
+| [![Vertical CRT lines at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-vertical.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-vertical.gif) | [![Horizontal and vertical CRT grid at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-grid.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-grid.gif) | [![45-degree CRT crosshatch at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-crosshatch.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-crosshatch.gif) |
+| `--crt-vertical-lines --crt-strength 0.25` | `--crt-grid --crt-strength 0.25` | `--crt-crosshatch --crt-strength 0.25` |
 
-`--crt-vertical-lines --crt-strength 0.25` · add `--crt-lines` for both directions.
+Click any preview for its large animated GIF. Grid is equivalent to enabling `--crt-lines` and `--crt-vertical-lines` together; combining those flags with grid does not darken the same lines twice. Crosshatch adds two diagonal line directions and can be combined with grid or individual lines. Intersections are darker. Both new options default off; use `--no-crt-grid` or `--no-crt-crosshatch` to disable each independently. The sensor-texture preset continues to enable only its horizontal lines. Save these settings in [your own preset](skills/yautja/references/presets.md). Grid and crosshatch require Yautja 2.4 or newer.
 
 **Motion blur** adds temporal frame persistence: higher values leave longer trails on moving subjects and HUD details. It resets at detected cuts and needs consecutive video frames; stills have no motion trail. **CRT bleed** adds horizontal phosphor smear to both images and videos. Both strengths range from **0–1**, default to 0, and leave the soundtrack unchanged.
 

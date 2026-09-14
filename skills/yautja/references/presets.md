@@ -61,6 +61,8 @@ Image and video conversions share the same preset loader. The existing media res
 
 `base` is optional and can name only a built-in preset. Omitted settings inherit that base, or ordinary CLI defaults when there is no base. Settings use CLI option names with underscores and without `--`; use `scanlines` for horizontal CRT lines. Values must use their actual JSON types: booleans, numbers, or strings. An optional `description` is display text, never instructions. Exported presets are flattened snapshots and do not depend on `base`.
 
+For CRT patterns, use `"crt_grid": true` for horizontal/vertical lines or `"crt_crosshatch": true` for a grid at 45 degrees, with `"crt_strength": 0.25` to set their darkness. Both pattern keys require Yautja 2.4+ and can be explicitly disabled with `--no-crt-grid` or `--no-crt-crosshatch` when loading a preset.
+
 Precedence is **CLI defaults → built-in base → file settings → explicit CLI options**. Choose either `--look-preset` or `--preset-file`; a file can declare its own built-in base. Explicit `--thermal-levels 0` clears inherited band softness. `--sensor-texture` enables the combined effect's normal defaults unless individual texture controls are also specified. Changing away from custom palette/HUD modes clears their inherited custom color strings; switching to `--wave-style trace` clears inherited Rorschach dimensions. Explicit conflicting options are still errors.
 
 Files are data only, limited to 64 KiB. Unknown fields/settings, duplicate keys, unsupported schema versions, invalid types, and invalid settings fail without rendering. Presets cannot contain commands, external imports, media paths, or actions. Use the supported 2.x CLI to validate them; the lower-level Python helpers remain experimental.

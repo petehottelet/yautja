@@ -16,7 +16,7 @@ LOOK_PRESETS = {'hottropic': {
     'thermal_gamma': 1.1, 'thermal_softness': .8, 'sensor_resolution': 192,
     'hud': False, 'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'seed': 42, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
-    'crt_vertical_lines': False,
+    'crt_vertical_lines': False, 'crt_grid': False, 'crt_crosshatch': False,
 }}
 PRESET_LABELS = {
     'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
