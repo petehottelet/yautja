@@ -56,21 +56,21 @@ Install a published release from [PyPI](https://pypi.org/project/yautja/) in an 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5.3,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.5.4,<3"
 .venv-yautja/bin/python -m yautja --doctor
 .venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.3,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.4,<3"
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 .venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-Alternatively, use `pipx install "yautja>=2.5.3,<3"` or `pipx install "yautja[semantic]>=2.5.3,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+Alternatively, use `pipx install "yautja>=2.5.4,<3"` or `pipx install "yautja[semantic]>=2.5.4,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -182,7 +182,7 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 
 | Amber Phosphor | White Hot | Black Hot |
 | --- | --- | --- |
-| [![Amber Phosphor palette: warm amber display colors](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-amber-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: lighter warm regions with a white waveform and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-white-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-white-hot.gif) | [![Black Hot palette: simulated warm regions appear darker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-black-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-black-hot.gif) |
+| [![Amber Phosphor palette: warm amber display colors](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-amber-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: lighter warm regions with a light gray waveform and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-white-hot.gif?v=2.5.4)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-white-hot.gif?v=2.5.4) | [![Black Hot palette: simulated warm regions appear darker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-black-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-black-hot.gif) |
 | `--stylepreset amber-phosphor` | `--stylepreset white-hot` | `--stylepreset black-hot` |
 
 `--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
@@ -216,7 +216,7 @@ python -m yautja "photo.jpg" "thermal-only.png" --palette green-phosphor --no-hu
 
 ### HUD colors, custom palettes, and random colors
 
-White Hot uses a **white waveform and HUD** by default, Black Hot uses black, Abyss uses muted cyan, and other palettes retain the standard red/cyan HUD. Use **`--hud-theme palette`** to match the waveform, glyphs, clock, callouts, and scale to the selected palette; White Hot keeps white ink and Black Hot keeps black ink in this mode too. Custom and random HUD themes remain available. These controls work with images and videos and every thermal look.
+White Hot uses a **light gray (`#D0D0D0`) waveform and HUD** by default, Black Hot uses black, Abyss uses muted cyan, and other palettes retain the standard red/cyan HUD. Use **`--hud-theme palette`** to match the waveform, glyphs, clock, callouts, and scale to the selected palette; White Hot keeps light gray ink and Black Hot keeps black ink in this mode too. Custom and random HUD themes remain available. These controls work with images and videos and every thermal look.
 
 | Green Phosphor · matched HUD | Ironbow · matched HUD |
 | --- | --- |
@@ -359,7 +359,7 @@ The saved catalog belongs to the exact source file. Reuse it for different palet
 | [![Three blades assemble around a selected explorer and flash red and white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-lock.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-lock.gif) | [![Abyss with a glowing cyan target and neon HUD, vertical CRT lines, and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-abyss-steady.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-abyss-steady.gif) | [![Green palette with a custom teal and pale mint target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-custom.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-custom.gif) |
 | Default target animation | `--palette abyss --target-colors "#267085,#267085" --no-target-flash --neon --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65` | `--palette green-phosphor --hud-theme palette --target-colors "#31d7bb,#d6fff3" --target-acquire 0.45 --crt-bleed 0.4` |
 
-These target examples show seconds 0–3.25 of the source, selecting the foreground explorer separately in the first two shots. The triangle contracts into a compact marker at the figure's center, with solid-color sides and narrow, clear gaps at all three corners. It assembles in **0.8 seconds**, lands red, then flashes red/white at **1.5 cycles per second**. Set `--target-acquire`, `--target-scale`, and `--target-flash-rate` to change timing and size; scale 1 uses the compact reticle. `--no-target-flash` keeps the assembly and holds the primary color; equal primary/flash colors work too. White Hot uses white and Black Hot uses black for both target states unless colors are overridden. Stills display the assembled triangle immediately.
+These target examples show seconds 0–3.25 of the source, selecting the foreground explorer separately in the first two shots. The triangle contracts into a compact marker at the figure's center, with solid-color sides and narrow, clear gaps at all three corners. It assembles in **0.8 seconds**, lands red, then flashes red/white at **1.5 cycles per second**. Set `--target-acquire`, `--target-scale`, and `--target-flash-rate` to change timing and size; scale 1 uses the compact reticle. `--no-target-flash` keeps the assembly and holds the primary color; equal primary/flash colors work too. White Hot uses light gray and Black Hot uses black for both target states unless colors are overridden. Stills display the assembled triangle immediately.
 
 Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or use the `target` and `target-flash` keys with custom HUD colors. Palette-matched and random HUD themes also color targets. `--no-hud` hides them along with every other overlay. [All target controls, bounds, scan details, and effect options](skills/yautja/references/targets.md).
 
@@ -422,7 +422,7 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5.3,<3"
+python -m pip install "yautja[semantic]>=2.5.4,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
@@ -446,7 +446,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.3,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.3,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.4,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.4,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 

@@ -145,6 +145,6 @@ def resolve_colors(palettes, *, palette='auto', palette_colors=None, hud_theme='
         hud = {key: random_rgb(color_rng(seed, key), .43 if key in ('waveform-axis', 'waveform-ticks') else .95)
                for key in HUD_DEFAULTS}
     if name in ('white-hot', 'black-hot') and hud_theme in ('standard', 'palette'):
-        ink = (255, 255, 255) if name == 'white-hot' else (0, 0, 0)
+        ink = (208, 208, 208) if name == 'white-hot' else (0, 0, 0)
         hud = {key: ink for key in HUD_DEFAULTS}
     return ColorScheme(name, stops, table, hud_theme, hud, seed)

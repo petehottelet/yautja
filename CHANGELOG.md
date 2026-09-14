@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.4 — 2026-09-13
+
+- Set every White Hot HUD element to light gray (`#D0D0D0`) by default, including waveform, glyphs, timecode, callouts, and both target states. Standard and palette-matched themes share this ink; alpha compositing keeps it gray over bright areas, and explicit color overrides remain available. Refresh both animated White Hot previews and version their README image URLs so stale cached previews are not reused. The agent skill now requires runtime 2.5.4+.
+
 ## 2.5.3 — 2026-09-13
 
 - Replace Square + lock dot with Round with lock dot (`--target-shape round-dot`): a continuous circular outline with a center dot that appears only on lock. Refresh both animated preview sizes and the documentation. The former `square-dot` name is removed; other square designs remain available. The agent skill now requires runtime 2.5.3+.

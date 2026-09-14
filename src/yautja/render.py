@@ -275,8 +275,10 @@ class Renderer:
         for value, high, flag in ((crt_strength, 1, 'crt-strength'), (heat_glow, 1, 'heat-glow'), (heat_glow_speed, 5, 'heat-glow-speed')):
             if not math.isfinite(value) or not 0 <= value <= high:
                 raise ValueError(f'--{flag} must be between 0 and {high}')
-        # Alpha draws black ink over the image; screen blending would erase it.
-        self.overlay_mode = 'RGBA' if self.neon or self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        # Alpha keeps gray ink gray over highlights and makes black ink visible.
+        # Screen blending would brighten the gray toward white or erase black.
+        fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
+        self.overlay_mode = 'RGBA' if self.neon or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None

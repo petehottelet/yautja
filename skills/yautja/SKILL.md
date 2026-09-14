@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.5.3,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.5.4,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.5.3,<3` for the four segmented looks, or `yautja>=2.5.3,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.5.4,<3` for the four segmented looks, or `yautja>=2.5.4,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -74,7 +74,7 @@ Original **Yautja** colors are the default in every mode, including Detailed. `-
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.
 - `--palette green-phosphor`: a green night-vision-style display.
 - `--palette amber-phosphor`: a warm amber display.
-- `--palette white-hot` or `--palette black-hot`: grayscale, with simulated warm regions light or dark. White Hot defaults to white ink and Black Hot to black ink for the waveform and every HUD element.
+- `--palette white-hot` or `--palette black-hot`: grayscale, with simulated warm regions light or dark. White Hot defaults to light gray (`#D0D0D0`) ink and Black Hot to black ink for the waveform and every HUD element.
 
 Use `--grain` for fine animated noise (bare flag: 0.035), or set a strength such as `--grain 0.02`; `--grain 0` disables it. Use `--pixelation` for chunky pixels (bare flag: longest grid edge 96), or `--pixelation 80` for larger blocks. The supported grid range is 32–640; `--pixelation 0` disables it. `--crt-lines` and `--no-crt-lines` control horizontal CRT lines across the final picture and HUD; `--scanlines` / `--no-scanlines` remain aliases.
 
@@ -88,7 +88,7 @@ For a figure list or a selected tracking triangle, read [targets.md](references/
 
 Choose `--target-shape triangle-dots` for three center dots appearing on lock, `crosshair` for a circular sight, `hollow-cross` for four thick L-shaped bands with a hollow center and open arm ends, `round-dot` for a circular outline with one center dot appearing on lock, or `square`, `square-cross`, `square-mil`, and `square-x` for bracketed designs. Hollow Cross replaces Vector Lock; `vector-lock` and `iron-sights` remain aliases for the replacement. All shapes share colors, flash, stroke, blur, opacity, and acquisition settings; `triangle` remains the default. See the target reference for geometry and lock behavior.
 
-The three-blade triangle contracts into a compact reticle at the selected figure's center, with solid-color sides and narrow, open corners. It lands in red, then flashes red/white by default; White Hot uses white and Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
+The three-blade triangle contracts into a compact reticle at the selected figure's center, with solid-color sides and narrow, open corners. It lands in red, then flashes red/white by default; White Hot uses light gray and Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
 
 For an optional outline on each target blade, use `--target-stroke 3` (0–12; default 0/off) and optionally `--target-stroke-colors "#660b12,#687a8d"` for landing/flash colors; a single hex color holds both states. Without explicit colors, the outline uses darker shades of the target colors. The stroke is drawn inward to keep the corner gaps open.
 

@@ -20,7 +20,7 @@ python -m yautja "photo.jpg" "ironbow.png" --palette ironbow --hud-theme palette
 
 `--hud-theme palette` takes coordinated highlights and accents from the thermal
 palette, with dimmer scale lines. Green Phosphor uses greens; Amber Phosphor uses
-ambers. White Hot uses white and Black Hot uses black for the waveform and
+ambers. White Hot uses light gray and Black Hot uses black for the waveform and
 all HUD elements in both `standard` and `palette` modes, including both target
 states. Black ink is alpha-composited so it remains visible against light regions.
 Matching also works with custom and random thermal palettes. `--hud-theme standard`

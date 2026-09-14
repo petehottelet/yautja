@@ -109,15 +109,38 @@ class ColorTests(unittest.TestCase):
                     self.assertLess(result[:70, 450:].min(), 5)
                     self.assertLess(result[100:300, 200:400].min(), 5)
 
-    def test_black_hot_preserves_explicit_hud_and_target_color_choices(self):
-        custom = Renderer(320, 180, palette='black-hot', hud_theme='custom',
-                          hud_colors='waveform=#ff0000', target_colors='#00ff00,#0000ff')
-        self.assertEqual(custom.hud_colors['waveform'], (255, 0, 0))
-        self.assertEqual(custom.hud_colors['target'], (0, 255, 0))
-        self.assertEqual(custom.hud_colors['target-flash'], (0, 0, 255))
-        for theme in ('muted-cyan', 'random'):
-            scheme = resolve_colors(PALETTES, palette='black-hot', hud_theme=theme)
-            self.assertNotEqual(scheme.hud['waveform'], (0, 0, 0))
+    def test_white_hot_hud_is_light_gray_across_waveforms_and_target_states(self):
+        field = np.full((360, 640), 100, np.uint8)
+        mask = np.zeros(field.shape, np.float32)
+        mask[100:300, 250:350] = 1
+        subjects = [Subject(mask, 'person', .9, track_id=1)]
+        targets = [{'id': 'S001-F001', 'bbox': [.4, .28, .55, .83]}]
+        for theme in ('standard', 'palette'):
+            for style in ('trace', 'rorschach', 'rorschach-split', 'rorschach-hollow'):
+                with self.subTest(theme=theme, style=style):
+                    renderer = Renderer(640, 360, palette='white-hot', hud_theme=theme,
+                                        wave_style=style, show_timecode=True, verbose=True)
+                    self.assertEqual(set(renderer.colors.report()['hud_colors'].values()), {'#d0d0d0'})
+                    for time in (0, .3, .6, .9, 1.2, 1.4):
+                        result = np.asarray(renderer.render_field(field, time, subjects=subjects, targets=targets))
+                        np.testing.assert_array_equal(result[..., 0], result[..., 1])
+                        np.testing.assert_array_equal(result[..., 1], result[..., 2])
+                    self.assertGreater(result[:, :100].max(), 180)
+                    self.assertGreater(result[:70, 450:].max(), 180)
+                    self.assertGreater(result[100:300, 200:400].max(), 180)
+                    bright = np.asarray(renderer.render_field(np.full_like(field, 255), 1.5, subjects=subjects))
+                    self.assertGreater(np.count_nonzero(np.all(bright[:, :100] == 208, axis=2)), 20)
+
+    def test_monochrome_palettes_preserve_explicit_hud_and_target_color_choices(self):
+        for palette, ink in (('black-hot', (0, 0, 0)), ('white-hot', (208, 208, 208))):
+            custom = Renderer(320, 180, palette=palette, hud_theme='custom',
+                              hud_colors='waveform=#ff0000', target_colors='#00ff00,#0000ff')
+            self.assertEqual(custom.hud_colors['waveform'], (255, 0, 0))
+            self.assertEqual(custom.hud_colors['target'], (0, 255, 0))
+            self.assertEqual(custom.hud_colors['target-flash'], (0, 0, 255))
+            for theme in ('muted-cyan', 'random'):
+                scheme = resolve_colors(PALETTES, palette=palette, hud_theme=theme)
+                self.assertNotEqual(scheme.hud['waveform'], ink)
         self.assertEqual(resolve_colors(PALETTES).hud, HUD_DEFAULTS)
 
     def test_random_schemes_are_seeded_stable_and_can_be_reused_as_custom(self):

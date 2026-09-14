@@ -178,7 +178,7 @@ class PresetTests(unittest.TestCase):
                          '--target-shape', 'crosshair', '--motion-blur', '.3', '--crt-lines', '--timecode'])
             report = self.invoke([source, root / 'out.mp4', '--preset-file', preset])
             self.assertEqual((report['frames'], report['audio_preserved'], report['target_shape']), (6, True, 'crosshair'))
-            self.assertEqual(set(report['hud_colors'].values()), {'#ffffff'})
+            self.assertEqual(set(report['hud_colors'].values()), {'#d0d0d0'})
             self.assertEqual(report['targets'], [])
 
 
