@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.8 — 2026-09-13
+
+- Give the round reticle three center dots arranged in a triangle, appearing only on lock. Preserve its reduced size, four outline gaps, and existing `--target-shape round-dot` setting. Rename the gallery label to Round with three lock dots, refresh both GIF sizes, and update the CLI, API, and skill documentation (runtime 2.5.8+).
+
 ## 2.5.7 — 2026-09-13
 
 - Reduce the final locked size of Circular crosshair, Hollow Cross, Round with lock dot, and all four square reticles by 15%. Preserve the acquisition starting size, lock timing, and both triangle designs. Refresh all seven examples in both GIF sizes with versioned README URLs. The agent skill now requires runtime 2.5.7+.

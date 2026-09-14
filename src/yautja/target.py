@@ -58,7 +58,7 @@ def detail_shapes(shape, radius, locked):
                                  (quadrant + 1) * math.pi / 2 - .18, segments)
             paths.append(([(.72 * math.cos(a), .72 * math.sin(a)) for a in angles], False))
         if locked:
-            circles = [(0, 0, .10)]
+            circles = [(0, -.23, .10), (-.25, .16, .10), (.25, .16, .10)]
     elif shape == 'square-x':
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * .10, y * .10), (x * .39, y * .39)], False))
