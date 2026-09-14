@@ -149,20 +149,29 @@ Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--th
 
 Start from a built-in preset, a saved preset, or individual options. Customize the settings, then save your own named style preset:
 
+**Tropic Glow is the custom-preset example: HotTropic + HUD + heat glow + neon.** It demonstrates how to modify a built-in style and save that combination under your own name. Its thermal colors, detail mode, and levels come from HotTropic.
+
+| Setting | HotTropic · built-in style preset | Tropic Glow · editable custom preset |
+| --- | --- | --- |
+| Thermal image | Thermal Spectrum colors, Cinematic detail, 12 soft levels, dark scenery | Same thermal recipe |
+| HUD, timecode, and callouts | Hidden | Visible, with palette-matched colors |
+| Heat glow | Off | 0.6 |
+| Neon HUD | Off | On |
+
 ```bash
 yautja --list-presets
-yautja --stylepreset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja --stylepreset hottropic --hud --hud-theme palette --neon --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 ```
 
 Saving needs no source or models. `--save-preset` writes a complete snapshot of the resolved visual settings, including defaults, so the exported file can be reused without its starting preset. Share the JSON file with another person or agent, then override individual choices when using it, such as `--heat-glow 0.2`. Existing saves require `--overwrite`.
 
-| Tropic Glow · custom style preset example |
+| Tropic Glow · HotTropic with neon HUD and heat glow |
 | --- |
-| [![Tropic Glow: HotTropic with coordinated HUD colors and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif) |
+| [![Tropic Glow: HotTropic with palette-matched neon HUD and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif?v=2.5.5)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif?v=2.5.5) |
 | [Editable JSON preset](skills/yautja/assets/presets/tropic-glow.json) · [Creation, schema, and sharing guide](skills/yautja/references/presets.md) |
 
-Tropic Glow is another style preset, created by customizing HotTropic with HUD elements and heat glow. The editable JSON example uses HotTropic as an optional base to keep the file short; presets exported with `--save-preset` contain the full settings.
+The editable JSON example uses `"base": "hottropic"` to inherit the starting settings and lists its changes under `settings`, including `"neon": true`. Load it with `--preset-file "tropic-glow.json"`. Presets exported with `--save-preset` contain the full settings, so they can be reused without the starting preset. Add `--no-neon` when loading Tropic Glow to disable only its neon styling.
 
 ### Style presets based on palettes
 

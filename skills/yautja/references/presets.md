@@ -29,7 +29,7 @@ The encoder's existing `--preset fast` option remains separate and keeps its mea
 Saving is a separate operation: omit input and output media paths. No inference or conversion runs.
 
 ```bash
-yautja --stylepreset hottropic --hud --hud-theme palette --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja --stylepreset hottropic --hud --hud-theme palette --neon --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 yautja "clip.mov" "less-glow.mp4" --preset-file "tropic-glow.json" --heat-glow 0.2
 ```
@@ -42,16 +42,20 @@ Image and video conversions share the same preset loader. The existing media res
 
 ## Write or share a JSON preset
 
-[Tropic Glow example](../assets/presets/tropic-glow.json) is a compact editable version of the example above. Files use UTF-8 JSON with schema version 1:
+[Tropic Glow](../assets/presets/tropic-glow.json) is an editable custom preset made from the built-in HotTropic style. It keeps HotTropic's colors, Cinematic detail, and 12 soft thermal levels, then adds palette-matched HUD elements, timecode, callouts, heat glow at 0.6, and neon illumination. HotTropic itself keeps HUD, heat glow, and neon off. Load the custom example with `--preset-file`; `--stylepreset hottropic` selects the built-in starting look. Add `--no-neon` when loading the file to turn off only the neon styling.
+
+The compact example inherits HotTropic through its `base` field. Files use UTF-8 JSON with schema version 1:
 
 ```json
 {
   "schema_version": 1,
   "name": "Tropic Glow",
+  "description": "HotTropic colors and thermal levels with palette-matched neon HUD elements and animated heat glow.",
   "base": "hottropic",
   "settings": {
     "hud": true,
     "hud_theme": "palette",
+    "neon": true,
     "heat_glow": 0.6,
     "timecode": true,
     "verbose": true

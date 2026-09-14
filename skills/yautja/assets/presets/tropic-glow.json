@@ -1,10 +1,12 @@
 {
   "schema_version": 1,
   "name": "Tropic Glow",
+  "description": "HotTropic colors and thermal levels with palette-matched neon HUD elements and animated heat glow.",
   "base": "hottropic",
   "settings": {
     "hud": true,
     "hud_theme": "palette",
+    "neon": true,
     "heat_glow": 0.6,
     "timecode": true,
     "verbose": true

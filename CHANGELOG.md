@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.5 — 2026-09-13
+
+- Enable neon in the bundled Tropic Glow custom preset, alongside its palette-matched HUD and animated heat glow. Keep the built-in HotTropic recipe unchanged. Explain the relationship in the README and preset guide, update the save command and JSON example, and refresh both Tropic Glow GIFs with versioned image URLs.
+
 ## 2.5.4 — 2026-09-13
 
 - Set every White Hot HUD element to light gray (`#D0D0D0`) by default, including waveform, glyphs, timecode, callouts, and both target states. Standard and palette-matched themes share this ink; alpha compositing keeps it gray over bright areas, and explicit color overrides remain available. Refresh both animated White Hot previews and version their README image URLs so stale cached previews are not reused. The agent skill now requires runtime 2.5.4+.
