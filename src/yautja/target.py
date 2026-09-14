@@ -7,8 +7,15 @@ from PIL import Image, ImageDraw, ImageFilter
 from .colors import parse_hex
 from .hud import blur_layer
 
-TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'iron-sights',
+TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'vector-lock',
                  'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')
+
+
+def resolve_target_shape(shape):
+    shape = {'iron-sights': 'vector-lock'}.get(shape, shape)
+    if shape not in TARGET_SHAPES:
+        raise ValueError('Unknown target shape: ' + str(shape))
+    return shape
 
 
 def detail_shapes(shape, radius, locked):
@@ -36,11 +43,16 @@ def detail_shapes(shape, radius, locked):
                 for position in (-.38, -.25, .25, .38):
                     points = [(position, -.055), (position, .055)]
                     paths.append(([(y, x) for x, y in points] if axis else points, False))
-    elif shape == 'iron-sights':
-        paths.extend([([(-.68, -.42), (-.68, .45), (-.24, .45)], False),
-                      ([(.68, -.42), (.68, .45), (.24, .45)], False),
-                      ([(0, .45), (0, -.20)], False),
-                      ([(-.16, -.20), (.16, -.20)], False)])
+    elif shape == 'vector-lock':
+        for sign in (-1, 1):
+            # Separate angular guards leave the subject visible through the center.
+            paths.append(([(sign * .34, -.72), (sign * .63, -.72), (sign * .90, -.40),
+                           (sign * .90, .40), (sign * .63, .72), (sign * .34, .72)], False))
+            paths.append(([(sign * .67, -.22), (sign * .51, 0), (sign * .67, .22)], False))
+            paths.append(([(-.15, sign * .94), (.15, sign * .94)], False))
+            paths.append(([(-.13, sign * .39), (0, sign * .26), (.13, sign * .39)], False))
+        if locked:
+            paths.append(([(0, -.10), (.10, 0), (0, .10), (-.10, 0)], True))
     elif shape == 'square-dot' and locked:
         circles = [(0, 0, .10)]
     elif shape == 'square-x':
@@ -72,9 +84,7 @@ class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
     def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.,
                  opacity=1., flash_opacity=None, shape='triangle'):
-        if shape not in TARGET_SHAPES:
-            raise ValueError('Unknown target shape: ' + str(shape))
-        self.shape = shape
+        self.shape = resolve_target_shape(shape)
         flash_opacity = opacity if flash_opacity is None else flash_opacity
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
                                        (flash_rate, 0, 3, 'target-flash-rate'),

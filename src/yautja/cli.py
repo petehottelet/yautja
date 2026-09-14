@@ -26,7 +26,7 @@ from .waveform import WAVE_STYLES
 from .looks import (LOOK_PRESETS, PRESET_LABELS, PRESET_ALIASES, LEVEL_OPTIONS,
                     ThermalTransfer, resolve_look, merge_look, normalize_preset)
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
-from .target import TARGET_SHAPES
+from .target import TARGET_SHAPES, resolve_target_shape
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_strength', 'heat_glow', 'heat_glow_speed',
@@ -561,7 +561,7 @@ def parser():
     p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target')
     p.add_argument('--target', action='append', default=[], help='Figure ID from the catalog, e.g. S001-F002; repeat or comma-separate for multiple figures/shots')
     p.add_argument('--target-colors', help='Two comma-separated RGB hex colors for landing and flash, overriding HUD target colors; default red,white')
-    p.add_argument('--target-shape', choices=TARGET_SHAPES, default='triangle', help='Animated reticle geometry; triangle by default. Triangle-dots reveals three center dots on lock')
+    p.add_argument('--target-shape', type=resolve_target_shape, choices=TARGET_SHAPES, default='triangle', help='Animated reticle geometry; triangle by default. Vector-lock uses angular guards and a lock diamond; iron-sights remains an alias')
     p.add_argument('--target-acquire', type=float, default=.8, help='Seconds for the target reticle to assemble, 0.1-5')
     p.add_argument('--target-flash', action=argparse.BooleanOptionalAction, default=True, help='Alternate target colors after landing; --no-target-flash keeps the landing color')
     p.add_argument('--target-flash-rate', type=float, default=1.5, help='Target flash cycles per second, 0-3; 0 holds the landing color')

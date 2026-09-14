@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.3,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.3.1,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.3,<3` for the four segmented looks, or `yautja>=2.3,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.3.1,<3` for the four segmented looks, or `yautja>=2.3.1,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -86,7 +86,7 @@ Use `--vhs` for analog tape styling: softer color detail, chroma bleed, horizont
 
 For a figure list or a selected tracking triangle, read [targets.md](references/targets.md). First scan with `yautja "clip.mov" "figures.json" --list-figures` using cached semantic models, then inspect the generated contact sheet. Resolve the user's chosen figure to its shot-local ID and render with `--figures "figures.json" --target S001-F003`. Reuse that catalog for later color/effect changes. IDs are detected tracks, not identities. Check `targets_seen` and `targets_unseen` in the conversion report.
 
-Choose `--target-shape triangle-dots` for three center dots appearing on lock, `crosshair` for a circular sight, `iron-sights` for rear/front posts, or `square`, `square-dot`, `square-cross`, `square-mil`, and `square-x` for bracketed designs. All shapes share colors, flash, stroke, blur, opacity, and acquisition settings; `triangle` remains the default. See the target reference for geometry and lock behavior.
+Choose `--target-shape triangle-dots` for three center dots appearing on lock, `crosshair` for a circular sight, `vector-lock` for angular guards, inward chevrons, and a center diamond that appears on lock (`iron-sights` remains an alias), or `square`, `square-dot`, `square-cross`, `square-mil`, and `square-x` for bracketed designs. All shapes share colors, flash, stroke, blur, opacity, and acquisition settings; `triangle` remains the default. See the target reference for geometry and lock behavior.
 
 The three-blade triangle contracts into a compact reticle at the selected figure's center, with solid-color sides and narrow, open corners. It lands in red, then flashes red/white by default; White Hot uses white and Black Hot uses black for both states. `--no-target-flash` keeps the assembly but holds the primary color. Set both colors with `--target-colors "#ff302b,#ffffff"`; `--target-acquire`, `--target-scale`, and `--target-flash-rate` adjust timing and size. Scale 1 uses the compact reticle. Stills show the landed triangle. HUD off also suppresses selected targets.
 

@@ -73,6 +73,8 @@ def variants():
                                'wave_width': .14, 'wave_height': 1.}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow')},
     })
+    # Preserve the published image URLs while replacing the old sight geometry.
+    result['target-shape-iron-sights']['target_shape'] = 'vector-lock'
     custom = load_preset(Path(__file__).resolve().parents[1] / 'skills/yautja/assets/presets/tropic-glow.json')
     options = resolve_look(custom.get('base'), custom['settings'])
     options['show_timecode'] = options.pop('timecode')

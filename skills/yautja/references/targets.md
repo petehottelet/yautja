@@ -29,13 +29,13 @@ Using a saved catalog with Classic needs only the base runtime. Selecting a segm
 
 ## Target animation and color
 
-Select geometry with `--target-shape`. Every shape uses the same selected figure tracks, acquisition duration, scale, red/white flash defaults, custom colors, inward outline, target blur, and opacity controls. Default `triangle` retains the existing three-blade design.
+Select geometry with `--target-shape`. Every shape uses the same selected figure tracks, acquisition duration, scale, red/white flash defaults, custom colors, inward outline, target blur, and opacity controls. Default `triangle` retains the existing three-blade design. Vector Lock is available in 2.3.1+; `iron-sights` remains an alias for the new design in commands and saved presets.
 
 | Shape | Geometry / center detail |
 | --- | --- |
 | `triangle-dots` | Original triangle plus three center dots; dots appear when acquisition completes |
 | `crosshair` | Four radial arms and a segmented circular ring, with an open center |
-| `iron-sights` | Two rear sight posts and a central front post with a short cap |
+| `vector-lock` | Angular outer guards, inward chevrons, and a center diamond that appears on lock; replaces iron sights |
 | `square` | Four open corner brackets |
 | `square-dot` | Corner brackets with one center dot that appears on lock |
 | `square-cross` | Corner brackets with an open-center cross |

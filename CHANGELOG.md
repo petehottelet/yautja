@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.1 — 2026-09-13
+
+- Replace the iron-sights reticle with Vector Lock: angular outer guards, inward chevrons, and a center diamond that appears on lock. Preserve acquisition, flash, color, outline, blur, and opacity controls; keep `iron-sights` as an alias in commands and saved presets.
+- Refresh both GIF sizes, retain their existing image URLs, and update the skill and examples for `--target-shape vector-lock`.
+
 ## 2.3.0 — 2026-09-13
 
 - Name the eleven-color, twelve-level reference look HotTropic; preserve its exact appearance and the `thermal-spectrum-reference-v1` alias.
