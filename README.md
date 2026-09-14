@@ -415,6 +415,13 @@ Set `--hud-opacity 0.5` for half-strength HUD artwork, or `--hud-opacity-element
 | [![All HUD artwork at half opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity.gif) | [![Red waveform at 0.3 opacity, target at 0.7, and timecode at 0.9](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-elements.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity-elements.gif) |
 | `--hud-opacity 0.5` | `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` with the matched red Rorschach colors and shape above |
 
+| Independent opacity · neon on |
+| --- |
+| [![Neon red waveform, target, and timecode with cyan callouts and independent opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-neon.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity-neon.gif) |
+| Add `--neon` to the independent-opacity example above |
+
+This keeps the original Yautja thermal colors, red waveform/target/timecode, cyan callouts, and the same opacity values: waveform 0.3, target 0.7, and timecode 0.9. Neon adds bright cores and soft halos to the HUD; both target states stay red. Click the preview for the large animated GIF.
+
 Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. A `target` override controls both states unless `target-flash` is explicitly set. Reticle outlines and glow follow their element's opacity. `--no-hud` still hides everything. Click either GIF for the large version. [Detailed transparency controls](skills/yautja/references/targets.md#hud-transparency).
 
 ### Segmentation setup
