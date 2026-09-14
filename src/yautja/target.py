@@ -51,10 +51,12 @@ def detail_shapes(shape, radius, locked):
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * px, y * py) for px, py in quadrant], True))
     elif shape == 'round-dot':
-        # Keep the former bracket width, using a closed circular outline.
-        segments = max(64, min(512, math.ceil(math.tau * radius * .72 / 4)))
-        angles = np.linspace(0, math.tau, segments, endpoint=False)
-        paths.append(([(.72 * math.cos(a), .72 * math.sin(a)) for a in angles], True))
+        # Open arcs leave equal gaps at the top, right, bottom, and left.
+        segments = max(16, min(128, math.ceil(math.tau * radius * .72 / 16)))
+        for quadrant in range(4):
+            angles = np.linspace(quadrant * math.pi / 2 + .18,
+                                 (quadrant + 1) * math.pi / 2 - .18, segments)
+            paths.append(([(.72 * math.cos(a), .72 * math.sin(a)) for a in angles], False))
         if locked:
             circles = [(0, 0, .10)]
     elif shape == 'square-x':

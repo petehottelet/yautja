@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.6 — 2026-09-13
+
+- Add four evenly spaced gaps to the Round with lock dot outline (`--target-shape round-dot`). Keep its circular size, line thickness, center dot, and lock animation. Refresh both GIF sizes and version their README URLs. Update the agent skill to require runtime 2.5.6+.
+
 ## 2.5.5 — 2026-09-13
 
 - Enable neon in the bundled Tropic Glow custom preset, alongside its palette-matched HUD and animated heat glow. Keep the built-in HotTropic recipe unchanged. Explain the relationship in the README and preset guide, update the save command and JSON example, and refresh both Tropic Glow GIFs with versioned image URLs.

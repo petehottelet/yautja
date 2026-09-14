@@ -56,21 +56,21 @@ Install a published release from [PyPI](https://pypi.org/project/yautja/) in an 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5.4,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.5.6,<3"
 .venv-yautja/bin/python -m yautja --doctor
 .venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.4,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.6,<3"
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 .venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-Alternatively, use `pipx install "yautja>=2.5.4,<3"` or `pipx install "yautja[semantic]>=2.5.4,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+Alternatively, use `pipx install "yautja>=2.5.6,<3"` or `pipx install "yautja[semantic]>=2.5.6,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -327,7 +327,7 @@ The original `--wave-style trace` stays the default. Rorschach replaces the left
 
 ### Target shapes
 
-Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. The center dots in `triangle-dots` and `round-dot` appear on lock and reset when the target is lost. Hollow Cross replaces Vector Lock with four thick L-shaped bands, an open center, and uncapped arm ends. Existing `vector-lock` and `iron-sights` commands and saved presets resolve to Hollow Cross.
+Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. Round with lock dot has four evenly spaced gaps in its circular outline. The center dots in `triangle-dots` and `round-dot` appear on lock and reset when the target is lost. Hollow Cross replaces Vector Lock with four thick L-shaped bands, an open center, and uncapped arm ends. Existing `vector-lock` and `iron-sights` commands and saved presets resolve to Hollow Cross.
 
 | Triangle + three lock dots | Circular crosshair |
 | --- | --- |
@@ -341,7 +341,7 @@ Choose `--target-shape` independently of colors, lock timing, flash, outline, bl
 
 | Round with lock dot | Square + cross |
 | --- | --- |
-| [![Round with lock dot animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-round-dot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-round-dot.gif) | [![Square + cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-cross.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-cross.gif) |
+| [![Round with lock dot: circular outline with four open gaps](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-round-dot.gif?v=2.5.6)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-round-dot.gif?v=2.5.6) | [![Square + cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-cross.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-cross.gif) |
 | `--target-shape round-dot` | `--target-shape square-cross` |
 
 | Square + graduated cross | Square + diagonal marks |
@@ -438,7 +438,7 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5.4,<3"
+python -m pip install "yautja[semantic]>=2.5.6,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
@@ -462,7 +462,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.4,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.4,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5.6,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5.6,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 

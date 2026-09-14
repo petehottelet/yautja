@@ -8,26 +8,26 @@ Use the [PyPI package](https://pypi.org/project/yautja/) with the compatible com
 
 Choose the first usable route:
 
-1. **pipx:** `pipx install "yautja>=2.5.4,<3"`, or `pipx install "yautja[semantic]>=2.5.4,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for any later extras or GPU setup; a different Python installs into a different environment. A dedicated venv is easier for a custom CUDA stack.
+1. **pipx:** `pipx install "yautja>=2.5.6,<3"`, or `pipx install "yautja[semantic]>=2.5.6,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for any later extras or GPU setup; a different Python installs into a different environment. A dedicated venv is easier for a custom CUDA stack.
 2. **Dedicated venv outside the skill:** create and use the environment below. All `python` examples thereafter mean its exact executable, or the activated environment.
-3. **User site:** `python -m pip install --user "yautja>=2.5.4,<3"` only when supported. Invoke `python -m yautja` using that same Python if the console script is not on PATH. If Python is externally managed (PEP 668), use route 2. Never use `--break-system-packages`.
+3. **User site:** `python -m pip install --user "yautja>=2.5.6,<3"` only when supported. Invoke `python -m yautja` using that same Python if the console script is not on PATH. If Python is externally managed (PEP 668), use route 2. Never use `--break-system-packages`.
 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.5.4,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.5.6,<3"
 .venv-yautja/bin/python -m yautja --version
 .venv-yautja/bin/python -m yautja --doctor
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.4,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5.6,<3"
 .venv-yautja\Scripts\python.exe -m yautja --version
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 ```
 
-Confirm a stable version in `>=2.5.4,<3` before using this skill. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
+Confirm a stable version in `>=2.5.6,<3` before using this skill. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
 
 ## Offline install
 
@@ -43,16 +43,16 @@ Transfer the extracted bundle and complete wheelhouse. In a fresh target venv, f
 
 <!-- offline-install: tested from the extracted skill by tools.verify_install -->
 ```bash
-python -m pip install --no-index --no-cache-dir --find-links wheelhouse --find-links wheels "yautja>=2.5.4,<3"
+python -m pip install --no-index --no-cache-dir --find-links wheelhouse --find-links wheels "yautja>=2.5.6,<3"
 yautja --version
 yautja --doctor --media image
 ```
 
-Use `"yautja[semantic]>=2.5.4,<3"` in that install for a semantic wheelhouse. If a dependency is missing, stop and complete the wheelhouse on the connected computer; do not drop `--no-index`. Model use is independently offline: transfer the complete cache of the three pinned snapshots after an explicit connected `yautja --download-models`, then set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and run `yautja --doctor --thermal cinematic`. These variables do not disable pip networking. For videos separately install FFmpeg/ffprobe and their system libraries before going offline.
+Use `"yautja[semantic]>=2.5.6,<3"` in that install for a semantic wheelhouse. If a dependency is missing, stop and complete the wheelhouse on the connected computer; do not drop `--no-index`. Model use is independently offline: transfer the complete cache of the three pinned snapshots after an explicit connected `yautja --download-models`, then set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and run `yautja --doctor --thermal cinematic`. These variables do not disable pip networking. For videos separately install FFmpeg/ffprobe and their system libraries before going offline.
 
 ## Updates
 
-Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2.5.4,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2.5.4,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL to follow development; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
+Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2.5.6,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2.5.6,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL to follow development; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
 
 ## Video tools
 

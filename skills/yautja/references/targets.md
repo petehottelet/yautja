@@ -37,7 +37,7 @@ Select geometry with `--target-shape`. Every shape uses the same selected figure
 | `crosshair` | Four radial arms and a segmented circular ring, with an open center |
 | `hollow-cross` | Four thick, square-cornered L bands outline a plus; the center and all four arm ends stay open, including on lock |
 | `square` | Four open corner brackets |
-| `round-dot` | Continuous circular outline with one center dot that appears on lock (2.5.3+) |
+| `round-dot` | Circular outline with four evenly spaced gaps and one center dot that appears on lock (gaps in 2.5.6+) |
 | `square-cross` | Corner brackets with an open-center cross |
 | `square-mil` | Corner brackets with a graduated cross |
 | `square-x` | Corner brackets with four diagonal center marks |

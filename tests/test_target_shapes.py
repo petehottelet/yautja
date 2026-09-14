@@ -58,7 +58,7 @@ class TargetShapeTests(unittest.TestCase):
             with self.subTest(shape=shape), self.assertRaises(ValueError):
                 TargetOverlay(shape=shape)
 
-    def test_round_dot_has_circular_outline_and_center_dot_only_on_lock(self):
+    def test_round_dot_has_four_gaps_and_center_dot_only_on_lock(self):
         background = Image.new('RGB', (480, 270))
         overlay = TargetOverlay(shape='round-dot', flash_rate=0)
         for time in (0, .3, .6, .79):
@@ -73,9 +73,12 @@ class TargetShapeTests(unittest.TestCase):
         # A ring keeps its distance from the center at every angle; square
         # brackets would put the diagonal corners much farther out.
         self.assertLess(ring.max() / ring.min(), 1.2)
-        angles = np.arctan2(y[radii > 12] - 134.5, x[radii > 12] - 239.5)
-        bins, _ = np.histogram(angles, bins=36, range=(-np.pi, np.pi))
-        self.assertTrue(np.all(bins > 0), 'The circular outline must be continuous')
+        dx, dy = x[radii > 12] - 239.5, y[radii > 12] - 134.5
+        self.assertGreater(np.minimum(np.abs(dx), np.abs(dy)).min(), 4,
+                           'The outline must leave clear gaps at all four cardinal directions')
+        for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            self.assertGreater(np.count_nonzero((dx * sx > 0) & (dy * sy > 0)), 100,
+                               'Each quadrant must retain a visible circular arc')
         empty = overlay.draw(background, 1., [], self.colors)
         np.testing.assert_array_equal(np.asarray(empty), np.asarray(background))
         frame = np.asarray(overlay.draw(background, 1.1, self.targets, self.colors))
