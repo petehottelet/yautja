@@ -8,7 +8,7 @@ from .colors import parse_hex
 from .hud import blur_layer
 
 TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'hollow-cross',
-                 'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')
+                 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')
 
 
 def resolve_target_shape(shape):
@@ -50,8 +50,13 @@ def detail_shapes(shape, radius, locked):
                     (.98, .39), (.98, .21), (.21, .21)]
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * px, y * py) for px, py in quadrant], True))
-    elif shape == 'square-dot' and locked:
-        circles = [(0, 0, .10)]
+    elif shape == 'round-dot':
+        # Keep the former bracket width, using a closed circular outline.
+        segments = max(64, min(512, math.ceil(math.tau * radius * .72 / 4)))
+        angles = np.linspace(0, math.tau, segments, endpoint=False)
+        paths.append(([(.72 * math.cos(a), .72 * math.sin(a)) for a in angles], True))
+        if locked:
+            circles = [(0, 0, .10)]
     elif shape == 'square-x':
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * .10, y * .10), (x * .39, y * .39)], False))

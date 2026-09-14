@@ -42,7 +42,7 @@ def variants():
     result.update({
         'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
-           for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'square-dot', 'square-cross', 'square-mil', 'square-x')},
+           for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
         'colors-matched-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette'},
         'colors-matched-ironbow': {'thermal': 'cinematic', 'palette': 'ironbow', 'hud_theme': 'palette'},

@@ -13,7 +13,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 Keep the lightweight environment if you only need classic mode. For semantic mode, install the `semantic` extra in the selected virtual environment. Use the same environment for the package and models:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.5.2,<3"
+python -m pip install "yautja[semantic]>=2.5.3,<3"
 python -m yautja --download-models
 python -m yautja "clip.mov" "outputs/clip-semantic.mp4" --thermal semantic --verbose --timecode
 python -m yautja "photo.jpg" "outputs/photo-realistic.png" --thermal realistic --verbose
@@ -41,7 +41,7 @@ The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.5.2,<3"
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.5.3,<3"
 .venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
 .venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```

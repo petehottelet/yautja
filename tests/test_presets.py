@@ -71,7 +71,7 @@ class PresetTests(unittest.TestCase):
                      '--timecode', '--thermal-levels', '8', '--thermal-band-softness', '.6',
                      '--sensor-texture', '--grain', '.02', '--hud-blur', '2', '--hud-opacity', '.7',
                      '--crt-grid', '--crt-crosshatch', '--crt-strength', '.3',
-                     '--wave-style', 'rorschach', '--wave-height', '1', '--target-shape', 'square-dot', '--seed', '78']
+                     '--wave-style', 'rorschach', '--wave-height', '1', '--target-shape', 'round-dot', '--seed', '78']
             with patch('yautja.cli.semantic_tracker') as models, patch('yautja.cli.convert') as convert:
                 saved = self.invoke([*flags, '--save-preset', preset, '--preset-name', 'My Glow'])
                 models.assert_not_called()
@@ -82,7 +82,7 @@ class PresetTests(unittest.TestCase):
             self.invoke([source, root / 'direct.png', *flags])
             report = self.invoke([source, root / 'saved.png', '--preset-file', preset])
             self.assertEqual((report['preset_name'], report['preset_kind']), ('My Glow', 'custom'))
-            self.assertEqual(report['target_shape'], 'square-dot')
+            self.assertEqual(report['target_shape'], 'round-dot')
             self.assertTrue(report['crt_grid'] and report['crt_crosshatch'])
             args = parser().parse_args(['--preset-file', str(preset), '--no-crt-grid', '--no-crt-crosshatch'])
             self.assertFalse(args.crt_grid or args.crt_crosshatch)

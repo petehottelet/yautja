@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.3 — 2026-09-13
+
+- Replace Square + lock dot with Round with lock dot (`--target-shape round-dot`): a continuous circular outline with a center dot that appears only on lock. Refresh both animated preview sizes and the documentation. The former `square-dot` name is removed; other square designs remain available. The agent skill now requires runtime 2.5.3+.
+
 ## 2.5.2 — 2026-09-13
 
 - Rename the built-in visual preset flag from `--look-preset` to `--stylepreset`, with no old flag alias. Update commands, help, examples, and the agent skill, which now requires runtime 2.5.2+. Preserve preset behavior, JSON preset files, the Python `look_preset` keyword and report key, and encoder `--preset`.

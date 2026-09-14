@@ -54,5 +54,31 @@ class TargetShapeTests(unittest.TestCase):
             renderer = Renderer(320, 180, target_shape=shape, hud=False)
             np.testing.assert_array_equal(np.asarray(renderer.render(image, 0, targets=self.targets)),
                                           np.asarray(renderer.render(image, 0)))
-        with self.assertRaises(ValueError):
-            TargetOverlay(shape='typo')
+        for shape in ('typo', 'square-dot'):
+            with self.subTest(shape=shape), self.assertRaises(ValueError):
+                TargetOverlay(shape=shape)
+
+    def test_round_dot_has_circular_outline_and_center_dot_only_on_lock(self):
+        background = Image.new('RGB', (480, 270))
+        overlay = TargetOverlay(shape='round-dot', flash_rate=0)
+        for time in (0, .3, .6, .79):
+            frame = np.asarray(overlay.draw(background, time, self.targets, self.colors))
+            self.assertEqual(frame[133:137, 238:242].max(), 0)
+        frame = np.asarray(overlay.draw(background, .81, self.targets, self.colors))
+        self.assertGreater(frame[135, 240, 0], 200)
+        y, x = np.nonzero(frame[..., 0] > 128)
+        radii = np.hypot(x - 239.5, y - 134.5)
+        ring = radii[radii > 12]
+        self.assertGreater(ring.size, 500)
+        # A ring keeps its distance from the center at every angle; square
+        # brackets would put the diagonal corners much farther out.
+        self.assertLess(ring.max() / ring.min(), 1.2)
+        angles = np.arctan2(y[radii > 12] - 134.5, x[radii > 12] - 239.5)
+        bins, _ = np.histogram(angles, bins=36, range=(-np.pi, np.pi))
+        self.assertTrue(np.all(bins > 0), 'The circular outline must be continuous')
+        empty = overlay.draw(background, 1., [], self.colors)
+        np.testing.assert_array_equal(np.asarray(empty), np.asarray(background))
+        frame = np.asarray(overlay.draw(background, 1.1, self.targets, self.colors))
+        self.assertEqual(frame[133:137, 238:242].max(), 0)
+        still = np.asarray(overlay.draw(background, 0, self.targets, self.colors, static=True))
+        self.assertGreater(still[135, 240, 0], 200)
