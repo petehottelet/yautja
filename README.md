@@ -15,7 +15,7 @@
 
 # Yautja is sci-fi segmentation, re-skinning, and annotation for video and images. 
 
-Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skill** for creating thermal-imaging-style output.
+Yautja is a **sci-fi-styled image segmentation, re-skinning, and annotation skill** with thermal-imaging-style output.
 
 **For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures.
 
