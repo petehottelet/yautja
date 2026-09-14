@@ -61,7 +61,10 @@ def check_runtime(python, env, cwd, prefix):
     doctor = json.loads(run(['yautja', '--doctor'], cwd, env))
     assert doctor['ready']
     assert Path(doctor['installation']['package']).resolve().is_relative_to(prefix.resolve())
-    assert Path(doctor['installation']['python']).resolve() == python.resolve()
+    # pip's launcher may use python3.11 while module commands use python.
+    # On macOS these can be separate executable copies in the same venv.
+    assert Path(doctor['installation']['prefix']).resolve() == prefix.resolve(), doctor['installation']
+    assert Path(doctor['installation']['python']).parent.resolve() == python.parent.resolve(), doctor['installation']
     assert doctor['installation']['cli_matches_environment']
     assert doctor['environment']['system_site_packages'] is False
     run([python, '-m', 'pip', 'check'], cwd, env)
