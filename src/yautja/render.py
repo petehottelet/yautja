@@ -14,6 +14,7 @@ from .thermal import resolve_thermal
 from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
+from .neon import NeonStyle
 from .waveform import WAVE_STYLES, inkblot_mask
 from .hud import HudPanel, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
@@ -213,6 +214,7 @@ class Renderer:
                  heat_glow=0., heat_glow_speed=1., wave_style='trace', wave_width=None, wave_height=None, wave_detail=.6,
                  target_stroke=0., target_stroke_colors=None, hud_blur=0., hud_blur_elements=None,
                  hud_opacity=1., hud_opacity_elements=None, target_shape='triangle',
+                 neon=False, neon_intensity=1., neon_spread=.6, neon_flicker=0., neon_elements=None,
                  thermal_levels=None, thermal_band_softness=None, thermal_black_point=0.,
                  thermal_white_point=1., thermal_gamma=1., thermal_softness=0.):
         self.width, self.height = width, height
@@ -239,11 +241,15 @@ class Renderer:
         self.hud_blurs = hud_blurs(hud_blur, hud_blur_elements)
         self.hud_opacity = hud_opacity
         self.hud_opacities = hud_opacities(hud_opacity, hud_opacity_elements)
+        self.neon = bool(neon and hud)
+        self.neon_style = NeonStyle(neon_intensity, neon_spread, neon_flicker, neon_elements, seed)
+        self.neon_gain = 1.
         self.hud_blur_pixels = {key: value * min(width, height) / 1080 for key, value in self.hud_blurs.items()}
         self.target_overlay = TargetOverlay(target_acquire, target_flash_rate if target_flash else 0, target_scale,
                                             stroke=target_stroke, stroke_colors=target_stroke_colors,
                                             blur=self.hud_blurs['target'], opacity=self.hud_opacities['target'],
-                                            flash_opacity=self.hud_opacities['target-flash'], shape=target_shape)
+                                            flash_opacity=self.hud_opacities['target-flash'], shape=target_shape,
+                                            neon=self.neon_style if self.neon else None)
         self.target_flash = target_flash
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
@@ -270,7 +276,7 @@ class Renderer:
             if not math.isfinite(value) or not 0 <= value <= high:
                 raise ValueError(f'--{flag} must be between 0 and {high}')
         # Alpha draws black ink over the image; screen blending would erase it.
-        self.overlay_mode = 'RGBA' if self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or self.hud_theme == 'custom' or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -282,6 +288,13 @@ class Renderer:
             self.heat_field = field(width, height, sensor_resolution, seed=seed,
                                     legacy_bands=thermal_levels is None)
         self.scale = min(1.5, max(.5, width / 1100, min(width, height) / 900))
+        s = self.scale
+        self.neon_widths = {'waveform': max(1.5, 1.25 * s) if wave_style == 'trace' else max(3, 6 * min(width, height) / 1080),
+                            'waveform-axis': max(1, s), 'waveform-ticks': max(1, 1.5 * s),
+                            'waveform-glyphs': max(2, .11 * max(10, round(25 * s))),
+                            'readout': max(2, .11 * max(10, round(25 * s))),
+                            'timecode': 1.5, 'callouts': 1.5,
+                            'leaders': max(1, 1.5 * s), 'markers': max(1.5, 2 * s)}
         self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
         self.fonts, self.tiles = {}, {}
@@ -323,22 +336,28 @@ class Renderer:
     def composite(self, image, overlay, x, y):
         if overlay.mode == 'RGBA':
             base = image.crop((x, y, x + overlay.width, y + overlay.height)).convert('RGBA')
-            if self.glow:
+            if self.glow and not self.neon:
                 bloom = overlay.filter(ImageFilter.GaussianBlur(max(.5, self.scale * 2)))
                 bloom.putalpha(bloom.getchannel('A').point(lambda v: round(v * self.glow)))
                 base = Image.alpha_composite(base, bloom)
             image.paste(Image.alpha_composite(base, overlay).convert('RGB'), (x, y))
             return
-        if self.glow:
+        if self.glow and not self.neon:
             bloom = overlay.filter(ImageFilter.GaussianBlur(max(.5, self.scale * 2)))
             bloom = bloom.point(lambda v: round(v * self.glow))
             overlay = ImageChops.add(overlay, bloom)
         image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
 
     def hud_panel(self, size, *elements):
-        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities)
+        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities, separate=self.neon)
 
     def composite_panel(self, image, panel, x, y):
+        if self.neon:
+            for key, artwork in panel.layers.items():
+                self.neon_style.apply(image, artwork, x, y, self.hud_colors[key], element=key,
+                                      width=self.neon_widths[key], gain=self.neon_gain,
+                                      opacity=self.hud_opacities[key], blur=self.hud_blur_pixels[key])
+            return
         artwork, pad = panel.finish()
         self.composite(image, artwork, x - pad, y - pad)
 
@@ -514,6 +533,7 @@ class Renderer:
         layer = panel.layer('callouts')
         for item in self.annotation_layout(subjects, time=time, shot_id=shot_id):
             subject, size, step = item['subject'], item['size'], item['step']
+            self.neon_widths['callouts'] = max(1.5, .12 * size)
             x, y = item['rect'][:2]
             cx, cy = item['target']
             color = self.hud_ink('callouts', subject.opacity)
@@ -577,7 +597,7 @@ class Renderer:
         if self.hud:
             self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id)
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
-            image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static)
+            image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
 
     def render_graded(self, luma, time, wave, subjects, targets, shot_id, target_static):
@@ -603,7 +623,7 @@ class Renderer:
         if self.hud:
             self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id)
             image = self.target_overlay.draw(image, time, targets,
-                        (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static)
+                        (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
 
     def draw_waveform(self, image, readout_luma, time, wave):
@@ -670,6 +690,8 @@ class Renderer:
         return size, stats
 
     def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None):
+        if self.neon:
+            self.neon_gain = self.neon_style.noise.gain(time, self.neon_style.flicker)
         s = self.scale
         size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.
@@ -695,6 +717,7 @@ class Renderer:
             clock = lcd_timecode(timecode(time + self.timecode_start), clock_height, self.hud_ink('timecode'))
             if clock.width > rw:
                 clock = clock.resize((rw, max(1, round(clock.height * rw / clock.width))), Image.Resampling.LANCZOS)
+            self.neon_widths['timecode'] = max(1.5, .12 * clock.height)
             panel.layer('timecode').paste(clock, (rw - clock.width, size + round(7 * s)))
         self.composite_panel(image, panel, max(0, self.width - rw - pad), pad)
         if self.verbose:

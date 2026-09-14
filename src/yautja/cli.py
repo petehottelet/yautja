@@ -21,6 +21,7 @@ from . import __version__
 from .render import Renderer, PALETTES
 from .colors import HUD_THEMES, resolve_colors, hex_color
 from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
+from .neon import NeonStyle
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
 from .looks import (LOOK_PRESETS, PRESET_LABELS, PRESET_ALIASES, LEVEL_OPTIONS,
@@ -32,7 +33,8 @@ EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_fla
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
-                  'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset', *LEVEL_OPTIONS)
+                  'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', *LEVEL_OPTIONS)
 
 
 def target_selection(args, source):
@@ -63,6 +65,13 @@ def extra_report(renderer, selection, *, static=False):
             'hud_blur_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_blurs.items()},
             'hud_opacity': renderer.hud_opacity if renderer.hud else 0.,
             'hud_opacity_elements': {key: value if renderer.hud else 0. for key, value in renderer.hud_opacities.items()},
+            'neon': renderer.neon,
+            'neon_intensity': renderer.neon_style.intensity if renderer.neon else 0.,
+            'neon_spread': renderer.neon_style.spread if renderer.neon else 0.,
+            'neon_flicker': renderer.neon_style.flicker if renderer.neon else 0.,
+            'neon_intensities': {key: value if renderer.neon else 0. for key, value in renderer.neon_style.intensities.items()},
+            'neon_elements': {key: value if renderer.neon else 0. for key, value in renderer.neon_style.intensities.items()},
+            'neon_flicker_seed_stream': 'sha256(seed:neon-flicker)' if renderer.neon else None,
             'hud_effect_units': 'stroke widths and blur radii: pixels at 1080px short edge, scaled with output size',
             'crt_bleed': renderer.display.crt_bleed, 'crt_vertical_lines': renderer.crt_vertical_lines,
             'crt_grid': renderer.crt_grid, 'crt_crosshatch': renderer.crt_crosshatch,
@@ -549,6 +558,11 @@ def parser():
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (white for White Hot, black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash. Unspecified elements keep standard colors')
+    p.add_argument('--neon', action=argparse.BooleanOptionalAction, default=False, help='Light every HUD element with a bright neon core and colored halo; replaces standard HUD bloom. Default off')
+    p.add_argument('--neon-intensity', type=float, default=1., help='Neon brightness, 0-2; 0 disables neon treatment, 1 is normal, 2 is intense')
+    p.add_argument('--neon-spread', type=float, default=.6, help='Halo radius relative to stroke width, 0-2; 0 is a tight rim, 2 is a wide wash')
+    p.add_argument('--neon-flicker', type=float, default=0., help='Seeded neon hum, 0-1; 0 is steady. Stills show time zero')
+    p.add_argument('--neon-elements', help='Comma-separated element=intensity overrides, 0-2; 0 disables neon for that element. Others inherit --neon-intensity. Elements: ' + ', '.join(BLUR_ELEMENTS) + '. Target applies to both flash states')
     p.add_argument('--hud-blur', type=float, default=0., help='Gaussian softness for all HUD artwork only, 0-20 reference pixels at a 1080px short edge; default 0 (sharp)')
     p.add_argument('--hud-blur-elements', help='Override blur independently with quoted comma-separated element=radius values, 0-20; explicit 0 keeps an element sharp. Elements: ' + ', '.join(BLUR_ELEMENTS) + '. Target applies to both flash states')
     p.add_argument('--hud-opacity', type=float, default=1., help='Shared HUD visibility, 0-1: 0 is transparent, 1 keeps full existing visibility (default); includes outlines and glow')
@@ -641,6 +655,11 @@ def main(argv=None):
         parse_stroke_colors(args.target_stroke_colors)
         hud_blurs(args.hud_blur, args.hud_blur_elements)
         hud_opacities(args.hud_opacity, args.hud_opacity_elements)
+        NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed)
+        if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
+            print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
+        if args.neon and args.glow != .65:
+            print('--glow is ignored while --neon is on.', file=sys.stderr)
         if args.list_figures and (args.figures or args.target):
             p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
         if args.hud and bool(args.target) != bool(args.figures):

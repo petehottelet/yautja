@@ -15,7 +15,7 @@ except ModuleNotFoundError:  # Python 3.10 developer environment
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ('SKILL.md', 'LICENSE', 'agents/openai.yaml', 'references/runtime.md',
          'references/semantic.md', 'references/dependencies.md', 'references/colors.md', 'references/targets.md',
-         'references/presets.md', 'assets/presets/tropic-glow.json')
+         'references/presets.md', 'assets/presets/tropic-glow.json', 'assets/presets/abyss-neon.json')
 # --replace migrates only the old distribution's known files, never whole folders.
 LEGACY_FILES = ('requirements.txt', 'requirements-semantic.txt', 'VERSION',
                 'assets/glyphs.json', 'scripts/yautja.py', 'scripts/render.py',

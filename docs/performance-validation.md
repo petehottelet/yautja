@@ -78,6 +78,19 @@ Before implementation, all **27 existing tests passed**. After implementation:
 - Existing tests continue covering audio gaps, trim timing, HDR, rotation, frame coverage, waveform behavior, output protection, and the explicit archive manifest.
 - The extracted portable archive passes classic doctor and renders a six-frame, quarter-second clip with audio and timecode. The archive contains 14 source/configuration/documentation files, with no models, private media, environments, or executables. Installed skills were not replaced.
 
+## Neon HUD 2.5.0
+
+Measured on the same Windows workstation with Python 3.11.9 at 1920×1080. `python -m tools.benchmark_neon` renders a fixed Classic heat field with one visible callout, a moving locked triangle, the procedural waveform, glyphs and LCD timecode. Neon uses intensity 1, spread 0.6, flicker 0. Each mode discards five warm-up frames per run and measures 24 frames across three runs, alternating mode order: **72 measured frames per mode**. No model inference, decoding, encoding, scene heat glow or CRT is included.
+
+| Rendering | Median frame time |
+| --- | --- |
+| Existing HUD bloom, neon off | 352.4 ms |
+| Neon on | 279.6 ms |
+
+This is 20.7% lower frame time in this fixture and meets the PRD's maximum 25% overhead target. The improvement comes from resampling only the target's occupied artwork and avoiding full-frame float RGB compositing. Default-off output keeps its existing rendering path. Different scene complexity, target count, acquisition size, thermal modes and hardware can change the comparison; this is neither a real-time claim nor a general conversion speedup.
+
+The initial implementation exceeded the budget, so it was profiled and revised before measuring these final results. Re-run the command above to print platform information, scope and fresh JSON measurements.
+
 ## Remaining work
 
 Cross-platform CI and three selectable thermal looks have since shipped. Video-memory tracking, persistent heat fields and segmentation caching remain future work; see [the roadmap](ROADMAP.md). The image predictor still emits the existing upstream `sam2_video` configuration versus `sam2` class warning; both pinned models nevertheless executed successfully in these CPU/CUDA checks. Evaluate the actual video model/processor API in a future tracking experiment rather than treating this image path as video memory.

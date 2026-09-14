@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "name": "Abyss Neon",
+  "description": "Abyss palette with a steady cyan target, neon HUD, vertical CRT lines, and heat glow.",
+  "base": "abyss",
+  "settings": {
+    "neon": true,
+    "neon_spread": 0.6,
+    "target_colors": "#267085,#267085",
+    "target_flash": false,
+    "crt_vertical_lines": true,
+    "crt_strength": 0.25,
+    "heat_glow": 0.65
+  }
+}

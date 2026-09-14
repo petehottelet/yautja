@@ -70,7 +70,9 @@ def check_runtime(python, env, cwd, prefix):
                               '--heat-glow-speed', '0', '--crt-vertical-lines', '--crt-grid', '--crt-crosshatch', '--crt-strength', '.25',
                               '--crt-bleed', '.4', '--no-target-flash', '--wave-style', 'rorschach-hollow',
                               '--wave-width', '.14', '--wave-height', '1', '--thermal-levels', '6',
-                              '--thermal-band-softness', '.3', '--target-shape', 'square-mil'], cwd, image_env))
+                              '--thermal-band-softness', '.3', '--target-shape', 'square-mil', '--neon',
+                              '--neon-intensity', '.8', '--neon-spread', '.4', '--neon-flicker', '.3',
+                              '--neon-elements', 'timecode=0,target=.5'], cwd, image_env))
     assert effects['palette'] == 'abyss' and effects['heat_glow'] == .6 and effects['crt_vertical_lines']
     assert effects['crt_bleed'] == .4 and effects['targets'] == []
     assert effects['crt_grid'] and effects['crt_crosshatch']
@@ -78,6 +80,12 @@ def check_runtime(python, env, cwd, prefix):
     assert effects['wave_style'] == 'rorschach-hollow' and effects['wave_height'] == 1
     assert effects['thermal_levels'] == 6 and effects['thermal_band_softness'] == .3
     assert effects['target_shape'] == 'square-mil'
+    assert effects['neon'] and effects['neon_intensity'] == .8 and effects['neon_spread'] == .4
+    assert effects['neon_flicker'] == .3 and effects['neon_intensities']['target-flash'] == .5
+    neon_preset = ROOT / 'skills/yautja/assets/presets/abyss-neon.json'
+    run(['yautja', '--preset-file', neon_preset, '--thermal', 'classic', '--save-preset', 'neon.json'], cwd, image_env)
+    neon = json.loads(run(['yautja', 'photo.jpg', 'neon.png', '--preset-file', 'neon.json'], cwd, image_env))
+    assert neon['neon'] and neon['palette'] == 'abyss' and neon['target_colors'] == ['#267085', '#267085']
     presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
     assert any(p['id'] == 'hottropic' and p['name'] == 'HotTropic' for p in presets['presets'])
     run(['yautja', '--look-preset', 'hottropic', '--thermal', 'classic',

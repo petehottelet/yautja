@@ -36,6 +36,7 @@ def variants():
         'motion-soft': {'motion_blur': .35}, 'motion-strong': {'motion_blur': .85},
         'bleed-soft': {'crt_bleed': .3}, 'bleed-strong': {'crt_bleed': .85},
         'heat-glow': {'heat_glow': .75},
+        'neon': {'neon': True}, 'neon-flicker': {'neon': True, 'neon_flicker': .5},
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
@@ -54,7 +55,7 @@ def variants():
         'glow-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette', 'heat_glow': .75},
         'target-lock': {'thermal': 'cinematic'},
         'target-abyss-steady': {'thermal': 'cinematic', 'palette': 'abyss', 'target_flash': False,
-                              'target_colors': '#267085,#267085',
+                              'target_colors': '#267085,#267085', 'neon': True,
                               'crt_vertical_lines': True, 'crt_strength': .25, 'heat_glow': .65},
         'target-custom': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette',
                           'target_colors': '#31d7bb,#d6fff3', 'target_acquire': .45, 'crt_bleed': .4},

@@ -60,6 +60,31 @@ Three solid-color blades contract into a compact reticle centered on the selecte
 yautja "clip.mov" "abyss-target.mp4" --thermal cinematic --palette abyss --figures "figures.json" --target S001-F003 --no-target-flash --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65
 ```
 
+## Neon HUD
+
+Available in Yautja 2.5+. `--neon` illuminates all active HUD elements with a bright core and two colored halos, inspired by Saber Alight's neon tube rendering. It works on stills and video, with every palette and target shape. Default off; `--no-neon` overrides a preset.
+
+| Option | Behavior |
+| --- | --- |
+| `--neon-intensity 1` | Overall strength, 0–2; default 1. Zero keeps original ink without emission or whitening |
+| `--neon-spread 0.6` | Halo radius relative to stroke width, 0–2; default 0.6 |
+| `--neon-flicker 0.5` | Smooth synchronized hum, 0–1; default 0 is steady. Uses an independent stream derived from `--seed`; stills evaluate time zero |
+| `--neon-elements "waveform=0.6,target=1.2,timecode=0"` | Per-element intensity, 0–2; omitted keys inherit the global intensity; zero disables that element's neon |
+
+Keys: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`. The target override covers both flash states. Hidden elements emit nothing. Tuning flags without `--neon` are validated and saved but inactive; the CLI prints a notice on stderr.
+
+Neon follows resolved HUD colors and each reticle's current flash state. Muted cyan `#267085` emits normalized cyan `#49D7FF`; thick cores approach white. White ink gets a white halo; black ink gets dark diffusion and keeps a black core. Virtual Boy's final red-only clamp remains active for its standard and palette HUD themes.
+
+HUD blur softens the visible core while light is derived from sharp coverage. HUD opacity and tracking fades scale core and light together, including zero. Outlines remain part of the target artwork and the halo follows its fill color. `--glow` is ignored while neon is on, with a notice for nondefault values; no legacy bloom is stacked. Heat glow is independent and runs first; CRT patterns, persistence, bleed and VHS affect the completed frame afterward. `--no-hud` disables neon with the rest of the HUD.
+
+```bash
+yautja "clip.mov" "neon.mp4" --thermal cinematic --verbose --timecode --neon
+yautja "clip.mov" "cyan-target.mp4" --thermal cinematic --palette abyss --figures "figures.json" --target S001-F003 --target-colors "#267085,#267085" --no-target-flash --neon
+yautja "photo.jpg" "neon.png" --neon --neon-spread 0.4 --neon-elements "waveform=0.6,timecode=0"
+```
+
+Save all controls with `--save-preset`, or start with [Abyss Neon](../assets/presets/abyss-neon.json). Reports contain requested options in `settings` and effective `neon`, `neon_intensity`, `neon_spread`, `neon_flicker`, `neon_elements`, `neon_intensities`, and `neon_flicker_seed_stream`. Effective values are false/zero when neon or HUD is off.
+
 ## Reticle stroke and independent HUD blur
 
 Both options are off by default and work for images and videos. The reticle remains solid-colored without a stroke. Its size, blade thickness, acquisition animation, and corner gaps use the existing settings.

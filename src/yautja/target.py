@@ -80,7 +80,8 @@ def parse_stroke_colors(value):
 class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
     def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.,
-                 opacity=1., flash_opacity=None, shape='triangle'):
+                 opacity=1., flash_opacity=None, shape='triangle', neon=None):
+        self.neon = neon
         self.shape = resolve_target_shape(shape)
         flash_opacity = opacity if flash_opacity is None else flash_opacity
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
@@ -100,7 +101,7 @@ class TargetOverlay:
         self.seen = set()
         self.frames = 0
 
-    def draw(self, image, time, targets, colors, *, shot=None, static=False):
+    def draw(self, image, time, targets, colors, *, shot=None, static=False, neon_gain=1.):
         if self.shot != shot or (self.last_time is not None and (time <= self.last_time or time - self.last_time > .5)):
             self.active.clear()
         self.shot, self.last_time = shot, time
@@ -111,10 +112,15 @@ class TargetOverlay:
         self.seen.update(visible)
         self.frames += 1
         width, height = image.size
+        if self.neon:
+            image = image.copy()
         # Draw at twice output resolution for crisp edges without jagged pixels.
         overlay = Image.new('RGBA', (width * 2, height * 2))
         draw = ImageDraw.Draw(overlay)
         for item in targets:
+            if self.neon:
+                overlay = Image.new('RGBA', (width * 2, height * 2))
+                draw = ImageDraw.Draw(overlay)
             start = self.active.setdefault(item['id'], time)
             age = self.acquire if static else time - start
             progress = min(1., max(0., age / self.acquire))
@@ -137,6 +143,9 @@ class TargetOverlay:
             flash = progress == 1 and elapsed > 0 and self.flash_rate > 0 and int(elapsed * self.flash_rate * 2) % 2 == 1
             color = colors[int(flash)]
             opacity = round(255 * float(item.get('opacity', 1.)) * (self.flash_opacity if flash else self.opacity))
+            neon_opacity = opacity / 255
+            if self.neon:
+                opacity = 255
             for index in range(3) if self.shape in ('triangle', 'triangle-dots') else ():
                 a, b = points[index], points[(index + 1) % 3]
                 direction = (b - a) / max(1., np.linalg.norm(b - a))
@@ -192,6 +201,21 @@ class TargetOverlay:
                 draw.ellipse(box, fill=(*color, opacity))
                 if outline_width:
                     draw.ellipse(box, outline=(*outline, opacity), width=min(outline_width, max(1, round(r))))
+            if self.neon:
+                tube_width = thickness if self.shape.startswith('triangle') else radius * .18 if self.shape == 'hollow-cross' else line_width / 2
+                bounds = overlay.getbbox()
+                if bounds and neon_opacity:
+                    # Resize only occupied artwork. Align to the 2x raster and
+                    # retain the Lanczos kernel margin so subpixel edges match.
+                    box = (max(0, bounds[0] // 2 * 2 - 8), max(0, bounds[1] // 2 * 2 - 8),
+                           min(width * 2, (bounds[2] + 1) // 2 * 2 + 8),
+                           min(height * 2, (bounds[3] + 1) // 2 * 2 + 8))
+                    tile = overlay.crop(box).resize(((box[2] - box[0]) // 2, (box[3] - box[1]) // 2), Image.Resampling.LANCZOS)
+                    self.neon.apply(image, tile, box[0] // 2, box[1] // 2, color,
+                                    element='target-flash' if flash else 'target', width=tube_width,
+                                    gain=neon_gain, opacity=neon_opacity, blur=self.blur * min(width, height) / 1080)
+        if self.neon:
+            return image
         overlay = overlay.resize(image.size, Image.Resampling.LANCZOS)
         overlay = blur_layer(overlay, self.blur * min(width, height) / 1080)
         glow = overlay.filter(ImageFilter.GaussianBlur(max(.5, width / 640)))

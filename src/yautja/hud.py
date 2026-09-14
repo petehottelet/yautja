@@ -70,11 +70,11 @@ def opacity_layer(image, amount):
 
 class HudPanel:
     """Keep the original canvas unless elements need separate appearance controls."""
-    def __init__(self, mode, size, radii, elements, opacities):
+    def __init__(self, mode, size, radii, elements, opacities, *, separate=False):
         self.mode, self.size = mode, size
         self.radii = {key: radii[key] for key in elements}
         self.opacities = {key: opacities[key] for key in elements}
-        self.separate = any(self.radii.values()) or any(value != 1 for value in self.opacities.values())
+        self.separate = separate or any(self.radii.values()) or any(value != 1 for value in self.opacities.values())
         self.layers = {}
 
     def layer(self, element):

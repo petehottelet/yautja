@@ -56,21 +56,21 @@ Install a published release from [PyPI](https://pypi.org/project/yautja/) in an 
 ```bash
 python -m venv .venv-yautja
 # macOS/Linux
-.venv-yautja/bin/python -m pip install "yautja>=2.2,<3"
+.venv-yautja/bin/python -m pip install "yautja>=2.5,<3"
 .venv-yautja/bin/python -m yautja --doctor
 .venv-yautja/bin/python -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 ```powershell
 # Windows, after creating the venv
-.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.2,<3"
+.venv-yautja\Scripts\python.exe -m pip install "yautja>=2.5,<3"
 .venv-yautja\Scripts\python.exe -m yautja --doctor
 .venv-yautja\Scripts\python.exe -m yautja "clip.mov" "clip-yautja.mp4" --timecode
 ```
 
 For the segmented looks, add `[semantic]` after `yautja` in the install specification. For a local clone use `python -m pip install ".[semantic]"` in its environment; for a built wheel use its exact path. The lightweight install supports Classic mode only.
 
-Alternatively, use `pipx install "yautja>=2.2,<3"` or `pipx install "yautja[semantic]>=2.2,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
+Alternatively, use `pipx install "yautja>=2.5,<3"` or `pipx install "yautja[semantic]>=2.5,<3"` for segmentation. An activated venv can instead use `python -m pip install` with those same specifications. Then run `yautja --version`, `yautja --doctor`, and `yautja "clip.mov" "clip-yautja.mp4"`. Use the same environment's Python for `python -m yautja` if the command is not on PATH. [Environment and offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md).
 
 Leave off `--timecode` for the alien readout alone. Sound is retained unless `--mute` is used. Existing files are protected unless you explicitly pass `--overwrite`.
 
@@ -329,14 +329,37 @@ yautja "clip.mov" "targeted.mp4" --thermal cinematic --figures "figures.json" --
 
 The saved catalog belongs to the exact source file. Reuse it for different palettes, resolutions, frame rates, or trims; select additional shot IDs explicitly when a figure reappears after a cut. IDs are detected tracks, and detection can miss or swap figures during occlusion. Inspect the contact sheet and output. `targets_seen` and `targets_unseen` in the report confirm which selections appeared.
 
-| Assemble and flash · red/white | Abyss · steady cyan target + vertical CRT | Custom target colors |
+| Assemble and flash · red/white | Abyss · glowing cyan target + vertical CRT | Custom target colors |
 | --- | --- | --- |
-| [![Three blades assemble around a selected explorer and flash red and white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-lock.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-lock.gif) | [![Abyss with steady cyan target matching the HUD, vertical CRT lines, and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-abyss-steady.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-abyss-steady.gif) | [![Green palette with a custom teal and pale mint target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-custom.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-custom.gif) |
-| Default target animation | `--palette abyss --target-colors "#267085,#267085" --no-target-flash --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65` | `--palette green-phosphor --hud-theme palette --target-colors "#31d7bb,#d6fff3" --target-acquire 0.45 --crt-bleed 0.4` |
+| [![Three blades assemble around a selected explorer and flash red and white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-lock.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-lock.gif) | [![Abyss with a glowing cyan target and neon HUD, vertical CRT lines, and heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-abyss-steady.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-abyss-steady.gif) | [![Green palette with a custom teal and pale mint target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-custom.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-custom.gif) |
+| Default target animation | `--palette abyss --target-colors "#267085,#267085" --no-target-flash --neon --crt-vertical-lines --crt-strength 0.25 --heat-glow 0.65` | `--palette green-phosphor --hud-theme palette --target-colors "#31d7bb,#d6fff3" --target-acquire 0.45 --crt-bleed 0.4` |
 
 These target examples show seconds 0–3.25 of the source, selecting the foreground explorer separately in the first two shots. The triangle contracts into a compact marker at the figure's center, with solid-color sides and narrow, clear gaps at all three corners. It assembles in **0.8 seconds**, lands red, then flashes red/white at **1.5 cycles per second**. Set `--target-acquire`, `--target-scale`, and `--target-flash-rate` to change timing and size; scale 1 uses the compact reticle. `--no-target-flash` keeps the assembly and holds the primary color; equal primary/flash colors work too. White Hot uses white and Black Hot uses black for both target states unless colors are overridden. Stills display the assembled triangle immediately.
 
 Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or use the `target` and `target-flash` keys with custom HUD colors. Palette-matched and random HUD themes also color targets. `--no-hud` hides them along with every other overlay. [All target controls, bounds, scan details, and effect options](skills/yautja/references/targets.md).
+
+### Neon HUD
+
+Add **`--neon`** to illuminate waveform artwork, glyphs, timecode, callouts, leaders, markers, and selected targets. A bright core and two soft halos follow each element's color. Neon is off by default and works with every palette, for images and video.
+
+| Steady neon | Neon hum |
+| --- | --- |
+| [![Neon waveform, glyphs, callouts and LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-neon.gif) | [![The same neon HUD with gentle synchronized flicker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon-flicker.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-neon-flicker.gif) |
+| `--neon` | `--neon --neon-flicker 0.5` |
+
+These matched examples show seconds 0–3.25 with verbose callouts and timecode enabled. Click a preview for the large GIF. The Abyss target example above also uses neon: its muted `#267085` ink emits a brighter cyan halo.
+
+| Control | Meaning |
+| --- | --- |
+| `--neon` / `--no-neon` | Enable or disable the entire treatment; default off |
+| `--neon-intensity 1` | Brightness from 0–2; default 1. Zero keeps the original ink with no neon |
+| `--neon-spread 0.6` | Halo spread from 0–2; default 0.6. Lower values give a tighter rim |
+| `--neon-flicker 0.5` | Synchronized seeded hum from 0–1; default 0 is steady |
+| `--neon-elements "waveform=0.6,target=1.2,timecode=0"` | Independent intensity overrides; omitted elements inherit the shared value |
+
+Element names are the same as HUD blur below; `target` covers both flash states. Existing colors, outlines, blur and opacity still apply. Blur softens the core; opacity fades both core and halo. White Hot glows white, Black Hot diffuses black, and Virtual Boy retains its red-only display. `--heat-glow` remains independent. Neon replaces standard `--glow` bloom while enabled, and CRT/VHS effects run afterward. `--no-hud` hides all of it.
+
+Load or customize the bundled [Abyss Neon preset](skills/yautja/assets/presets/abyss-neon.json) with `--preset-file`. All five neon settings can be saved with `--save-preset`. Neon requires Yautja 2.5 or newer. [Full controls](skills/yautja/references/targets.md#neon-hud).
 
 ### Reticle stroke and HUD blur
 
@@ -374,7 +397,7 @@ Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-tick
 Install the `semantic` extra in the same environment, then explicitly download the pinned models once:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.2,<3"
+python -m pip install "yautja[semantic]>=2.5,<3"
 python -m yautja --download-models
 python -m yautja --doctor --thermal cinematic --device cuda
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
@@ -398,7 +421,7 @@ python -m tools.build_skill_bundle --install both
 
 Choose `--install claude`, `--install codex`, or `--install both`. Codex respects `CODEX_HOME`; Claude uses `~/.claude/skills/yautja`. Existing installs require `--replace`, which updates known skill files and removes obsolete bundled runtime files/wheels while keeping personal files and environments. New bundles contain instructions, references, the MIT license and one application wheel. Dependencies, FFmpeg, models and gallery media are separate. See the [complete offline wheelhouse procedure](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install).
 
-Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.2,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.2,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
+Use the original skill installer to update instructions. Upgrade the runtime in its original environment: `pipx runpip yautja install --upgrade "yautja>=2.5,<3"`, or that venv's `python -m pip install --upgrade "yautja>=2.5,<3"` (retain the semantic extra when used). Verify the compatible version and rerun doctor before converting; restart the agent session after updating the skill. Conversion never updates either component automatically. See the [changelog](https://github.com/petehottelet/yautja/blob/main/CHANGELOG.md) and [release instructions](https://github.com/petehottelet/yautja/blob/main/docs/PUBLISHING.md).
 
 ## Useful controls
 
@@ -427,6 +450,7 @@ Use the original skill installer to update instructions. Upgrade the runtime in 
 | `--hud-theme custom --hud-colors "waveform=#0f8,timecode=#fff"` | Assign colors to individual HUD elements |
 | `--random-colors` | Randomize both the thermal palette and HUD colors |
 | `--glow 0.4` | Restrain HUD bloom independently of sensor texture |
+| `--neon --neon-intensity 0.8` | Light all HUD elements with neon cores and halos; replaces standard bloom |
 | `--seed 123` | Reproducible colors, generated waveform, grain, and callout glyph combinations |
 
 Video output is H.264/AAC MP4, CRF 18, source aspect ratio and orientation, at most 1920 pixels on the longest edge, and source-average constant frame rate capped at 60 fps. Image output is RGB PNG. It handles local JPEG/PNG stills and FFmpeg-decodable videos; protected, corrupt, or unsupported media cannot be guaranteed. Colors are simulated and do not measure temperature.

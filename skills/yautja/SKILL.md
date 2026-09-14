@@ -1,17 +1,17 @@
 ---
 name: yautja
-description: Re-skin local images and videos with Yautja thermal-style silhouettes, cinematic heat patches, or detailed surface segmentation. Use for sci-fi palettes, shot-by-shot figure lists and animated targets, alien glyphs, Rorschach inkblot waveforms, adjustable heat glow, motion trails, grain, chunky pixels, horizontal or vertical CRT lines, and VHS styling. For entertainment only; colors are generated, not measured temperatures.
+description: Re-skin local images and videos with Yautja thermal-style silhouettes, cinematic heat patches, or detailed surface segmentation. Use for sci-fi palettes, shot-by-shot figure lists and animated targets, alien glyphs, Rorschach inkblot waveforms, adjustable heat glow, neon HUD illumination, motion trails, grain, chunky pixels, horizontal or vertical CRT lines, and VHS styling. For entertainment only; colors are generated, not measured temperatures.
 ---
 
 # Yautja
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.4.2,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.5.0,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.4.2,<3` for the four segmented looks, or `yautja>=2.4.2,<3` for Classic. A base pipx install does not include segmentation.
+Run `yautja --version`. If a compatible stable version is available, keep that installation. Otherwise read [runtime.md](references/runtime.md#install-one-runtime): use pipx if available, then a dedicated virtual environment outside the skill folder, then a user-site install only if supported. Install `yautja[semantic]>=2.5.0,<3` for the four segmented looks, or `yautja>=2.5.0,<3` for Classic. A base pipx install does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -105,6 +105,8 @@ the video soundtrack remain active. Waveform analysis is skipped. HUD is on by
 default; `--hud` restores it. This works for both images and videos.
 
 Use `--hud-blur 3` to soften HUD artwork, or `--hud-blur-elements "waveform=6,target=4,timecode=0"` to control elements independently. Each radius is 0–20; explicit 0 keeps an element sharp and omitted elements inherit `--hud-blur` (default 0). Target blur covers both flash states. Blur and target stroke widths use pixels at a 1080px short edge, scaled to the output. Blur is applied to the HUD layers before scene composition, independently of heat glow, HUD bloom, and whole-frame CRT/VHS effects. See [all element keys and examples](references/targets.md#reticle-stroke-and-independent-hud-blur).
+
+Use `--neon` for bright cores and colored halos on all HUD artwork, including text and targets. It is off by default. `--neon-intensity` (0–2, default 1), `--neon-spread` (0–2, default 0.6), and `--neon-flicker` (0–1, default 0) control brightness, reach, and seeded synchronized hum. `--neon-elements "waveform=0.6,target=1.2,timecode=0"` overrides intensity per element; 0 disables that element's neon and `target` covers both flash states. Existing blur softens the core and opacity fades core plus halo. Neon replaces standard HUD bloom while on; heat glow and final CRT/VHS remain independent. See [neon details](references/targets.md#neon-hud) and the [Abyss Neon preset](assets/presets/abyss-neon.json).
 
 For transparency, use `--hud-opacity 0.5` or independent overrides such as `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"`. Values are 0–1: 0 invisible, 1 full existing visibility (default). Omitted elements inherit the shared value. A `target` override also controls its flash and outline; use `target-flash` for a separate flash opacity. Blur, color, and opacity remain independent. See [all transparency controls](references/targets.md#hud-transparency). To match waveform, reticle, and timecode red, use `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`; custom alpha compositing avoids screen blending's pink shift over blue backgrounds.
 

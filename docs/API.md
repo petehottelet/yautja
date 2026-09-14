@@ -32,6 +32,14 @@ This low-level example does not perform the CLI's orientation, metadata, input/o
 
 `--list-presets` returns a JSON catalog without media or inference. `--save-preset PATH --preset-name NAME` exports current visual settings without conversion; `--preset-file PATH` loads schema-1 JSON presets for images or videos. File settings override an optional built-in base; explicit CLI choices override file settings. The schema permits visual options only, with strict JSON types and no source paths, selected figure IDs, actions, or machine settings. Reports add `preset_name`, `preset_kind`, and `preset_file`. [Preset schema, examples, and precedence](../skills/yautja/references/presets.md).
 
+## Neon illumination
+
+Yautja 2.5 adds renderer keywords `neon=False`, `neon_intensity=1.0`, `neon_spread=0.6`, `neon_flicker=0.0`, and `neon_elements=None`. The last value is a comma-separated `element=intensity` string. Intensity and spread accept finite 0–2 values; flicker accepts 0–1. Per-element intensity zero disables its entire neon treatment; target applies to both flash states. Invalid tuning fails even while neon is off. Geometry and default output are unchanged when neon is disabled.
+
+Requested values are preserved in conversion `settings`. Top-level reports contain effective `neon`, `neon_intensity`, `neon_spread`, `neon_flicker`, and the resolved per-element map as both `neon_elements` and `neon_intensities`. Effective values are false/zero when neon or HUD is disabled. `neon_flicker_seed_stream` is `sha256(seed:neon-flicker)` when enabled, otherwise null. Stills evaluate time zero; all HUD layers share one deterministic flicker gain per frame. No new runtime dependencies are required.
+
+All five options are portable visual preset keys. [Controls, interactions, and examples](../skills/yautja/references/targets.md#neon-hud).
+
 ## Figure catalog schema
 
 `--list-figures` writes a versioned catalog and adjacent HTML contact sheet. Pass its path with `--figures` and repeat or comma-separate `--target` IDs on subsequent conversions. See [the selection and effects reference](../skills/yautja/references/targets.md) for flags, bounds, defaults, and examples.

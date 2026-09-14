@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.0 — 2026-09-13
+
+- Add optional neon illumination for every HUD vector and text element, with bright cores, two colored halos, adjustable intensity/spread, synchronized seeded flicker, and per-element overrides. Preserve existing output when disabled; respect color, blur, opacity, target flash and final CRT/VHS controls. Black ink uses dark diffusion.
+- Add the portable Abyss Neon preset, update the steady Abyss target to glowing cyan, and publish matched steady/flickering neon GIFs in both sizes. Include all controls in preset saves, conversion reports, API documentation, and the agent skill (runtime 2.5+).
+- Crop reticle resampling to occupied artwork and composite emission without large float RGB buffers. A warmed 1080p CPU fixture measured 352.4 ms/frame with existing bloom and 279.6 ms/frame with neon, meeting the PRD's maximum 25% overhead target for that fixture. These figures exclude media I/O and segmentation and are not a general speed guarantee; see [method and scope](docs/performance-validation.md#neon-hud-250).
+
 ## 2.4.2 — 2026-09-13
 
 - Replace Vector Lock with Hollow Cross: four solid, square-cornered L bands outlining an open plus, with a hollow center and uncapped arm ends. Preserve target colors, acquisition, flash, outline, blur, and opacity controls; old `vector-lock` and `iron-sights` commands and saved presets resolve to the replacement.

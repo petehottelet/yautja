@@ -11,7 +11,7 @@ import tarfile
 import tempfile
 import zipfile
 
-from .build_skill_bundle import ROOT, manifest, project, wheel_path, write_archive
+from .build_skill_bundle import ROOT, FILES, manifest, project, wheel_path, write_archive
 
 
 def normalize_sdist(path, epoch):
@@ -45,6 +45,12 @@ def main(argv=None):
     wheel = wheel_path()
     sdist = dist / f"{meta['name'].replace('-', '_')}-{meta['version']}.tar.gz"
     normalize_sdist(sdist, epoch)
+    with tarfile.open(sdist) as archive:
+        members = set(archive.getnames())
+        prefix = f"{meta['name']}-{meta['version']}/skills/yautja/"
+        missing = [name for name in FILES if prefix + name not in members]
+        if missing:
+            raise ValueError('Source archive is missing skill resources: ' + ', '.join(missing))
     subprocess.run([sys.executable, '-m', 'twine', 'check', '--strict', str(wheel), str(sdist)], check=True)
     if wheel.stat().st_size >= 1_000_000:
         raise ValueError('Application wheel must be smaller than 1 MB')

@@ -11,6 +11,7 @@ from .looks import LOOK_PRESETS, PRESET_ALIASES, PRESET_LABELS, LEVEL_OPTIONS, n
 VISUAL_OPTIONS = (
     'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors',
     'hud', 'hud_blur', 'hud_blur_elements', 'hud_opacity', 'hud_opacity_elements',
+    'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements',
     'seed', 'grain', 'glow', 'sensor_texture', 'sensor_resolution', 'pixelation',
     'scanlines', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'crt_bleed', 'vhs', 'motion_blur',
     'heat_glow', 'heat_glow_speed', 'verbose', 'timecode', 'timecode_start',
@@ -18,7 +19,7 @@ VISUAL_OPTIONS = (
     'target_colors', 'target_shape', 'target_acquire', 'target_flash', 'target_flash_rate',
     'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS,
 )
-NULLABLE = {'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements',
+NULLABLE = {'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
             'grain', 'pixelation', 'scanlines', 'wave_width', 'wave_height', 'target_colors',
             'target_stroke_colors', 'thermal_levels', 'thermal_band_softness'}
 MAX_BYTES = 65536

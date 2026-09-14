@@ -1,5 +1,7 @@
 # Thermal and HUD colors
 
+`--neon` (2.5+) adds illumination without changing the selected palette or stored HUD colors: muted inks emit brighter halos of the same hue, thick cores approach white, and black ink uses dark diffusion. Existing color overrides still control each element and target flash state. [Neon controls and interactions](targets.md#neon-hud).
+
 These controls work with every thermal look, still images, and videos. They change
 color only; segmentation, glyph selection, waveform data, and timecode values stay
 the same. Omit them to keep the existing red/cyan HUD and original Yautja palette.

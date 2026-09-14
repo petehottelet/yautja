@@ -2,8 +2,9 @@ include pyproject.toml README.md LICENSE CHANGELOG.md
 recursive-include src/yautja *.py *.json
 recursive-include tools *.py
 recursive-include tests *.py
-recursive-include skills/yautja *.md *.yaml LICENSE
+recursive-include skills/yautja *.md *.yaml *.json LICENSE
 recursive-include docs *.md
+exclude docs/PRD-neon-hud.md
 prune assets
 prune outputs
 prune 00_project_files

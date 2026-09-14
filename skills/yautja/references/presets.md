@@ -63,6 +63,13 @@ Image and video conversions share the same preset loader. The existing media res
 
 For CRT patterns, use `"crt_grid": true` for horizontal/vertical lines or `"crt_crosshatch": true` for a grid at 45 degrees, with `"crt_strength": 0.25` to set their darkness. Both pattern keys require Yautja 2.4+ and can be explicitly disabled with `--no-crt-grid` or `--no-crt-crosshatch` when loading a preset.
 
+For neon HUD artwork in 2.5+, save `"neon": true` with optional `neon_intensity` (0–2, default 1), `neon_spread` (0–2, default 0.6), `neon_flicker` (0–1, default 0), and `neon_elements` (a comma-separated override string or null). `"neon_elements": "waveform=0.6,target=1.2,timecode=0"` keeps the timecode's original ink, lowers waveform emission, and increases target emission. Tuning without `neon: true` is saved but inactive. The included [Abyss Neon preset](../assets/presets/abyss-neon.json) uses a steady cyan target, full neon HUD, vertical CRT, and scene heat glow. Source-specific target selections still come from `--figures` and `--target` on the render command.
+
+```bash
+yautja "clip.mov" "abyss-neon.mp4" --preset-file "abyss-neon.json" --figures "figures.json" --target S001-F003
+yautja --preset-file "abyss-neon.json" --neon-spread 0.4 --save-preset "my-neon.json" --preset-name "My Neon"
+```
+
 Precedence is **CLI defaults → built-in base → file settings → explicit CLI options**. Choose either `--look-preset` or `--preset-file`; a file can declare its own built-in base. Explicit `--thermal-levels 0` clears inherited band softness. `--sensor-texture` enables the combined effect's normal defaults unless individual texture controls are also specified. Changing away from custom palette/HUD modes clears their inherited custom color strings; switching to `--wave-style trace` clears inherited Rorschach dimensions. Explicit conflicting options are still errors.
 
 Files are data only, limited to 64 KiB. Unknown fields/settings, duplicate keys, unsupported schema versions, invalid types, and invalid settings fail without rendering. Presets cannot contain commands, external imports, media paths, or actions. Use the supported 2.x CLI to validate them; the lower-level Python helpers remain experimental.
