@@ -10,7 +10,7 @@ WAVE_STYLES = ('trace', *RORSCHACH_STYLES, *DIGITAL_STYLES)
 
 
 def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, seed=42):
-    """Return a symmetrical shaded L mask; zero input always produces zero ink."""
+    """Return an inkblot or digital L mask; zero input produces zero ink."""
     if style in DIGITAL_STYLES:
         return digital_mask(width, height, signal, time, style=style, detail=detail, seed=seed)
     if style not in RORSCHACH_STYLES:
@@ -57,9 +57,11 @@ def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, s
 
 
 def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
-    """Three distinct pixel geometries; signal amplitude controls occupied width."""
+    """Audio controls block width or the height of three segmented LED columns."""
     if style not in DIGITAL_STYLES:
         raise ValueError('Choose a digital waveform style.')
+    if style == 'digital-circuit':
+        return vocoder_mask(width, height, signal, detail=detail)
     pixel = max(2, round(width / (14 + detail * 18)))
     columns = max(5, math.ceil(width / pixel))
     rows = max(2, math.ceil(height / pixel))
@@ -73,11 +75,9 @@ def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
     center, half = columns // 2, (columns - 1) // 2
     rng = np.random.default_rng((seed + int(time * 5) * 104729) & 0xffffffff)
     draw = ImageDraw.Draw(canvas)
-    previous = None
     for row in range(0, rows, 3):
         strength = float(drive[row:row + 3].max())
         if strength <= 0:
-            previous = None
             continue
         radius = max(1, round(half * strength))
         if style == 'digital-blocks':
@@ -98,19 +98,40 @@ def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
                                fill=int(rng.integers(175, 256)))
             if row % 12 == 3:
                 draw.rectangle((center - 1, row, center, row + 1), fill=255)
-        else:
-            # Stepped dual rails joined by rungs and chunky junction squares.
-            radius = max(2, radius)
-            for sign in (-1, 1):
-                x = center + sign * radius
-                draw.rectangle((x - 1, row, x, row + 2), fill=220)
-                if previous is not None:
-                    old = center + sign * previous
-                    draw.rectangle((min(x, old) - 1, row, max(x, old), row), fill=220)
-                if row % 12 == 0:
-                    draw.rectangle((x - 1, row, x + 1, row + 1), fill=255)
-            if row % 9 == 0:
-                draw.rectangle((center - radius, row + 1, center + radius, row + 1), fill=235)
-            previous = radius
     # Exact square raster cells; no bilinear smoothing or diagonal stair blur.
     return canvas.resize((columns * pixel, rows * pixel), Image.Resampling.NEAREST).crop((0, 0, width, height))
+
+
+def vocoder_mask(width, height, signal, *, detail=.6):
+    """Three LED stacks light outward from the middle, led by the center stack."""
+    mask = Image.new('L', (width, height))
+    values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
+    if not len(values) or not values.max():
+        return mask
+    # Different trailing windows give the flanking columns their own audio
+    # response. No random animation is added to a constant or silent signal.
+    levels = []
+    for fraction in (.55, .3, .8):
+        window = values[-max(1, round(len(values) * fraction)):]
+        energy = .65 * float(np.sqrt(np.mean(window ** 2))) + .35 * float(window.max())
+        levels.append(float(np.clip(energy * 6, 0, 1) ** .3))
+    levels = (levels[0] * .68, max(levels), levels[2] * .72)
+    segments = 2 * round(10 + detail * 6)
+    pitch = height / segments
+    bar_height = max(1, round(pitch * .65))
+    bar_width = max(1, round(width * .23))
+    gap = max(2, round(width * .1))
+    left = (width - (3 * bar_width + 2 * gap)) // 2
+    draw = ImageDraw.Draw(mask)
+    for col, level in enumerate(levels):
+        x = left + col * (bar_width + gap)
+        for row in range(segments):
+            distance = (abs(row - (segments - 1) / 2) + .5) / (segments / 2)
+            activation = float(np.clip((level - distance) * segments / 2 + 1, 0, 1))
+            if not activation:
+                continue
+            brightness = .65 + .35 * max(0., 1 - distance / max(level, 1e-8))
+            y = round((row + .5) * pitch - bar_height / 2)
+            draw.rectangle((x, y, x + bar_width - 1, y + bar_height - 1),
+                           fill=round(255 * activation * brightness))
+    return mask

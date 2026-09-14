@@ -45,11 +45,12 @@ class SignalTests(unittest.TestCase):
         self.assertEqual(glyph[62, 40], 0)
 
     def test_cli_cyber_choice_applies_everywhere_and_timecode_stays_numeric(self):
-        for order in (['--stylepreset', 'ghost-signal', '--HUDglyphs', 'yautja'],
-                      ['--HUDglyphs', 'yautja', '--stylepreset', 'ghost-signal']):
+        for order in (['--stylepreset', 'netrunner', '--HUDglyphs', 'yautja'],
+                      ['--HUDglyphs', 'yautja', '--stylepreset', 'netrunner']):
             self.assertEqual(parser().parse_args(order).hud_glyphs, 'yautja')
-        args = parser().parse_args(['--stylepreset', 'ghost-signal'])
+        args = parser().parse_args(['--stylepreset', 'netrunner'])
         self.assertEqual((args.hud_glyphs, args.preset_kind), ('cyber', 'look'))
+        self.assertEqual(parser().parse_args(['--stylepreset', 'ghost-signal']).look_preset, 'netrunner')
         renderers = [Renderer(320, 180, hud_glyphs=g) for g in ('yautja', 'cyber')]
         self.assertNotEqual(renderers[0].glyph(17, 20).tobytes(), renderers[1].glyph(17, 20).tobytes())
         np.testing.assert_array_equal(renderers[1].callout_glyph(17, 20), code_glyph(17, 20))
@@ -109,7 +110,7 @@ class SignalTests(unittest.TestCase):
         size = (640, 360)
         mask = np.zeros((360, 640), np.float32)
         mask[100:330, 270:370] = 1
-        options = dict(look_preset='ghost-signal', neon=False, glow=0, subject_code=False, subject_outline=False,
+        options = dict(look_preset='netrunner', neon=False, glow=0, subject_code=False, subject_outline=False,
                        hud_opacity=0, hud_opacity_elements='subject-labels=1,subject-carets=1')
         frame = Image.new('RGB', size)
         renderer = Renderer(*size, **options)
@@ -119,11 +120,20 @@ class SignalTests(unittest.TestCase):
         ty, tx = np.nonzero(cyan)
         cy, cx = np.nonzero(yellow)
         self.assertGreater(len(tx), 10)
-        self.assertGreater(len(cx), 5)
+        self.assertGreater(len(cx), 20)
         self.assertAlmostEqual((tx.min() + tx.max()) / 2, (cx.min() + cx.max()) / 2, delta=1.5)
-        self.assertGreaterEqual(100 - cy.max(), 7)
-        self.assertGreaterEqual(cy.min() - ty.max(), 5)
+        self.assertGreaterEqual(100 - cy.max(), 20)
+        self.assertGreaterEqual(cy.min() - ty.max(), 13)
         self.assertEqual(renderer.signal.subject_caret_scale, 1.35)
+
+        # Moving the same head toward the top crops the title, but preserves
+        # the caret and exactly the same spacing. It must not hide the stack.
+        moved = np.zeros_like(mask)
+        moved[44:274, 270:370] = 1
+        cropped = np.asarray(Renderer(*size, **options).render(
+            frame, 0, subjects=[Subject(moved, 'person', .9, track_id=1)]))
+        np.testing.assert_array_equal(cropped[:304], image[56:])
+        self.assertGreater(cropped[..., 1].sum(), 0)
 
     def test_outline_ignores_interior_segmentation_holes(self):
         subject = self.subject()
@@ -132,6 +142,7 @@ class SignalTests(unittest.TestCase):
         image = np.asarray(renderer.render(Image.new('RGB', self.size), 0, subjects=[subject]))
         self.assertEqual(image[80:120, 140:180].sum(), 0)
         self.assertGreater(image[50:80, 123:128].sum(), 0)
+        self.assertEqual(np.count_nonzero(image[60].max(axis=1)), 2)
 
     @unittest.skipUnless(importlib.util.find_spec('cv2'), 'Optional tracking runtime is not installed')
     def test_outline_refresh_corrects_flow_error_on_the_current_frame(self):
@@ -161,14 +172,14 @@ class SignalTests(unittest.TestCase):
 
     def test_subject_effects_hide_together_and_reset_when_track_disappears(self):
         source = Image.new('RGB', self.size, (70, 95, 80))
-        renderer = Renderer(*self.size, look_preset='ghost-signal')
+        renderer = Renderer(*self.size, look_preset='netrunner')
         renderer.render(source, 0, subjects=[self.subject()], shot_id=1)
         self.assertEqual(set(renderer.signal.anchors), {1})
         renderer.render(source, .1, subjects=[], shot_id=1)
         self.assertEqual(renderer.signal.anchors, {})
-        image = Renderer(*self.size, look_preset='ghost-signal', hud=False).render(source, 1, subjects=[self.subject()])
+        image = Renderer(*self.size, look_preset='netrunner', hud=False).render(source, 1, subjects=[self.subject()])
         np.testing.assert_array_equal(image, renderer.signal.grade(source))
-        silent = Renderer(*self.size, look_preset='ghost-signal', hud_opacity=0,
+        silent = Renderer(*self.size, look_preset='netrunner', hud_opacity=0,
                           hud_opacity_elements=','.join(k + '=0' for k in HUD_DEFAULTS))
         np.testing.assert_array_equal(silent.render(source, 1, subjects=[self.subject()]), renderer.signal.grade(source))
 
@@ -176,11 +187,12 @@ class SignalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = str(Path(folder) / 'cyber.json')
             with patch('sys.stdout', new_callable=io.StringIO), patch('yautja.cli.semantic_tracker') as models:
-                self.assertEqual(main(['--stylepreset', 'ghost-signal', '--code-speed', '2', '--save-preset', path]), 0)
+                self.assertEqual(main(['--stylepreset', 'netrunner', '--code-speed', '2', '--save-preset', path]), 0)
                 models.assert_not_called()
             args = parser().parse_args(['--preset-file', path])
             self.assertEqual((args.hud_glyphs, args.code_speed, args.subject_code), ('cyber', 2, True))
             self.assertEqual(args.neon_core_whiten, 0)
+            self.assertEqual((args.code_density, args.subject_head_gap, args.subject_title_gap), (.95, 60., 40.))
             # Exercise the exact CLI option mapping used by actual conversions.
             renderer = Renderer(*self.size, thermal=args.thermal,
                                 **{k: getattr(args, k) for k in EFFECT_OPTIONS})

@@ -17,28 +17,28 @@ LOOK_PRESETS = {'hottropic': {
     'hud': False, 'neon': False, 'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'seed': 42, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
     'crt_vertical_lines': False, 'crt_grid': False, 'crt_crosshatch': False,
-}, 'ghost-signal': {
+}, 'netrunner': {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#548568',
     'scene_tint_strength': .8, 'scene_exposure': .65, 'hud': True,
     'hud_glyphs': 'cyber', 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}=' + ('#FFC442' if key == 'subject-carets' else '#41E8EF' if key == 'subject-labels' else '#FD5550')
                            for key in HUD_DEFAULTS),
     'subject_outline': True, 'subject_code': True, 'subject_labels': True,
-    'subject_head_gap': 24., 'subject_title_gap': 18., 'subject_caret_scale': 1.35,
-    'code_size': 22., 'code_speed': 1., 'code_density': .65,
+    'subject_head_gap': 60., 'subject_title_gap': 40., 'subject_caret_scale': 1.35,
+    'code_size': 22., 'code_speed': 1., 'code_density': .95,
     'neon': True, 'neon_intensity': .35, 'neon_spread': .3, 'neon_core_whiten': 0.,
     'neon_elements': 'subject-code=0.2,subject-outline=0.3,subject-labels=0.25,subject-carets=0.2',
     'hud_opacity_elements': 'subject-code=0.8,waveform-axis=0.35,waveform-ticks=0.4',
     'verbose': False, 'timecode': True, 'target_flash': False, 'grain': 0., 'pixelation': 0,
     'sensor_texture': False, 'scanlines': False, 'heat_glow': 0.,
 }}
-COMPLETE_PRESETS = {'hottropic', 'ghost-signal'}
+COMPLETE_PRESETS = {'hottropic', 'netrunner'}
 PRESET_LABELS = {
     'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
     'redline': 'Redline', 'virtualboy': 'Virtual Boy', 'green-phosphor': 'Green Phosphor',
     'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
     'thermal-spectrum': 'Thermal Spectrum',
-    'ghost-signal': 'Ghost Signal',
+    'netrunner': 'Netrunner',
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}
                      for name in PRESET_LABELS if name not in COMPLETE_PRESETS})
@@ -48,6 +48,8 @@ LEVEL_OPTIONS = ('thermal_levels', 'thermal_band_softness', 'thermal_black_point
 
 def normalize_preset(name):
     name = name.strip().lower()
+    if name == 'ghost-signal':
+        name = 'netrunner'
     if name not in LOOK_PRESETS:
         raise ValueError('Unknown look preset: ' + str(name))
     return name

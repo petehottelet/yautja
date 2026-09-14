@@ -40,7 +40,7 @@ def variants():
     }.items():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
-        'look-ghost-signal': {'look_preset': 'ghost-signal'},
+        'look-netrunner': {'look_preset': 'netrunner'},
         'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')},
@@ -75,7 +75,9 @@ def variants():
                                     'target_colors': '#ff302b,#ff302b',
                                     'hud_opacity_elements': 'waveform=0.3,target=0.7,timecode=0.9'},
         **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
-                               'wave_width': .14, 'wave_height': 1.}
+                               'wave_width': .14, 'wave_height': 1.,
+                               **({'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1'}
+                                  if style == 'digital-circuit' else {})}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow', 'digital-blocks', 'digital-shards', 'digital-circuit')},
     })
     # Preserve the published image URLs while replacing the old sight geometry.

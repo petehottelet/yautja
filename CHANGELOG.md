@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.6.1 — 2026-09-14
+
+- Rename Ghost Signal to Netrunner (`--stylepreset netrunner`) and place its README example below the other presets. Existing `ghost-signal` commands and preset bases still resolve to Netrunner.
+- Thicken yellow carets, expand head/caret/title spacing, and crop annotations naturally at screen edges without moving them inward or hiding a visible caret when its title is offscreen.
+- Halve silhouette outline thickness and increase Netrunner code density from 65% to 95% of available columns. Refresh both animated preview sizes.
+- Replace the digital circuit ladder with three segmented vocoder columns inspired by KITT’s voice display: a taller center column, shorter flanking columns, and audio-driven illumination expanding from the middle. Refresh the waveform preview with neon on its bars only.
+
 ## 2.6.0 — 2026-09-13
 
 - Add the Ghost Signal style preset: green-tinted source scenery, warm-red neon HUD and silhouette outlines, upward-flowing code clipped to detected people/animals, and stable overhead glyph titles with yellow downward carets. Add source tint/exposure and independent subject overlay, code size/speed/density, color, blur, opacity, and neon controls.

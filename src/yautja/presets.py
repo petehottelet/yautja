@@ -31,8 +31,8 @@ def catalog():
         {'id': name, 'name': label, 'kind': 'look' if name in COMPLETE_PRESETS else 'palette',
          'description': ('Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.'
                          if name == 'hottropic' else 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.'
-                         if name == 'ghost-signal' else f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
-         'aliases': [],
+                         if name == 'netrunner' else f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
+         'aliases': ['ghost-signal'] if name == 'netrunner' else [],
          'settings': dict(LOOK_PRESETS[name])} for name, label in PRESET_LABELS.items()]}
 
 

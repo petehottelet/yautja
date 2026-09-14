@@ -186,15 +186,17 @@ class SignalStyle:
                 holes = ImageChops.invert(exterior.crop((1, 1, image.width + 1, image.height + 1)))
                 silhouette = ImageChops.lighter(binary, holes)
                 radius = max(1, round(2 * scale))
-                edge = ImageChops.subtract(silhouette.filter(ImageFilter.MaxFilter(radius * 2 + 1)),
-                                          silhouette.filter(ImageFilter.MinFilter(radius * 2 + 1)))
+                # A single inner edge is half the width of the previous
+                # two-sided gradient and stays inside the current silhouette.
+                edge = ImageChops.subtract(silhouette, silhouette.filter(ImageFilter.MinFilter(radius * 2 + 1)))
                 paste('subject-outline', edge)
             if self.subject_labels:
                 cell = max(8, round(30 * scale))
                 label_w = cell * 5
-                hx, hy = current[2], min(current[3], y0)
+                hx, hy = current[2], y0
                 span = max(3, round(10 * scale)) * self.subject_caret_scale
-                caret_y = round(hy - self.subject_head_gap * scale)
+                stroke = max(2, round(6 * scale * self.subject_caret_scale))
+                caret_y = round(hy - self.subject_head_gap * scale - stroke / 2)
                 title_tile = Image.new('L', (label_w, cell))
                 for i in range(5):
                     tile = renderer.code_mask(stable_number(renderer.seed, subject.track_id, 'title', i) % 192, cell)
@@ -203,20 +205,18 @@ class SignalStyle:
                 if ink_bounds is None:
                     continue
                 title_tile = title_tile.crop(ink_bounds)
-                label_x = round(np.clip(hx - title_tile.width / 2, 3, max(3, image.width - title_tile.width - 3)))
-                hx = label_x + (title_tile.width - 1) / 2
-                label_y = round(caret_y - span * .55 - self.subject_title_gap * scale - title_tile.height)
-                # Preserve stack spacing at the frame edge instead of pushing
-                # the title/caret down onto a head. Show it when space permits.
-                if label_y < 0:
-                    continue
+                label_x = round(hx - (title_tile.width - 1) / 2)
+                label_y = round(caret_y - span * .55 - stroke / 2 - self.subject_title_gap * scale - title_tile.height)
+                # Keep the same head/caret/title distances at frame edges.
+                # Pillow crops offscreen ink independently; an offscreen title
+                # must not hide its still-visible caret or shift the stack.
                 title = Image.new('L', image.size)
                 title.paste(title_tile, (label_x, label_y))
                 paste('subject-labels', title)
                 caret = Image.new('L', image.size)
                 ImageDraw.Draw(caret).line([(hx - span, caret_y - span * .55), (hx, caret_y),
                                            (hx + span, caret_y - span * .55)], fill=255,
-                                          width=max(1, round(3 * scale * self.subject_caret_scale)), joint='curve')
+                                          width=stroke, joint='curve')
                 paste('subject-carets', caret)
         self.anchors = active
         # Layers stay separate so opacity, blur, colors, and neon remain per element.

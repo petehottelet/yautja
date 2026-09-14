@@ -19,11 +19,15 @@ class DigitalWaveformsTests(unittest.TestCase):
                 self.assertIsNotNone(a.getbbox())
                 self.assertEqual(parser().parse_args(['--wave-style', style]).wave_style, style)
 
-    def test_pixel_geometries_are_distinct_and_stronger_audio_is_wider(self):
+    def test_pixel_geometries_are_distinct_and_stronger_audio_lights_more_area(self):
         masks = []
         for style in DIGITAL_STYLES:
             a = np.asarray(inkblot_mask(84, 360, np.ones(256) * .002, 1, style=style))
             b = np.asarray(inkblot_mask(84, 360, np.ones(256) * .2, 1, style=style))
+            if style == 'digital-circuit':
+                self.assertGreater(np.ptp(np.nonzero(b)[0]), np.ptp(np.nonzero(a)[0]))
+                masks.append(b)
+                continue
             self.assertGreater(np.ptp(np.nonzero(b)[1]), np.ptp(np.nonzero(a)[1]))
             # All visible transitions fall on the chosen square cell lattice.
             edges = np.nonzero(np.diff(b.astype(int), axis=1))[1] + 1
@@ -33,6 +37,20 @@ class DigitalWaveformsTests(unittest.TestCase):
         for i in range(3):
             for j in range(i + 1, 3):
                 self.assertGreater(np.count_nonzero(masks[i] != masks[j]), 1000)
+
+    def test_vocoder_has_three_separated_columns_and_a_taller_center(self):
+        mask = np.asarray(inkblot_mask(120, 540, np.full(256, .15), 0, style='digital-circuit'))
+        lit_columns = np.flatnonzero(mask.max(axis=0))
+        groups = np.split(lit_columns, np.flatnonzero(np.diff(lit_columns) > 1) + 1)
+        self.assertEqual(len(groups), 3)
+        heights = []
+        for group in groups:
+            lit_rows = np.flatnonzero(mask[:, group].max(axis=1))
+            heights.append(np.ptp(lit_rows))
+            self.assertGreater(np.count_nonzero(np.diff(lit_rows) > 1), 5)
+            self.assertAlmostEqual((lit_rows.min() + lit_rows.max()) / 2, 270, delta=1)
+        self.assertGreater(heights[1], max(heights[0], heights[2]))
+        np.testing.assert_array_equal(mask, inkblot_mask(120, 540, np.full(256, .15), 5, style='digital-circuit'))
 
     def test_new_styles_keep_other_hud_pixels_and_work_with_opacity_neon(self):
         field = np.full((270, 480), 100, np.uint8)
