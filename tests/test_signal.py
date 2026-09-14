@@ -122,17 +122,18 @@ class SignalTests(unittest.TestCase):
         self.assertGreater(len(tx), 10)
         self.assertGreater(len(cx), 20)
         self.assertAlmostEqual((tx.min() + tx.max()) / 2, (cx.min() + cx.max()) / 2, delta=1.5)
-        self.assertGreaterEqual(100 - cy.max(), 20)
-        self.assertGreaterEqual(cy.min() - ty.max(), 13)
+        self.assertAlmostEqual(100 - cy.max(), 10, delta=1)
+        # Stroke rasterization and the last glyph pixel add up to two pixels.
+        self.assertAlmostEqual(cy.min() - ty.max(), 7, delta=2)
         self.assertEqual(renderer.signal.subject_caret_scale, 1.35)
 
         # Moving the same head toward the top crops the title, but preserves
         # the caret and exactly the same spacing. It must not hide the stack.
         moved = np.zeros_like(mask)
-        moved[44:274, 270:370] = 1
+        moved[24:254, 270:370] = 1
         cropped = np.asarray(Renderer(*size, **options).render(
             frame, 0, subjects=[Subject(moved, 'person', .9, track_id=1)]))
-        np.testing.assert_array_equal(cropped[:304], image[56:])
+        np.testing.assert_array_equal(cropped[:284], image[76:])
         self.assertGreater(cropped[..., 1].sum(), 0)
 
     def test_outline_ignores_interior_segmentation_holes(self):
@@ -192,7 +193,7 @@ class SignalTests(unittest.TestCase):
             args = parser().parse_args(['--preset-file', path])
             self.assertEqual((args.hud_glyphs, args.code_speed, args.subject_code), ('cyber', 2, True))
             self.assertEqual(args.neon_core_whiten, 0)
-            self.assertEqual((args.code_density, args.subject_head_gap, args.subject_title_gap), (.95, 60., 40.))
+            self.assertEqual((args.code_density, args.subject_head_gap, args.subject_title_gap), (.95, 30., 20.))
             # Exercise the exact CLI option mapping used by actual conversions.
             renderer = Renderer(*self.size, thermal=args.thermal,
                                 **{k: getattr(args, k) for k in EFFECT_OPTIONS})

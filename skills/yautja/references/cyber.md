@@ -1,6 +1,6 @@
 # Cyber glyphs and Netrunner
 
-Requires Yautja 2.6.1+. **Netrunner** is a complete style preset. **Cyber** is a selectable glyph set within that preset. The controls also work independently with other presets.
+Requires Yautja 2.6.2+. **Netrunner** is a complete style preset. **Cyber** is a selectable glyph set within that preset. The controls also work independently with other presets.
 
 ```bash
 yautja "clip.mov" "signal.mp4" --stylepreset netrunner
@@ -18,7 +18,7 @@ Titles are decorative glyph sequences derived from the seed and track ID. They d
 
 ## Complete preset recipe
 
-Netrunner uses source scene mode with tint `#548568`, tint strength `0.8`, exposure `0.65`, Low Detail segmentation, and Cyber glyphs. HUD ink is warm red `#FD5550`, subject titles are cyan `#41E8EF`, and carets are yellow `#FFC442`. All three subject overlays and timecode are on; side callouts and sensor textures are off. Code size is `22`, speed `1`, and density `0.95`. Caret size is `1.35` (35% larger); head clearance is `60` and title clearance is `40` reference pixels. Titles are centered by their visible artwork above the caret, maintaining the same vertical spacing. The caret stroke is twice as thick as in 2.6.0, while the red silhouette contour is half as thick. Clearance is measured from the visible strokes. Titles and carets crop independently at screen edges; they are never shifted inward or hidden as a group to fit the frame.
+Netrunner uses source scene mode with tint `#548568`, tint strength `0.8`, exposure `0.65`, Low Detail segmentation, and Cyber glyphs. HUD ink is warm red `#FD5550`, subject titles are cyan `#41E8EF`, and carets are yellow `#FFC442`. All three subject overlays and timecode are on; side callouts and sensor textures are off. Code size is `22`, speed `1`, and density `0.95`. Caret size is `1.35` (35% larger); head clearance is `30` and title clearance is `20` reference pixels, half the 2.6.1 gaps. Titles are centered by their visible artwork above the caret, maintaining the same vertical spacing. The caret stroke is twice as thick as in 2.6.0, while the red silhouette contour is half as thick. Clearance is measured from the visible strokes. Titles and carets crop independently at screen edges; they are never shifted inward or hidden as a group to fit the frame.
 
 Neon intensity is `0.35`, spread `0.3`, and core whitening `0`, which preserves the red ink. Element intensity overrides are `subject-code=0.2,subject-outline=0.3,subject-labels=0.25,subject-carets=0.2`. Opacity overrides are `subject-code=0.8,waveform-axis=0.35,waveform-ticks=0.4`. Other controls use their standard defaults. `yautja --list-presets` returns the machine-readable recipe.
 

@@ -57,7 +57,7 @@ def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, s
 
 
 def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
-    """Audio controls block width or the height of three segmented LED columns."""
+    """Audio controls the width of pixel blocks or horizontal LED bars."""
     if style not in DIGITAL_STYLES:
         raise ValueError('Choose a digital waveform style.')
     if style == 'digital-circuit':
@@ -103,35 +103,27 @@ def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
 
 
 def vocoder_mask(width, height, signal, *, detail=.6):
-    """Three LED stacks light outward from the middle, led by the center stack."""
+    """One full-height stack of horizontal LED bars follows local audio energy."""
     mask = Image.new('L', (width, height))
     values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
     if not len(values) or not values.max():
         return mask
-    # Different trailing windows give the flanking columns their own audio
-    # response. No random animation is added to a constant or silent signal.
-    levels = []
-    for fraction in (.55, .3, .8):
-        window = values[-max(1, round(len(values) * fraction)):]
-        energy = .65 * float(np.sqrt(np.mean(window ** 2))) + .35 * float(window.max())
-        levels.append(float(np.clip(energy * 6, 0, 1) ** .3))
-    levels = (levels[0] * .68, max(levels), levels[2] * .72)
-    segments = 2 * round(10 + detail * 6)
+    # Lay the trailing audio window down the entire stack. Each row responds
+    # independently; constant audio stays steady and silent bins stay dark.
+    segments = min(max(1, height // 3), 2 * round(16 + detail * 10))
+    bins = np.linspace(0, len(values), segments + 1)
     pitch = height / segments
-    bar_height = max(1, round(pitch * .65))
-    bar_width = max(1, round(width * .23))
-    gap = max(2, round(width * .1))
-    left = (width - (3 * bar_width + 2 * gap)) // 2
+    bar_height = max(1, round(pitch * .6))
     draw = ImageDraw.Draw(mask)
-    for col, level in enumerate(levels):
-        x = left + col * (bar_width + gap)
-        for row in range(segments):
-            distance = (abs(row - (segments - 1) / 2) + .5) / (segments / 2)
-            activation = float(np.clip((level - distance) * segments / 2 + 1, 0, 1))
-            if not activation:
-                continue
-            brightness = .65 + .35 * max(0., 1 - distance / max(level, 1e-8))
-            y = round((row + .5) * pitch - bar_height / 2)
-            draw.rectangle((x, y, x + bar_width - 1, y + bar_height - 1),
-                           fill=round(255 * activation * brightness))
+    for row, (lo, hi) in enumerate(zip(bins, bins[1:])):
+        window = values[int(lo):max(int(lo) + 1, math.ceil(hi))]
+        energy = .65 * float(np.sqrt(np.mean(window ** 2))) + .35 * float(window.max())
+        strength = float(np.clip(energy * 6, 0, 1) ** .3)
+        if not strength:
+            continue
+        bar_width = max(1, round(width * strength))
+        x = (width - bar_width) // 2
+        y = round((row + .5) * pitch - bar_height / 2)
+        draw.rectangle((x, y, x + bar_width - 1, y + bar_height - 1),
+                       fill=round(255 * (.6 + .4 * strength)))
     return mask

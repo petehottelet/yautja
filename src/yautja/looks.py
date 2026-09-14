@@ -24,7 +24,7 @@ LOOK_PRESETS = {'hottropic': {
     'hud_colors': ','.join(f'{key}=' + ('#FFC442' if key == 'subject-carets' else '#41E8EF' if key == 'subject-labels' else '#FD5550')
                            for key in HUD_DEFAULTS),
     'subject_outline': True, 'subject_code': True, 'subject_labels': True,
-    'subject_head_gap': 60., 'subject_title_gap': 40., 'subject_caret_scale': 1.35,
+    'subject_head_gap': 30., 'subject_title_gap': 20., 'subject_caret_scale': 1.35,
     'code_size': 22., 'code_speed': 1., 'code_density': .95,
     'neon': True, 'neon_intensity': .35, 'neon_spread': .3, 'neon_core_whiten': 0.,
     'neon_elements': 'subject-code=0.2,subject-outline=0.3,subject-labels=0.25,subject-carets=0.2',

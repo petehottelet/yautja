@@ -171,7 +171,7 @@ For a wide, mirrored inkblot column in place of the thin trace, select a Rorscha
 | `--wave-style rorschach-hollow` | Mirrored rings and lobes with dark interior pockets |
 | `--wave-style digital-blocks` | Bitcrush Blocks: broad pixel slabs with square cutouts (2.6.0+) |
 | `--wave-style digital-shards` | Packet Shards: detached, unequal pixel packets displaced around the axis (2.6.0+) |
-| `--wave-style digital-circuit` | Vocoder Bars: three segmented LED columns lighting outward from the middle; taller center, shorter sides (2.6.1+) |
+| `--wave-style digital-circuit` | Vocoder Bars: horizontal LED rows in one vertical stack, with audio-driven width and brightness (2.6.2+) |
 | `--wave-width 0.14` | Maximum styled waveform width as a frame fraction, 0.02–0.3; default 0.12 |
 | `--wave-height 1` | Styled waveform height as a frame fraction, 0.1–1; default 0.96, vertically centered |
 | `--wave-detail 0.6` | Detail, 0–1; 0 is broad/smooth, higher values strengthen audio-driven edge spikes and lobe complexity |
@@ -182,8 +182,8 @@ yautja "clip.mov" "inkblot.mp4" --thermal cinematic --palette redline --wave-sty
 
 The Rorschach transform mirrors, smooths, and compresses waveform energy so quiet ambience remains visible, shapes it into slowly drifting lobes, and optionally cuts gaps or interior pockets. Audio level controls the occupied width within the specified maximum. `--wave-gain` changes audio response and `--wave-window` changes its trailing time window. Silence inside an audible track stays empty. The existing `--waveform auto` fallback still uses a procedural signal for a wholly silent or missing track; `--waveform audio` keeps actual silence. `--waveform procedural` forces generated motion. The decorative contours are a stylized transformation, not a literal audio measurement.
 
-Blocks and Shards quantize audio energy onto square pixel cells. Lower `--wave-detail` makes larger blocks, while higher values increase pixel density. Width, height, audio controls, HUD color, blur, opacity, and neon apply to all six styled waveforms. Digital silence is empty. Stronger audio widens Blocks/Shards or lights more segments in Vocoder Bars. Packet Shards also rearranges packets in seeded time steps.
+Blocks and Shards quantize audio energy onto square pixel cells. Lower `--wave-detail` makes larger blocks, while higher values increase pixel density. Width, height, audio controls, HUD color, blur, opacity, and neon apply to all six styled waveforms. Digital silence is empty. Stronger audio widens all three styles; Vocoder Bars also brighten. Packet Shards also rearranges packets in seeded time steps.
 
 Stills show the time-zero procedural shape. `--no-hud` hides it entirely. `--glow` adjusts its HUD bloom; `--crt-bleed` softens it horizontally, and `--motion-blur` leaves video trails. Higher width/detail can occupy more of the scene, so inspect the result at the intended resolution. Width and height overrides require a non-trace style. Reports include effective `wave_style`, `wave_width`, `wave_height`, and `wave_detail`, alongside requested settings.
 
-Vocoder Bars keep their three column widths fixed. Audio controls how many bars light above and below the center, with different trailing windows for the sides and center. `--wave-detail` controls segment count; silence produces no lit bars. Use `--neon --neon-intensity 0 --neon-elements "waveform=1"` for bright cores and halos on the waveform alone.
+Vocoder Bars use one vertical stack of horizontal rows. Use `--wave-width 0.07 --wave-height 1` to match the narrow, full-height gallery example. Row positions stay fixed while local audio energy controls each bar’s width and brightness. `--wave-detail` controls row count; silent portions leave dark rows, and complete silence produces no lit bars. Use `--neon --neon-intensity 0 --neon-elements "waveform=1"` for bright cores and halos on the waveform alone.

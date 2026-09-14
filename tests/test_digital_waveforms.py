@@ -24,11 +24,11 @@ class DigitalWaveformsTests(unittest.TestCase):
         for style in DIGITAL_STYLES:
             a = np.asarray(inkblot_mask(84, 360, np.ones(256) * .002, 1, style=style))
             b = np.asarray(inkblot_mask(84, 360, np.ones(256) * .2, 1, style=style))
+            self.assertGreater(np.ptp(np.nonzero(b)[1]), np.ptp(np.nonzero(a)[1]))
             if style == 'digital-circuit':
-                self.assertGreater(np.ptp(np.nonzero(b)[0]), np.ptp(np.nonzero(a)[0]))
+                self.assertEqual(np.ptp(np.nonzero(b)[0]), np.ptp(np.nonzero(a)[0]))
                 masks.append(b)
                 continue
-            self.assertGreater(np.ptp(np.nonzero(b)[1]), np.ptp(np.nonzero(a)[1]))
             # All visible transitions fall on the chosen square cell lattice.
             edges = np.nonzero(np.diff(b.astype(int), axis=1))[1] + 1
             pixel = max(2, round(84 / (14 + .6 * 18)))
@@ -38,19 +38,30 @@ class DigitalWaveformsTests(unittest.TestCase):
             for j in range(i + 1, 3):
                 self.assertGreater(np.count_nonzero(masks[i] != masks[j]), 1000)
 
-    def test_vocoder_has_three_separated_columns_and_a_taller_center(self):
-        mask = np.asarray(inkblot_mask(120, 540, np.full(256, .15), 0, style='digital-circuit'))
-        lit_columns = np.flatnonzero(mask.max(axis=0))
-        groups = np.split(lit_columns, np.flatnonzero(np.diff(lit_columns) > 1) + 1)
-        self.assertEqual(len(groups), 3)
-        heights = []
+    def test_vocoder_has_one_full_height_stack_of_horizontal_bars(self):
+        mask = np.asarray(inkblot_mask(67, 540, np.full(256, .15), 0, style='digital-circuit'))
+        lit_rows = np.flatnonzero(mask.max(axis=1))
+        groups = np.split(lit_rows, np.flatnonzero(np.diff(lit_rows) > 1) + 1)
+        self.assertGreater(len(groups), 30)
+        self.assertLess(lit_rows.min(), 10)
+        self.assertGreater(lit_rows.max(), 530)
         for group in groups:
-            lit_rows = np.flatnonzero(mask[:, group].max(axis=1))
-            heights.append(np.ptp(lit_rows))
-            self.assertGreater(np.count_nonzero(np.diff(lit_rows) > 1), 5)
-            self.assertAlmostEqual((lit_rows.min() + lit_rows.max()) / 2, 270, delta=1)
-        self.assertGreater(heights[1], max(heights[0], heights[2]))
-        np.testing.assert_array_equal(mask, inkblot_mask(120, 540, np.full(256, .15), 5, style='digital-circuit'))
+            lit_columns = np.flatnonzero(mask[group].max(axis=0))
+            self.assertTrue(np.all(np.diff(lit_columns) == 1))
+            self.assertGreater(len(lit_columns), len(group) * 4)
+            self.assertAlmostEqual((lit_columns.min() + lit_columns.max()) / 2, 33, delta=.5)
+        np.testing.assert_array_equal(mask, inkblot_mask(67, 540, np.full(256, .15), 5, style='digital-circuit'))
+
+    def test_vocoder_rows_follow_local_audio_and_detail_changes_row_count(self):
+        signal = np.repeat([.2, 0, .002], 100)
+        mask = np.asarray(inkblot_mask(67, 540, signal, 0, style='digital-circuit'))
+        self.assertFalse(mask[200:340].any())
+        self.assertGreater(np.count_nonzero(mask[:160].max(axis=0)),
+                           np.count_nonzero(mask[380:].max(axis=0)))
+        coarse = np.asarray(inkblot_mask(67, 540, np.ones(256), 0, style='digital-circuit', detail=0))
+        fine = np.asarray(inkblot_mask(67, 540, np.ones(256), 0, style='digital-circuit', detail=1))
+        self.assertGreater(np.count_nonzero(np.diff(fine.max(axis=1).astype(bool))),
+                           np.count_nonzero(np.diff(coarse.max(axis=1).astype(bool))))
 
     def test_new_styles_keep_other_hud_pixels_and_work_with_opacity_neon(self):
         field = np.full((270, 480), 100, np.uint8)

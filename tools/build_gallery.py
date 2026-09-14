@@ -76,7 +76,7 @@ def variants():
                                     'hud_opacity_elements': 'waveform=0.3,target=0.7,timecode=0.9'},
         **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
                                'wave_width': .14, 'wave_height': 1.,
-                               **({'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1'}
+                               **({'wave_width': .07, 'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1'}
                                   if style == 'digital-circuit' else {})}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow', 'digital-blocks', 'digital-shards', 'digital-circuit')},
     })

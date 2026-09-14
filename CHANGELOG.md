@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.2 — 2026-09-14
+
+- Arrange Vocoder Bars as horizontal LED rows in one narrow vertical stack spanning the left edge. Local audio controls each row’s width and brightness; silent portions stay dark. Refresh both neon preview sizes.
+- Halve Netrunner’s head-to-caret and caret-to-title gaps to 30/20 reference pixels while preserving caret thickness, cyan titles, and independent cropping at frame edges. Refresh both preview sizes.
+
 ## 2.6.1 — 2026-09-14
 
 - Rename Ghost Signal to Netrunner (`--stylepreset netrunner`) and place its README example below the other presets. Existing `ghost-signal` commands and preset bases still resolve to Netrunner.
