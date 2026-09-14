@@ -52,6 +52,7 @@ def variants():
         'glow-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette', 'heat_glow': .75},
         'target-lock': {'thermal': 'cinematic'},
         'target-abyss-steady': {'thermal': 'cinematic', 'palette': 'abyss', 'target_flash': False,
+                              'target_colors': '#267085,#267085',
                               'crt_vertical_lines': True, 'crt_strength': .25, 'heat_glow': .65},
         'target-custom': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette',
                           'target_colors': '#31d7bb,#d6fff3', 'target_acquire': .45, 'crt_bleed': .4},
