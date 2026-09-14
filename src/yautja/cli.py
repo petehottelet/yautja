@@ -24,7 +24,7 @@ from .hud import BLUR_ELEMENTS, OPACITY_ELEMENTS, hud_blurs, hud_opacities
 from .neon import NeonStyle
 from .thermal import THERMAL_MODES, resolve_thermal
 from .waveform import WAVE_STYLES
-from .looks import (LOOK_PRESETS, PRESET_LABELS, PRESET_ALIASES, LEVEL_OPTIONS,
+from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS,
                     ThermalTransfer, resolve_look, merge_look, normalize_preset)
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES, resolve_target_shape
@@ -523,9 +523,8 @@ class LookParser(argparse.ArgumentParser):
                 result.preset_name, result.preset_kind = data['name'], 'custom'
             elif result.look_preset:
                 vars(result).update(resolve_look(result.look_preset, overrides))
-                canonical = PRESET_ALIASES.get(result.look_preset, result.look_preset)
-                result.preset_name = PRESET_LABELS[canonical]
-                result.preset_kind = 'look' if canonical == 'hottropic' else 'palette'
+                result.preset_name = PRESET_LABELS[result.look_preset]
+                result.preset_kind = 'look' if result.look_preset == 'hottropic' else 'palette'
         except (ValueError, OSError) as exc:
             self.error(str(exc))
         return result

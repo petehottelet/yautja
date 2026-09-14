@@ -15,7 +15,7 @@ from yautja.render import Renderer
 from yautja.semantic import Subject, SurfacePart
 from yautja.thermal import HeatField, LowDetailHeatField, SurfaceHeatField, VeryDetailedHeatField
 
-NAME = 'thermal-spectrum-reference-v1'
+NAME = 'hottropic'
 
 
 class LevelTests(unittest.TestCase):

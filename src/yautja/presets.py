@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from .looks import LOOK_PRESETS, PRESET_ALIASES, PRESET_LABELS, LEVEL_OPTIONS, normalize_preset
+from .looks import LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, normalize_preset
 
 VISUAL_OPTIONS = (
     'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors',
@@ -30,7 +30,7 @@ def catalog():
         {'id': name, 'name': label, 'kind': 'look' if name == 'hottropic' else 'palette',
          'description': ('Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.'
                          if name == 'hottropic' else f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
-         'aliases': [alias for alias, canonical in PRESET_ALIASES.items() if canonical == name],
+         'aliases': [],
          'settings': dict(LOOK_PRESETS[name])} for name, label in PRESET_LABELS.items()]}
 
 

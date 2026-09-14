@@ -26,8 +26,6 @@ PRESET_LABELS = {
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}
                      for name in PRESET_LABELS if name != 'hottropic'})
-PRESET_ALIASES = {'thermal-spectrum-reference-v1': 'hottropic'}
-LOOK_PRESETS.update({alias: dict(LOOK_PRESETS[name]) for alias, name in PRESET_ALIASES.items()})
 LEVEL_OPTIONS = ('thermal_levels', 'thermal_band_softness', 'thermal_black_point',
                  'thermal_white_point', 'thermal_gamma', 'thermal_softness')
 

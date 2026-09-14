@@ -12,7 +12,7 @@ yautja "clip.mov" "green.mp4" --look-preset green-phosphor
 
 `--list-presets` prints JSON containing IDs, display names, kinds, settings, and aliases. It needs no media, FFmpeg, or segmentation models. Names are case-insensitive.
 
-**HotTropic** uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture. Its exact recipe is unchanged from `thermal-spectrum-reference-v1`, which remains a supported alias. See [colors.md](colors.md#thermal-levels-and-reference-preset) for the fixed palette positions and grading values.
+**HotTropic** uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture. See [colors.md](colors.md#thermal-levels-and-reference-preset) for the fixed palette positions and grading values.
 
 Every existing palette also has a starter preset: `yautja`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, and `thermal-spectrum`. Each selects that palette with Cinematic detail; other settings use the normal defaults. HUD colors follow the existing palette behavior, including white for White Hot, black for Black Hot, and muted cyan for Abyss. Add `--hud-theme palette` for coordinated HUD colors on other palettes.
 

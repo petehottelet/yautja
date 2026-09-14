@@ -122,7 +122,7 @@ Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--th
 
 ### Create your own presets
 
-A **preset** saves a combination of colors, thermal detail, levels, HUD styling, and effects. A **palette** is the color ramp inside it. Every existing palette now has a Cinematic starter preset, and HotTropic is a complete look. The old `thermal-spectrum-reference-v1` name still works.
+A **preset** saves a combination of colors, thermal detail, levels, HUD styling, and effects. A **palette** is the color ramp inside it. Every existing palette now has a Cinematic starter preset, and HotTropic is a complete look.
 
 List the built-ins, customize one, and save your version:
 

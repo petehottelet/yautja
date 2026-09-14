@@ -23,7 +23,7 @@ class PresetTests(unittest.TestCase):
             self.assertEqual(main([str(flag) for flag in flags]), 0)
         return json.loads(stdout.getvalue())
 
-    def test_catalog_covers_every_palette_and_hottropic_preserves_reference_pixels(self):
+    def test_catalog_covers_every_palette_and_hottropic(self):
         with patch('yautja.cli.semantic_tracker') as models, patch('yautja.cli.convert') as convert:
             report = self.invoke(['--list-presets'])
             models.assert_not_called()
@@ -35,10 +35,20 @@ class PresetTests(unittest.TestCase):
             self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'palette'))
         self.assertEqual(presets['hottropic']['name'], 'HotTropic')
         self.assertEqual(parser().parse_args(['--look-preset', 'HotTropic']).look_preset, 'hottropic')
-        field = np.tile(np.arange(256, dtype=np.uint8), (180, 1))
-        a, b = [Renderer(256, 180, look_preset=name).render_field(field, 0)
-                for name in ('hottropic', 'thermal-spectrum-reference-v1')]
-        np.testing.assert_array_equal(a, b)
+        self.assertEqual(presets['hottropic']['aliases'], [])
+
+    def test_removed_reference_name_is_rejected_by_cli_api_and_preset_base(self):
+        removed = 'thermal-spectrum-reference-v1'
+        with patch('sys.stderr', new_callable=io.StringIO), self.assertRaises(SystemExit) as result:
+            parser().parse_args(['--look-preset', removed])
+        self.assertEqual(result.exception.code, 2)
+        with self.assertRaisesRegex(ValueError, 'Unknown look preset'):
+            Renderer(320, 180, look_preset=removed)
+        with tempfile.TemporaryDirectory() as folder:
+            preset = Path(folder) / 'old.json'
+            preset.write_text(json.dumps({'schema_version': 1, 'name': 'Old base', 'base': removed, 'settings': {}}), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Unknown look preset'):
+                load_preset(preset)
 
     def test_save_load_matches_images_including_custom_colors_and_effects(self):
         with tempfile.TemporaryDirectory() as folder:

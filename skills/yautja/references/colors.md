@@ -103,7 +103,7 @@ missing custom values, and conflicting color options fail before media processin
 or model setup.
 ## Thermal levels and reference preset
 
-In Yautja 2.3+, `--look-preset hottropic` applies **HotTropic**. Its recipe is unchanged from Yautja 2.2’s `thermal-spectrum-reference-v1`, which remains a supported alias. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
+`--look-preset hottropic` applies **HotTropic**. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
 
 | Position | RGB |
 | --- | --- |

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.1 — 2026-09-13
+
+- Remove the old `thermal-spectrum-reference-v1` preset alias. Use `--look-preset hottropic` or `"base": "hottropic"` in a preset file. Keep HotTropic's appearance unchanged and remove the compatibility wording from current documentation.
+
 ## 2.5.0 — 2026-09-13
 
 - Add optional neon illumination for every HUD vector and text element, with bright cores, two colored halos, adjustable intensity/spread, synchronized seeded flicker, and per-element overrides. Preserve existing output when disabled; respect color, blur, opacity, target flash and final CRT/VHS controls. Black ink uses dark diffusion.
