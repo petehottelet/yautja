@@ -40,6 +40,8 @@ The experimental renderer uses `targets=None` to permit automatic segmented targ
 
 Fremont now selects `hud_font="orbitron-bold"` and `analysis_outline_width=5` (0.5–12 reference pixels, default 2.4). These are ordinary saved visual settings. Readable font selection also applies to analysis and captions when the glyph set remains Yautja or Cyber. `--no-target-label` clears an inherited caption.
 
+Murphy selects `hud_font="michroma-medium"`, a synthesized medium treatment of the unmodified Michroma Regular font. It applies to captions, Tech glyphs and analysis text and reports `hud_font_weight="Medium (synthetic)"`. A custom `hud_font_file` retains its native weight and takes precedence over this treatment.
+
 ## Fremont analysis
 
 `--stylepreset fremont` combines a detailed red/burgundy source scene with white readable analysis text, a moving XY grid and blinking subject outlines. It requires segmented setup, automatically selects visible subjects, and needs no figure catalog. The JSON/experimental Python keys are `analysis` (bool), `analysis_speed` (0–5), `analysis_blink_rate` (0–4), `analysis_margin` (0.01–0.15), and `scene_highlights` (0–1). All are visual preset settings. The HUD maps add `analysis-grid`, `analysis-text`, and `analysis-outline`.

@@ -2,6 +2,7 @@
 
 ## 2.12.1
 
+- Use Michroma with a synthesized medium weight for Murphy. Add the portable `michroma-medium` HUD font choice for captions, Tech glyphs and analysis, with accurate weight reporting and unchanged bundled font files.
 - Apply the shared filled/stroked control to Fremont's scan disk, with a clear interior and complete outer/inner circles in stroked mode. Show its red outlined variant and default translucent fill on neutral contact-sheet backgrounds.
 - Separate Focus/Relic's neon-purple HUD and glyphs from their blue grid and matching waveform. Make holographic outlines 25% thinner and bluer; give Relic's body-centered light streams and triangles a distinct violet-leaning neon pink glow matched to the reference.
 - Center Relic's effect on the body core using shoulder/hip joints with a mask fallback, and replace its readable code with soft rising light filaments. Add portable [`--code-style`](skills/yautja/references/options.md#code-style) (`glyphs` or `light`); Netrunner retains glyphs and Focus keeps the effect off.

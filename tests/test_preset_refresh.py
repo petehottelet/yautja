@@ -80,7 +80,8 @@ class PresetRefreshTests(unittest.TestCase):
 
     def test_murphy_defaults_and_live_mask_outline(self):
         renderer = Renderer(*self.size, look_preset='murphy')
-        self.assertEqual(renderer.typography.font(20).getname()[1], 'Medium')
+        self.assertEqual(renderer.typography.report()['hud_font_family'], 'Michroma')
+        self.assertEqual(renderer.typography.report()['hud_font_weight'], 'Medium (synthetic)')
         self.assertEqual(renderer.target_overlay.scale, 1.25)
         self.assertFalse(renderer.show_timecode)
         self.assertEqual(renderer.hud_opacities['readout'], 0)

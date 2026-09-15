@@ -367,10 +367,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### hud-font
 
 - Syntax: `--hud-font`
-- Values: `michroma`, `orbitron`, `orbitron-medium`, `orbitron-bold`
+- Values: `michroma`, `michroma-medium`, `orbitron`, `orbitron-medium`, `orbitron-bold`
 - Units: not applicable
 - Default: "michroma"
-- Applies: Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions
+- Applies: Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions
 - Requires: --hud
 - Persistence: saved
 - Example: [Complete recipe](examples.md#murphy)

@@ -48,6 +48,7 @@ class AnalysisHUD:
         self.analysis_target_size, self.analysis_target_response = analysis_target_size, analysis_target_response
         self.target = AnalysisTarget(analysis_target_size, analysis_target_response)
         self.font = analysis_font
+        self.font_stroke = lambda size: 0
         self.shot, self.origin, self.last_time = None, None, None
         self.selected, self.previous, self.cycle = None, None, None
         self.phase = 'SEARCH'
@@ -96,28 +97,30 @@ class AnalysisHUD:
         ss = 3
         for pixels in range(max(6, round(size * ss)), 2, -1):
             font = self.font(pixels)
+            extra_stroke = self.font_stroke(pixels)
+            padding = pixels // 40 + extra_stroke if extra_stroke else 0
             wrapped = []
             for line in lines:
                 current = ''
                 for word in line.split():
                     candidate = (current + ' ' + word).strip()
-                    if current and font.getlength(candidate) > width * ss:
+                    if current and font.getlength(candidate) + 2 * padding > width * ss:
                         wrapped.append(current)
                         current = word
                     else:
                         current = candidate
                 wrapped.append(current)
-            bounds = font.getbbox('Ag')
+            bounds = font.getbbox('Ag', stroke_width=padding)
             line_height = max(1, round((bounds[3] - bounds[1]) * 1.45))
-            if max(font.getlength(line) for line in wrapped) <= width * ss and line_height * len(wrapped) <= height * ss:
+            if max(font.getlength(line) for line in wrapped) + 2 * padding <= width * ss and line_height * len(wrapped) <= height * ss:
                 break
         else:
             return None
         tile = Image.new('L', (width * ss, line_height * len(wrapped)))
         draw = ImageDraw.Draw(tile)
         for row, line in enumerate(wrapped):
-            draw.text((0, row * line_height - bounds[1]), line, font=font, fill=255,
-                      stroke_width=max(0, pixels // 40))
+            draw.text((padding, row * line_height - bounds[1]), line, font=font, fill=255,
+                      stroke_width=max(0, pixels // 40) + extra_stroke)
         tile = tile.resize((width, max(1, math.ceil(tile.height / ss))), Image.Resampling.LANCZOS)
         bounds = tile.getbbox()
         if bounds:
@@ -133,6 +136,7 @@ class AnalysisHUD:
         if not (self.analysis or self.analysis_target):
             return
         self.font = renderer.typography.font
+        self.font_stroke = renderer.typography.stroke_width
         subject, phase, elapsed = self.state(subjects, time, shot, static)
         width, height = image.size
         if self.analysis_target:

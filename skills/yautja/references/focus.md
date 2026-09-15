@@ -8,7 +8,7 @@ All capabilities are shared options; presets only provide saved values. See the 
 
 **Relic** inherits Focus's scene, purple HUD and blue grid. Neon hot-pink broken triangles spawn on the selected figure, rise gently, then contract, spin and fade. Soft hot-pink light filaments stream upward behind the body core, aligned to shoulder/hip joints with a solid-body mask fallback. Arms and held props do not widen the light column. All foreground silhouettes occlude the trails and their glow. [`--code-style`](options.md#code-style) selects `light` or `glyphs`; `--code-size`, `--code-density` and `--code-speed` control stream spacing/width, count and upward motion. Focus leaves this effect off. Both presets leave decorative weak-spot patches off; the optional capability remains available.
 
-**Murphy** uses a slight blue source cast, glowing green center-crossing XY box, selected-subject outline and a large Orbitron Medium caption with a blinking underscore. Automatic targeting needs no catalog. Its upper-right readout and waveform are hidden by preset opacity.
+**Murphy** uses a slight blue source cast, glowing green center-crossing XY box, selected-subject outline and a large Michroma caption with a synthesized medium weight and blinking underscore. Automatic targeting needs no catalog. Its upper-right readout and waveform are hidden by preset opacity.
 
 Focus and Relic use these independently configurable [HUD color roles](hud-elements.md):
 
@@ -51,4 +51,4 @@ Optional `--target-weak-spots` draws fictional holographic patches clipped to se
 
 ## Readable typography
 
-Tech glyphs, Fremont descriptions and target captions use the selected `--hud-font`. Bundled choices are Michroma and Orbitron Light, Medium or Bold. Fremont defaults to Bold; Murphy to Medium. Numeric seven-segment timecode is separate. A local `--hud-font-file` overrides the bundled font, must cover printable ASCII, and is never saved in portable presets. [Font-file recipe](examples.md#font-file).
+Tech glyphs, Fremont descriptions and target captions use the selected `--hud-font`. Choices are Michroma Regular (`michroma`), a synthesized Michroma Medium (`michroma-medium`), and Orbitron Light, Medium or Bold. Michroma's upstream font has only a Regular face; the medium treatment lightly thickens its rasterized strokes and reports `Medium (synthetic)`. The bundled font file stays unmodified. Fremont defaults to Orbitron Bold; Murphy to Michroma Medium. Numeric seven-segment timecode is separate. A local `--hud-font-file` overrides the bundled face and its synthesized weight, must cover printable ASCII, and is never saved in portable presets. [Font-file recipe](examples.md#font-file).

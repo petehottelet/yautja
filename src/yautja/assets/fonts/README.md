@@ -1,6 +1,8 @@
 # Michroma
 
-The Fremont analysis HUD uses the unmodified Michroma Regular font. Copyright 2011 The Michroma Project Authors. The font remains under the SIL Open Font License 1.1 in `Michroma-OFL.txt`; it is not covered by Yautja's MIT license.
+The bundled Michroma Regular font is unmodified. Copyright 2011 The Michroma Project Authors. The font remains under the SIL Open Font License 1.1 in `Michroma-OFL.txt`; it is not covered by Yautja's MIT license.
+
+`--hud-font michroma-medium`, used by Murphy, synthesizes a medium treatment while rasterizing text. It uses this same unmodified Regular file, preserves custom-font overrides, and reports its weight as `Medium (synthetic)`. Michroma's [upstream family metadata](https://github.com/google/fonts/blob/main/ofl/michroma/METADATA.pb) lists only Regular; no separate Medium font file is bundled.
 
 Source: [Google Fonts, pinned revision](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/michroma).
 

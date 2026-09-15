@@ -26,7 +26,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 
 | Fremont | Murphy |
 | --- | --- |
-| [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.12.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.12.0) |
+| [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.12.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.12.1-michroma)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.12.1-michroma) |
 | Netrunner | Focus |
 | [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif?v=2.12.0) | [![Focus: neon-purple HUD, blue geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.12.1-neon)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.12.1-neon) |
 
@@ -176,7 +176,7 @@ Murphy preserves source detail under a slight blue cast. Its bright green HUD us
 yautja "clip.mov" "murphy.mp4" --stylepreset murphy --duration 4
 ```
 
-To customize it, add `--target-label "SEARCHING" --target-label-scale 2.2 --target-cursor --hud-font orbitron-medium --target-scale 1.25`. `--no-target-cursor` holds the caption without a blinking underscore. [Complete caption example](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/examples.md#murphy).
+Murphy uses Michroma with a synthesized medium weight. To customize it, add `--target-label "SEARCHING" --target-label-scale 2.2 --target-cursor --hud-font michroma-medium --target-scale 1.25`. `--no-target-cursor` holds the caption without a blinking underscore. [Complete caption example](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/examples.md#murphy).
 
 ### Fremont style preset
 

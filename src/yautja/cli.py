@@ -577,7 +577,7 @@ def parser():
     p.add_argument('--analysis-target', action=argparse.BooleanOptionalAction, default=False, help='Persistent translucent scan target with smooth focus motion and no acquisition zoom; independent of --analysis, shares its subject selection and speed')
     p.add_argument('--analysis-target-size', type=float, default=.36, help='Constant scan target diameter as a fraction of the short frame edge, 0.1-0.8')
     p.add_argument('--analysis-target-response', type=float, default=.6, help='Seconds to cover 95 percent of a focus change, 0-3; 0 follows immediately')
-    p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
+    p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
     p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
     p.add_argument('--outline-style', choices=['solid', 'shimmer', 'holographic'], default='solid', help='Continuous edge, partial shimmer, or textured partial holographic glow; enable with --subject-outline')
     p.add_argument('--outline-shine', type=float, default=.55, help='Moving holographic band brightness, 0-1; affects holographic outlines and optional weak-spot textures')

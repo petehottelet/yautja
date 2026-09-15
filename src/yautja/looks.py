@@ -83,7 +83,7 @@ LOOK_PRESETS['relic'] = {
 LOOK_PRESETS['murphy'] = {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#719DD2',
     'scene_tint_strength': .4, 'scene_exposure': .95, 'hud': True, 'hud_glyphs': 'tech',
-    'hud_font': 'orbitron-medium', 'hud_theme': 'custom',
+    'hud_font': 'michroma-medium', 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}={value}' for key, value in {
         **{key: '#38D988' for key in HUD_DEFAULTS}, 'waveform-axis': '#24523E',
         'waveform-ticks': '#2E6B50', 'timecode': '#9DEFC6', 'leaders': '#5FC498',
@@ -105,7 +105,7 @@ PRESET_DESCRIPTIONS = {
     'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
     'focus': 'Neon-purple HUD and gliding hexagon, blue spherical grid and waveform, and thin blue holographic outlines.',
     'relic': 'Focus with hot-pink triangle ornaments and soft rising light streams centered behind each body core.',
-    'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a medium-weight TARGETING caption with blinking cursor.',
+    'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a Michroma medium-weight TARGETING caption with blinking cursor.',
 }
 PRESET_LABELS = {
     'yautja': 'Yautja', 'costa-rica': 'Costa Rica', 'ironbow': 'Ironbow', 'abyss': 'Abyss',

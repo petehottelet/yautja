@@ -203,9 +203,9 @@ yautja "clip.mov" "relic.mp4" --stylepreset relic --duration 4 --target-motif tr
 
 **Segmented.** Automatic targeting works without a figure catalog. Scale affects the box; caption scale affects only the text. The underscore cursor blinks in video.
 
-<!-- example: {"id": "murphy", "tier": "models", "checks": {"target_label": "SEARCHING"}} -->
+<!-- example: {"id": "murphy", "tier": "models", "checks": {"target_label": "SEARCHING", "hud_font": "michroma-medium", "hud_font_weight": "Medium (synthetic)"}} -->
 ```bash
-yautja "clip.mov" "murphy.mp4" --stylepreset murphy --duration 4 --target-mode auto --target-outline --target-label "SEARCHING" --target-label-scale 2.2 --target-cursor --hud-font orbitron-medium --target-scale 1.25
+yautja "clip.mov" "murphy.mp4" --stylepreset murphy --duration 4 --target-mode auto --target-outline --target-label "SEARCHING" --target-label-scale 2.2 --target-cursor --hud-font michroma-medium --target-scale 1.25
 ```
 
 ## Fremont vehicle analysis

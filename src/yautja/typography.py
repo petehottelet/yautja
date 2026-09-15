@@ -7,7 +7,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-FONT_FILES = {'michroma': 'Michroma-Regular.ttf', 'orbitron': 'Orbitron-Light.ttf',
+FONT_FILES = {'michroma': 'Michroma-Regular.ttf', 'michroma-medium': 'Michroma-Regular.ttf',
+              'orbitron': 'Orbitron-Light.ttf',
               'orbitron-medium': 'Orbitron-Medium.ttf', 'orbitron-bold': 'Orbitron-Bold.ttf'}
 TECH_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
@@ -57,7 +58,8 @@ class HUDTypography:
             return self.tiles[key]
         ss = 3
         font = self.font(height * ss * 2)
-        bounds = font.getbbox(text)
+        stroke = self.stroke_width(font.size)
+        bounds = font.getbbox(text, stroke_width=stroke)
         spacing = tracking * font.size
         advance = sum(font.getlength(char) for char in text) if tracking else font.getlength(text)
         width = max(1, math.ceil(max(advance, bounds[2] - min(0, bounds[0])) + spacing * max(0, len(text) - 1)) + 4)
@@ -66,10 +68,10 @@ class HUDTypography:
         x = 2 - min(0, bounds[0])
         if tracking:
             for char in text:
-                draw.text((x, 2 - bounds[1]), char, font=font, fill=255)
+                draw.text((x, 2 - bounds[1]), char, font=font, fill=255, stroke_width=stroke)
                 x += font.getlength(char) + spacing
         else:
-            draw.text((x, 2 - bounds[1]), text, font=font, fill=255)
+            draw.text((x, 2 - bounds[1]), text, font=font, fill=255, stroke_width=stroke)
         box = ink.getbbox()
         if box:
             ink = ink.crop(box)
@@ -88,6 +90,12 @@ class HUDTypography:
         tile.paste(ink, ((width - ink.width) // 2, 0))
         return tile
 
+    def stroke_width(self, size):
+        # Michroma has no native Medium face. Thicken its raster at the working
+        # resolution; custom font files retain their own weight unchanged.
+        return max(1, round(size * .012)) if self.hud_font == 'michroma-medium' and self.data is None else 0
+
     def report(self):
+        weight = 'Medium (synthetic)' if self.stroke_width(24) else self.font(24).getname()[1]
         return {'hud_font': self.hud_font, 'hud_font_file': str(self.path) if self.path else None,
-                'hud_font_family': self.font(24).getname()[0], 'hud_font_weight': self.font(24).getname()[1]}
+                'hud_font_family': self.font(24).getname()[0], 'hud_font_weight': weight}

@@ -71,10 +71,30 @@ class FocusTests(unittest.TestCase):
                 mask = typography.mask(text, 18)
                 self.assertIs(mask, typography.mask(text, 18))
                 self.assertIsNotNone(mask.getbbox())
-            self.assertEqual(typography.font(20).getname()[0].split()[0], 'Michroma' if face == 'michroma' else 'Orbitron')
+            self.assertEqual(typography.font(20).getname()[0].split()[0], 'Michroma' if face.startswith('michroma') else 'Orbitron')
         r = Renderer(*self.size, look_preset='fremont')
         self.assertIn('Bold', r.typography.font(20).getname()[1])
         self.assertEqual(r.analysis.analysis_outline_width, 5)
+
+    def test_michroma_medium_is_heavier_and_reports_its_synthesized_weight(self):
+        regular, medium = HUDTypography('michroma'), HUDTypography('michroma-medium')
+        self.assertEqual(medium.report()['hud_font_weight'], 'Medium (synthetic)')
+        for height in (12,24,48):
+            a, b = regular.mask('TARGETING',height,.12), medium.mask('TARGETING',height,.12)
+            self.assertEqual(b.height,height)
+            self.assertGreater(np.asarray(b).mean(),np.asarray(a).mean()*1.1)
+            self.assertLess(abs(b.width-a.width),a.width*.12)
+        letter = medium.mask('O',36)
+        self.assertEqual(letter.getpixel((letter.width//2,letter.height//2)),0)
+        path = Path(__file__).resolve().parents[1] / 'src/yautja/assets/fonts/Michroma-Regular.ttf'
+        custom = HUDTypography('michroma-medium',path)
+        self.assertEqual(custom.report()['hud_font_weight'],'Regular')
+        np.testing.assert_array_equal(custom.mask('TARGETING',24),regular.mask('TARGETING',24))
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()):
+            saved = Path(directory)/'murphy.json'
+            self.assertEqual(main(['--stylepreset','murphy','--save-preset',str(saved)]),0)
+            settings = validate_settings(load_preset(saved)['settings'],parser())
+            self.assertEqual(settings['hud_font'],'michroma-medium')
 
     def test_custom_fonts_validate_before_opening_media(self):
         with tempfile.TemporaryDirectory() as directory:
