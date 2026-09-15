@@ -57,7 +57,7 @@ The final behind-code glow and blur are occluded by the union of current visible
 | `--target-motion acquire\|persistent` | `acquire` | Assembly animation or one constant-size reticle with smooth motion; persistent mode also sweeps empty automatic scenes |
 | `--target-hold` | `3` | Seconds per subject before cycling, 0.5–30 |
 | `--target-response` | `0.6` | Seconds to cover 95% of a stationary focus change, 0–3; 0 follows immediately |
-| `--target-fill auto\|filled\|stroked` | `auto` | Original styling, translucent filled interiors, or stroked contours; open paths remain lines |
+| `--target-fill auto\|filled\|stroked` | `auto` | Original styling, solid marks/translucent enclosures, or hollow mark outlines; works with all target types |
 | `--target-weak-spots` / `--no-target-weak-spots` | Off | Fictional holographic scan patches on the selected subject; enabled by Focus/Relic, requires segmentation |
 | `--target-outline` / `--no-target-outline` | Off | Outline only selected subjects using their current masks; needs segmentation |
 | `--target-label-scale` | `1` | Caption size multiplier, 0.5–4; Murphy uses 1.8 |

@@ -596,7 +596,7 @@ def parser():
     p.add_argument('--target-motion', choices=['acquire', 'persistent'], default='acquire', help='Acquisition animation or one persistent reticle gliding between subjects without zoom')
     p.add_argument('--target-hold', type=float, default=3., help='Seconds before cycling to another target, 0.5-30')
     p.add_argument('--target-response', type=float, default=.6, help='Persistent motion response in seconds, 0-3; 0 follows immediately')
-    p.add_argument('--target-fill', choices=['auto', 'filled', 'stroked'], default='auto', help='Original shape styling, filled interiors, or stroked contours; filled enclosing shapes use translucent interiors')
+    p.add_argument('--target-fill', choices=['auto', 'filled', 'stroked'], default='auto', help='All shapes: original treatment, solid marks with translucent enclosures, or hollow mark outlines')
     p.add_argument('--target-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline only targeted subjects using their current segmentation masks')
     p.add_argument('--target-weak-spots', action=argparse.BooleanOptionalAction, default=False, help='Decorative holographic scan patches on selected subjects, not physical weak-point detection; requires segmentation')
     p.add_argument('--target-label-scale', type=float, default=1., help='Target caption size multiplier, 0.5-4')

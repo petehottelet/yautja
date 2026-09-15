@@ -131,9 +131,7 @@ class PresetRefreshTests(unittest.TestCase):
                 Image.new('RGB',self.size),0,target,((255,50,30),)*2,static=True))
                 for fill in ('filled','stroked')]
             self.assertTrue(np.isfinite(frames).all())
-            # Open paths have no enclosed interior to fill.
-            if shape in ('hexagon','frame-box','triangle','triangle-dots','hollow-cross','round-dot'):
-                self.assertFalse(np.array_equal(*frames), shape)
+            self.assertFalse(np.array_equal(*frames), shape)
 
     def test_aliases_new_defaults_and_original_costa_rica_palette(self):
         self.assertEqual(normalize_preset('HotTropic'),'yautja')

@@ -2,7 +2,7 @@
 import math
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from .colors import parse_hex
 from .hud import blur_layer
@@ -39,7 +39,8 @@ def detail_shapes(shape, radius, locked):
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * .40, y * .72), (x * .72, y * .72), (x * .72, y * .40)], False))
     if shape == 'triangle-dots' and locked:
-        circles = [(0, -.23, .105), (-.25, .16, .105), (.25, .16, .105)]
+        # Reduce the three lock dots by 12%, preserving their centers.
+        circles = [(0, -.23, .0924), (-.25, .16, .0924), (.25, .16, .0924)]
     elif shape in ('crosshair', 'square-cross', 'square-mil'):
         outer = .9 if shape == 'crosshair' else .46
         for axis in (0, 1):
@@ -96,6 +97,24 @@ def parse_stroke_colors(value):
         raise ValueError('--target-stroke-colors needs one RGB hex color or a landing,flash pair')
     colors = tuple(parse_hex(part) for part in parts)
     return colors * 2 if len(colors) == 1 else colors
+
+
+def outline_path(canvas, vertices, width, stroke_width, color):
+    """Outline a thick open mark, retaining its curve, end caps and gaps."""
+    pad = math.ceil(width / 2) + 2
+    left = max(0, math.floor(min(x for x, _ in vertices)) - pad)
+    top = max(0, math.floor(min(y for _, y in vertices)) - pad)
+    right = min(canvas.width, math.ceil(max(x for x, _ in vertices)) + pad + 1)
+    bottom = min(canvas.height, math.ceil(max(y for _, y in vertices)) + pad + 1)
+    if right <= left or bottom <= top:
+        return
+    mask = Image.new('L', (right-left, bottom-top))
+    ImageDraw.Draw(mask).line([(x-left, y-top) for x,y in vertices], fill=255, width=width, joint='curve')
+    inner = mask.filter(ImageFilter.MinFilter(stroke_width * 2 + 1))
+    edge = ImageChops.subtract(mask, inner)
+    ink = Image.new('RGBA', mask.size, color)
+    ink.putalpha(edge.point(lambda value: round(value * color[3] / 255)))
+    canvas.alpha_composite(ink, (left, top))
 
 
 class TargetOverlay:
@@ -198,13 +217,16 @@ class TargetOverlay:
                                      a + direction * cutback + inward * thickness])
                 vertices += np.array([cx, cy]) + offset
                 polygon = [tuple(point * 2) for point in vertices]
+                blade_edge_width = max(2, round(2 * min(width, height) / 1080 * 2))
                 if self.fill == 'stroked':
                     draw.line([*polygon, polygon[0]], fill=(*color, opacity),
-                              width=max(1, round(2 * min(width, height) / 1080 * 2)), joint='curve')
+                              width=blade_edge_width, joint='curve')
                 else:
                     draw.polygon(polygon, fill=(*color, opacity))
                 # Draw inward so an outline never expands the blades into the gaps.
                 stroke_width = round(self.stroke * min(width, height) / 1080 * 2)
+                if self.fill == 'stroked':
+                    stroke_width = min(stroke_width, blade_edge_width)
                 if stroke_width:
                     outline = self.stroke_colors[int(flash)] if self.stroke_colors else tuple(round(c * .62) for c in color)
                     draw.polygon(polygon, outline=(*outline, opacity), width=stroke_width)
@@ -231,6 +253,11 @@ class TargetOverlay:
 
             for path, closed in paths:
                 vertices = [point(x, y) for x, y in path]
+                if not closed and self.fill == 'stroked':
+                    edge_width = max(2, min(round(2 * min(width, height) / 1080 * 2), line_width // 3))
+                    outline_path(overlay, vertices, line_width, edge_width,
+                                 (*(outline if outline_width else color), opacity))
+                    continue
                 if self.shape == 'hollow-cross' and self.fill != 'stroked':
                     draw.polygon(vertices, fill=(*color, opacity))
                     if outline_width:
@@ -241,17 +268,20 @@ class TargetOverlay:
                     draw.polygon(vertices, fill=(*color, round(opacity * .24)))
                 if closed:
                     vertices.append(vertices[0])
-                draw.line(vertices, fill=(*(outline if outline_width else color), opacity), width=line_width, joint='curve')
-                if outline_width and line_width > outline_width * 2:
-                    draw.line(vertices, fill=(*color, opacity), width=line_width - outline_width * 2, joint='curve')
+                path_width = (max(2, round(2 * min(width, height) / 1080 * 2))
+                              if self.shape == 'hollow-cross' and self.fill == 'stroked' else line_width)
+                draw.line(vertices, fill=(*(outline if outline_width else color), opacity), width=path_width, joint='curve')
+                if outline_width and path_width > outline_width * 2:
+                    draw.line(vertices, fill=(*color, opacity), width=path_width - outline_width * 2, joint='curve')
             for x, y, dot_radius in circles:
                 px, py = point(x, y)
                 r = radius * dot_radius * 2
                 box = (px - r, py - r, px + r, py + r)
+                dot_width = max(1, min(line_width, round(r * (.3 if self.fill == 'stroked' else 1))))
                 draw.ellipse(box, fill=None if self.fill == 'stroked' else (*color, opacity),
-                             outline=(*color, opacity), width=max(1, min(line_width, round(r))))
+                             outline=(*color, opacity), width=dot_width)
                 if outline_width:
-                    draw.ellipse(box, outline=(*outline, opacity), width=min(outline_width, max(1, round(r))))
+                    draw.ellipse(box, outline=(*outline, opacity), width=min(outline_width, dot_width))
             if self.neon:
                 tube_width = thickness if self.shape.startswith('triangle') else radius * .18 if self.shape == 'hollow-cross' else line_width / 2
                 bounds = overlay.getbbox()

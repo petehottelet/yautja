@@ -2,6 +2,9 @@
 
 ## 2.11.0
 
+- Make filled/stroked treatment distinct for all 11 target types, including hollow curved bands, crosshairs, brackets and dot rings. Reduce the triangle lock dots by 12% without changing their positions or timing.
+- Replace the README target-shape GIF grid with two real-time 24 fps animations and a compact filled/stroked contact sheet for the other nine types.
+
 - Add pulsing geodesic satellite dots and seven-sided node rings to Focus/Relic, with an independent detail switch and shared grid speed.
 - Add thicker partial holographic contours with blue/lavender/white texture, plus independently styled yellow decorative scan patches on the selected current silhouette. Support both effects in CLI, reports and portable presets.
 

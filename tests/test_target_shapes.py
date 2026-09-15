@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 from PIL import Image
 
-from yautja.target import TARGET_SHAPES, TargetOverlay
+from yautja.target import TARGET_SHAPES, TargetOverlay, detail_shapes
 from yautja.render import Renderer
 
 
@@ -47,6 +47,41 @@ class TargetShapeTests(unittest.TestCase):
         dots.draw(background, 1., [], self.colors)
         np.testing.assert_array_equal(np.asarray(base.draw(background, 1.1, self.targets, self.colors)),
                                       np.asarray(dots.draw(background, 1.1, self.targets, self.colors)))
+
+    def test_triangle_dot_diameters_shrink_twelve_percent_without_moving_centers(self):
+        _, dots = detail_shapes('triangle-dots', 100, True)
+        self.assertEqual([(x,y) for x,y,_ in dots], [(0,-.23),(-.25,.16),(.25,.16)])
+        for _, _, radius in dots:
+            self.assertAlmostEqual(radius / .105, .88)
+        self.assertEqual(detail_shapes('triangle-dots', 100, False)[1], [])
+        self.assertEqual([r for _,_,r in detail_shapes('round-dot', 100, True)[1]], [.1]*3)
+
+    def test_stroked_bands_and_dots_keep_hollow_interiors(self):
+        size = (960,540)
+        probes = {'crosshair':(.3,0), 'square':(.72,.55), 'square-cross':(.72,.55),
+                  'square-mil':(.72,.55), 'square-x':(.72,.55), 'hollow-cross':(.3,.65),
+                  'round-dot':(0,-.23), 'triangle-dots':(0,-.23)}
+        for shape, (x,y) in probes.items():
+            frames=[]
+            for fill in ('filled','stroked'):
+                target=TargetOverlay(shape=shape,fill=fill,flash_rate=0)
+                image=target.draw(Image.new('RGB',size),0,self.targets,self.colors,static=True)
+                _,cx,cy,lock_radius,_=target.placements[0]
+                frames.append(np.asarray(image)[round(cy+y*lock_radius*1.3),round(cx+x*lock_radius*1.3),0])
+            self.assertGreater(frames[0],200,shape)
+            self.assertLess(frames[1],60,shape)
+
+    def test_every_fill_mode_keeps_flash_opacity_and_still_behavior(self):
+        size=(480,270)
+        background=Image.new('RGB',size)
+        for shape in TARGET_SHAPES:
+            for fill in ('filled','stroked'):
+                target=TargetOverlay(shape=shape,fill=fill)
+                for time in (0,.3,.6,.9,1.2,1.4):
+                    frame=np.asarray(target.draw(background,time,self.targets,self.colors))
+                self.assertGreater(frame[...,1].max(),100,(shape,fill))
+                hidden=TargetOverlay(shape=shape,fill=fill,opacity=0,stroke=4,blur=3)
+                self.assertIsNone(hidden.draw(background,0,self.targets,self.colors,static=True).getbbox())
 
     def test_all_shapes_respect_no_hud_and_invalid_shapes_fail(self):
         image = Image.new('RGB', (320, 180), (80, 80, 80))

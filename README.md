@@ -278,7 +278,7 @@ yautja "clip.mov" "focus-no-patches.mp4" --stylepreset focus --no-target-weak-sp
 
 Use `--geo-grid-center-fade 1` for a clear center, `--geo-grid-width 2.2` for thicker lines, and `--geo-grid-breaks 0.7` for irregular gaps. Relic uses `--code-density 1.65`, three times its former 0.55 stream density; the supported range is 0–3. `--target-motif-speed 0` freezes the triangle animation, and `--target-motif-breaks 0` restores continuous edges.
 
-Choose `--target-fill filled` for translucent enclosed shapes or `--target-fill stroked` for outlines. `auto` preserves each shape’s original styling. Movement is separate: `--target-motion persistent` keeps one reticle moving continuously; `--target-motion acquire` uses the assembly animation.
+Choose `--target-fill filled` for solid marks and translucent enclosed shapes, or `--target-fill stroked` for their outlines. `auto` preserves each shape’s original styling. Movement is separate: `--target-motion persistent` keeps one reticle moving continuously; `--target-motion acquire` uses the assembly animation.
 
 ### Murphy style preset
 
@@ -435,36 +435,25 @@ In Blocks and Shards, `--wave-detail` controls pixel density: lower values make 
 
 ### Target shapes
 
-Choose `--target-shape` independently of colors, lock timing, flash, outline, blur, and transparency. The original `triangle` remains the default. Circular crosshair, Hollow Cross, Round with three lock dots, and the four square styles now lock at 85% of their previous size; `--target-scale` adjusts that final size. Round with three lock dots has four evenly spaced gaps in its circular outline and three center dots arranged in a triangle: one above and two below. The center dots in `triangle-dots` and `round-dot` appear on lock and reset when the target is lost. Hollow Cross replaces Vector Lock with four thick L-shaped bands, an open center, and uncapped arm ends. Existing `vector-lock` and `iron-sights` commands and saved presets resolve to Hollow Cross.
+All 11 target types support **`--target-fill filled`** and **`--target-fill stroked`**. Filled mode uses solid marks and dots, with translucent interiors for enclosed reticles. Stroked mode traces their edges, including hollow dots, curved bands, crosshairs, and square brackets. The default `auto` keeps each design's original treatment. Color, acquisition timing, flash, glow, blur, and opacity remain independent; `--target-stroke` adds an optional colored border.
 
-| Triangle + three lock dots | Circular crosshair |
+| Triangle + three lock dots | Circle + three lock dots |
 | --- | --- |
-| [![Triangle + three lock dots animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-triangle-dots.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-triangle-dots.gif) | [![Circular crosshair animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-crosshair.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-crosshair.gif?v=2.5.7) |
-| `--target-shape triangle-dots` | `--target-shape crosshair` |
+| [![Triangle target with three lock dots that appear on acquisition](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-triangle-dots.gif?v=2.11.0-targets)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-triangle-dots.gif?v=2.11.0-targets) | [![Circular target with four ring gaps and three lock dots](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-round-dot.gif?v=2.11.0-targets)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-round-dot.gif?v=2.11.0-targets) |
+| `--target-shape triangle-dots` | `--target-shape round-dot` |
 
-| Hollow Cross | Square brackets |
-| --- | --- |
-| [![Hollow Cross: four thick L-shaped bands with an open center and arm ends](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-iron-sights.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-iron-sights.gif?v=2.5.7) | [![Square brackets animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square.gif?v=2.5.7) |
-| `--target-shape hollow-cross` | `--target-shape square` |
+Both previews play at normal source speed and 24 fps. The three dots appear only on lock and reset when the target is lost. The triangle's dots are 12% smaller; the circle's dots retain their size. Click either GIF for the larger version.
 
-| Round with three lock dots | Square + cross |
-| --- | --- |
-| [![Round with three lock dots: circular outline with four open gaps](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-round-dot.gif?v=2.5.8)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-round-dot.gif?v=2.5.8) | [![Square + cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-cross.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-cross.gif?v=2.5.7) |
-| `--target-shape round-dot` | `--target-shape square-cross` |
+The remaining types are shown below, **filled on the left and stroked on the right** in each cell. The labels give the corresponding `--target-shape` value.
 
-| Square + graduated cross | Square + diagonal marks |
-| --- | --- |
-| [![Square + graduated cross animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-mil.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-mil.gif?v=2.5.7) | [![Square + diagonal marks animated target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-square-x.gif?v=2.5.7)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-square-x.gif?v=2.5.7) |
-| `--target-shape square-mil` | `--target-shape square-x` |
+[![Target contact sheet: triangle, crosshair, hollow-cross, square, square-cross, square-mil, square-x, hexagon and frame-box, each shown filled and stroked](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.11.0)
 
-Click any preview for its large animated GIF. [Selection, target colors, and effects](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#target-animation-and-color).
+```bash
+yautja "clip.mov" "filled.mp4" --stylepreset yautja --figures "figures.json" --target S001-F002 --target-shape triangle-dots --target-fill filled
+yautja "clip.mov" "stroked.mp4" --stylepreset yautja --figures "figures.json" --target S001-F002 --target-shape square-cross --target-fill stroked
+```
 
-| Thin hexagon | Frame-box with screen axes |
-| --- | --- |
-| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.11.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.10.0) |
-| `--target-shape hexagon` | `--target-shape frame-box` |
-
-`--target-mode auto` uses segmented subjects automatically. The default `selected` mode uses the catalog below. Explicit catalog selections take precedence over automatic mode, including frames where a selected figure is absent. `--target-motif triangles` and `--target-label "TARGETING"` add independent ornaments and a readable caption; both follow target visibility.
+The original `triangle` is the default; `--target-scale` changes the reticle size. Hollow Cross has four L-shaped bands and an open center; `vector-lock` and `iron-sights` resolve to this design. `--target-mode auto` uses segmented subjects automatically, while the default `selected` mode uses a catalog. Explicit catalog selections take precedence, including frames where a selected figure is absent. `--target-motif triangles` and `--target-label "TARGETING"` add ornaments and a caption. [Full selection, color, and effect controls](skills/yautja/references/targets.md).
 
 ### Choose a figure and add a target
 
