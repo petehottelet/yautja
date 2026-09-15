@@ -74,10 +74,10 @@ LOOK_PRESETS['focus'] = FOCUS_SETTINGS
 LOOK_PRESETS['relic'] = {
     **FOCUS_SETTINGS,
     'hud_colors': FOCUS_SETTINGS['hud_colors'],
-    'subject_code': True, 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
+    'subject_code': True, 'code_style': 'light', 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
     'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
     'target_motif_speed': 1., 'target_motif_breaks': .7,
-    'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.4,target-motif=0.65',
+    'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.85,target-motif=0.65',
 }
 LOOK_PRESETS['murphy'] = {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#719DD2',
@@ -103,7 +103,7 @@ PRESET_DESCRIPTIONS = {
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
     'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
     'focus': 'Neon-purple spherical geodesic grid and one detailed hexagon reticle gliding between subjects.',
-    'relic': 'Focus with pink triangle ornaments and rising code occluded behind every subject.',
+    'relic': 'Focus with violet triangle ornaments and soft rising light streams centered behind each body core.',
     'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a medium-weight TARGETING caption with blinking cursor.',
 }
 PRESET_LABELS = {

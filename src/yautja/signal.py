@@ -1,4 +1,4 @@
-"""Source-scene grading and silhouette-bound Cyber code streams."""
+"""Source-scene grading, silhouette code and body-centered light streams."""
 from functools import lru_cache
 import hashlib
 from importlib.resources import files
@@ -15,7 +15,7 @@ from .hologram import holographic_ink
 
 SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure', 'scene_highlights',
                   'subject_outline', 'subject_code', 'subject_labels',
-                  'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale',
+                  'code_style', 'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale',
                   'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'outline_width', 'outline_shine', 'code_layer')
 SUBJECT_ELEMENTS = ('subject-outline', 'subject-code', 'subject-labels', 'subject-carets')
 
@@ -71,10 +71,53 @@ def stable_number(seed, *parts):
     return int.from_bytes(hashlib.sha256(value.encode()).digest()[:8], 'little')
 
 
+def body_core(subject, binary):
+    """Torso center x and width in render pixels, excluding hands and props."""
+    x0, y0, x1, y1 = binary.getbbox()
+    bh, bw = y1 - y0, x1 - x0
+    joints = subject.keypoints
+    pairs = []
+    if subject.label == 'person' and joints is not None and joints.shape[0] >= 13:
+        scale = np.array(binary.size) / np.array(subject.mask.shape[::-1])
+        for indices in ((5, 6), (11, 12)):  # COCO shoulders and hips, never wrists
+            points = joints[list(indices)]
+            if np.isfinite(points).all() and np.all(points[:, 2] >= .35):
+                xy = points[:, :2] * scale
+                if np.all((xy[:, 0] >= x0) & (xy[:, 0] < x1) & (xy[:, 1] >= y0) & (xy[:, 1] < y1)):
+                    pairs.append(xy)
+    if pairs:
+        centers = np.array([pair.mean(axis=0) for pair in pairs])
+        cx = centers[:, 0].mean()
+        width = max(abs(pair[0, 0] - pair[1, 0]) for pair in pairs)
+        # A profile view still needs a narrow core even when the shoulders overlap.
+        width = max(width, .45 * np.ptp(centers[:, 1]), .14 * bh) * .9
+    else:
+        bits = np.asarray(binary) > 0
+        band = bits[y0 + int(.18 * bh):max(y0 + 1, y0 + int(.82 * bh)), x0:x1]
+        profile = band.sum(axis=0).astype(float)
+        window = min(bw, max(1, round(bh * .035)))
+        profile = np.convolve(profile, np.ones(window) / window, mode='same')
+        # Long vertical support identifies the body; a lateral arm or map adds
+        # width to the bounding box without pulling this core toward its tip.
+        _, head_x = np.nonzero(bits[y0:y0 + max(1, round(bh * .12)), x0:x1])
+        head = head_x.mean() if len(head_x) else bw / 2
+        scores = profile * (.7 + .3 * np.exp(-.5 * ((np.arange(bw) - head) / max(1, .24 * bh)) ** 2))
+        peak = int(scores.argmax())
+        left = right = peak
+        threshold = profile[peak] * .65
+        while left > 0 and profile[left - 1] >= threshold: left -= 1
+        while right < bw - 1 and profile[right + 1] >= threshold: right += 1
+        weights = profile[left:right + 1]
+        cx = x0 + np.average(np.arange(left, right + 1), weights=weights) if weights.sum() else (x0+x1)/2
+        width = (right - left + 1) * .9
+    width = max(1., min(width, bw, bh * (.6 if subject.label == 'person' else 1.5)))
+    return np.array([np.clip(cx, x0 + width/2, x1 - width/2), width])
+
+
 class SignalStyle:
     def __init__(self, *, scene_mode='thermal', scene_tint='#548568', scene_tint_strength=.8,
                  scene_exposure=.65, subject_outline=False, subject_code=False, subject_labels=False,
-                 code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
+                 code_style='glyphs', code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
                  subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
                  outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside',
                  outline_width=None, outline_shine=.55):
@@ -85,6 +128,9 @@ class SignalStyle:
         self.outline_width, self.outline_shine = outline_width, outline_shine
         if code_layer not in ('inside', 'behind'):
             raise ValueError('--code-layer must be inside or behind')
+        if code_style not in ('glyphs', 'light'):
+            raise ValueError('--code-style must be glyphs or light')
+        self.code_style = code_style
         if type(outline_arcs) is not int or not 1 <= outline_arcs <= 12:
             raise ValueError('--outline-arcs must be an integer between 1 and 12')
         self.outline_style, self.outline_coverage = outline_style, outline_coverage
@@ -109,6 +155,7 @@ class SignalStyle:
         self.subject_head_gap, self.subject_title_gap = subject_head_gap, subject_title_gap
         self.subject_caret_scale = subject_caret_scale
         self.anchors = {}
+        self.light_anchors = {}
         self.time = self.shot = None
 
     def report(self):
@@ -171,6 +218,40 @@ class SignalStyle:
                 mask.paste(255, (x, y, x+tile.width, y+tile.height), tile)
         return mask
 
+    def light_streams(self, size, bounds, time, seed, track_id):
+        """Continuous luminous filaments with soft heads traveling upward."""
+        ink = Image.new('L', size)
+        if not self.code_density:
+            return ink
+        x0, y0, x1, y1 = bounds
+        left, top = max(0, math.floor(x0)), max(0, math.floor(y0))
+        right, bottom = min(size[0], math.ceil(x1)), min(size[1], math.ceil(y1))
+        if right <= left or bottom <= top:
+            return ink
+        cell = max(2., self.code_size * min(size) / 1080)
+        count = max(1, min(64, round((x1-x0) / (cell * 1.4) * self.code_density)))
+        xx = np.arange(left, right, dtype=np.float32)[None, :]
+        yy = np.arange(top, bottom, dtype=np.float32)[:, None]
+        span = max(1., y1-y0)
+        tile = np.zeros((bottom-top, right-left), np.float32)
+        for index in range(count):
+            rng = np.random.default_rng(stable_number(seed, 'light-stream', track_id, index))
+            spread, phase, velocity, tail, jitter = rng.random(5)
+            cx = x0 + (index + .35 + .3*jitter) * (x1-x0) / count
+            sigma = max(.4, cell * (.055 + .045*spread))
+            period = max(cell * 18, span * (1.05 + .4*spread))
+            speed = min(size) * (.12 + .1*velocity) * self.code_speed
+            head = y0 + phase*period - time*speed
+            trail = (yy-head) % period
+            pulse = np.exp(-trail / (span * (.16 + .16*tail))) * np.clip(trail / max(1., cell*.8), 0, 1)
+            beam = .78*np.exp(-.5*((xx-cx)/sigma)**2) + .22*np.exp(-.5*((xx-cx)/(sigma*3.4))**2)
+            tile += beam * (.10 + .88*pulse)
+        # Fade the emission into the scene without rectangular ends or glyph cells.
+        fade_y = np.clip((yy-y0) / max(1., span*.10), 0, 1) * np.clip((y1-yy) / max(1., span*.10), 0, 1)
+        fade_x = np.clip(np.minimum(xx-x0, x1-xx) / max(1., (x1-x0)*.08), 0, 1)
+        ink.paste(Image.fromarray(np.uint8(np.clip(tile * fade_x * fade_y, 0, 1) * 255)), (left, top))
+        return ink
+
     def shimmer(self, edge, center, time, seed, track_id):
         from .geometry import noise
         yy, xx = np.nonzero(np.asarray(edge))
@@ -197,9 +278,11 @@ class SignalStyle:
         dt = None if self.time is None else time - self.time
         if shot_id != self.shot or dt is None or dt <= 0 or dt > .5:
             self.anchors.clear()
+            self.light_anchors.clear()
             dt = None
         self.time, self.shot = time, shot_id
         active = {}
+        active_lights = {}
         panel = renderer.hud_panel(image.size, *SUBJECT_ELEMENTS)
         behind = renderer.hud_panel(image.size, 'subject-code') if self.subject_code and self.code_layer == 'behind' else None
         union = Image.new('L', image.size) if behind else None
@@ -232,7 +315,17 @@ class SignalStyle:
                 (behind if behind and element == 'subject-code' else panel).layer(element).alpha_composite(layer)
 
             if self.subject_code:
-                if behind:
+                if self.code_style == 'light':
+                    core = body_core(subject, binary)
+                    previous_core = self.light_anchors.get(subject.track_id)
+                    if previous_core is not None and dt is not None and abs(core[0]-previous_core[0]) < min(image.size)*.15:
+                        core = previous_core + (core-previous_core) * (1-math.exp(-dt/.12))
+                    active_lights[subject.track_id] = core
+                    cx, core_width = core
+                    light_bounds = (cx-core_width/2, max(0., y0-(y1-y0)*.6), cx+core_width/2, y1)
+                    code = self.light_streams(image.size, light_bounds, 0 if static else time, renderer.seed, subject.track_id)
+                    paste('subject-code', code if behind else ImageChops.multiply(code, mask))
+                elif behind:
                     bw, bh = x1 - x0, y1 - y0
                     expanded = (x0, max(0, y0 - bh * .35), x1, y1)
                     code = self.streams(image.size, expanded, current[:2], 0 if static else time, renderer.seed, subject.track_id, renderer.code_mask, fit_columns=True)
@@ -305,6 +398,7 @@ class SignalStyle:
                                           width=stroke, joint='curve')
                 paste('subject-carets', caret)
         self.anchors = active
+        self.light_anchors = active_lights
         if behind:
             # Clip the final emission, including both regular bloom and neon.
             # Union occlusion protects other subjects as well as this stream's owner.

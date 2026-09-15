@@ -108,7 +108,7 @@ Choose a **complete preset** for a coordinated scene and HUD; a **palette starte
 | `fremont` | Detailed red/burgundy source | Bold white analysis, persistent translucent scan disk |
 | `murphy` | Source detail with a slight blue cast | Glowing green box and thinking caption |
 | `focus` | Dark, cool source detail | Violet geodesic sphere, partial blue-white edges, one gliding hexagon |
-| `relic` | Focus scene grade | Figure-bound violet triangles and dense upward code behind subjects |
+| `relic` | Focus scene grade | Figure-bound violet triangles and rising light streams behind each body core |
 | `netrunner` | Dark green source tint | Red edges, upward Cyber code, cyan titles, yellow carets |
 
 All complete presets need [segmented setup](#segmented-looks). Palettes alone also work in Classic. Every preset consists of ordinary options; no effect is reserved for one preset.
@@ -149,11 +149,11 @@ Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--th
 
 Focus uses a slowly rotating geodesic sphere, with bluish-violet broken lines fading toward the center. Satellite dots pulse away from vertices and return; some vertices carry seven-sided rings. Partial blue/lavender/white outlines shimmer along current subjects. One persistent hexagon glides between targets, containing the inset circle, six inner circles, four outer circles and a center square. The Focus preview is at the top of this page.
 
-Relic adds violet triangles that spawn on the selected figure, rise, contract and spin away. Its upward code is dense without smaller glyphs, confined to each figure's width and hidden by all foreground silhouettes. Focus keeps code off. Decorative yellow scan patches remain available with `--target-weak-spots`; both presets leave them off.
+Relic adds violet triangles that spawn on the selected figure, rise, contract and spin away. Soft violet filaments stream upward behind each body's core, using shoulders and hips for alignment instead of extended arms or held props. When pose information is unavailable, the solid body region supplies the center. Foreground silhouettes hide the trails and their glow. [`--code-style light`](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/options.md#code-style) selects this treatment; `glyphs` selects readable code. Focus keeps this effect off. Decorative yellow scan patches remain available with `--target-weak-spots`; both presets leave them off.
 
 | Relic |
 | --- |
-| [![Relic: violet figure-bound ornaments and dense upward code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.0) |
+| [![Relic: violet figure-bound ornaments and soft rising light streams centered on each body core](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.1-light)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.1-light) |
 
 <!-- example: {"id": "readme-focus", "tier": "models", "checks": {}} -->
 ```bash

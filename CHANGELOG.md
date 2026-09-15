@@ -2,6 +2,7 @@
 
 ## 2.12.1
 
+- Center Relic's effect on the body core using shoulder/hip joints with a mask fallback, and replace its readable code with soft rising light filaments. Add portable [`--code-style`](skills/yautja/references/options.md#code-style) (`glyphs` or `light`); Netrunner retains glyphs and Focus keeps the effect off.
 - Bring the triangle's three lock dots 15% closer together while retaining their existing sizes and cluster center. Refresh the triangle previews and complete target contact sheet.
 - Reorganize the README around installation, choosing a look, customization, portable presets, output controls and troubleshooting. Retain the hero, four leading presets and two animated lock-dot reticles. The complete contact sheet shows all 11 geometric shapes, including both lock-dot designs, plus Fremont's scan disk with its fill on and off.
 - Add a canonical reference covering every option family, alias, effective default, prerequisite and persistence rule, with complete runnable examples and one authoritative HUD role table. Include all three resources in the skill bundle.

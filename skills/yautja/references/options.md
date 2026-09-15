@@ -463,6 +463,17 @@ The fixed fields below are checked against the parser and preset registries by `
 - Persistence: saved
 - Example: [Complete recipe](examples.md#relic)
 
+#### code-style
+
+- Syntax: `--code-style`
+- Values: `glyphs`, `light`
+- Units: not applicable
+- Default: "glyphs"
+- Applies: Choose readable glyph streams or soft rising light filaments centered on the body core; Relic uses light
+- Requires: --subject-code, --hud and a segmented mode
+- Persistence: saved
+- Example: [Complete recipe](examples.md#relic)
+
 #### geo-grid
 
 - Syntax: `--geo-grid`, `--no-geo-grid`
@@ -766,7 +777,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: Switch; no value argument.
 - Units: not applicable
 - Default: false
-- Applies: Flow glyph code upward inside detected silhouettes; requires a segmented mode
+- Applies: Show rising glyphs or light streams on detected subjects; requires a segmented mode
 - Requires: --hud and a segmented thermal mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#netrunner)
@@ -821,7 +832,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 8–80
 - Units: reference pixels at a 1080px short edge
 - Default: 22.0
-- Applies: Code glyph size, 8-80 reference pixels at a 1080px short edge
+- Applies: Glyph size or light-stream spacing and width, 8-80 reference pixels at a 1080px short edge
 - Requires: --subject-code, --hud and a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#netrunner)
@@ -843,7 +854,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 0–3
 - Units: unitless
 - Default: 0.65
-- Applies: Code stream density, 0-3; 0 hides code, 0-1 selects a fraction of columns, above 1 adds columns without shrinking glyphs
+- Applies: Stream density, 0-3; 0 hides the effect. Glyph mode selects or adds columns without shrinking glyphs; light mode adjusts filament count
 - Requires: --subject-code, --hud and a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#netrunner)

@@ -184,15 +184,17 @@ yautja "photo.jpg" "grid.png" --geo-grid --geo-grid-projection sphere --geo-grid
 yautja "photo.jpg" "hologram.png" --thermal low-detail --subject-outline --outline-style holographic --outline-width 6.4 --outline-coverage 0.35 --outline-arcs 5 --outline-speed 1.35 --outline-shine 0.75 --target-mode cycle --target-weak-spots
 ```
 
-## Relic ornaments and code behind figures
+<a id="relic-ornaments-and-code-behind-figures"></a>
+
+## Relic ornaments and light behind figures
 
 <a id="relic"></a>
 
-**Segmented.** Broken triangles spawn on the selected figure, rise, then collapse and spin away. Code retains its glyph size and stream count inside the figure-wide column.
+**Segmented.** Broken triangles spawn on the selected figure, rise, then collapse and spin away. Soft light filaments rise behind each body's core, aligned to shoulders and hips when available. A mask-based fallback finds the body when pose information is unavailable. Foreground silhouettes hide the trails and their glow. Use `--code-style glyphs` for the separate glyph treatment.
 
-<!-- example: {"id": "relic", "tier": "models", "checks": {"look_preset": "relic"}} -->
+<!-- example: {"id": "relic", "tier": "models", "checks": {"look_preset": "relic", "code_style": "light"}} -->
 ```bash
-yautja "clip.mov" "relic.mp4" --stylepreset relic --duration 4 --target-motif triangles --target-motif-count 7 --target-motif-scale 1 --target-motif-speed 1 --target-motif-breaks 0.7 --code-layer behind
+yautja "clip.mov" "relic.mp4" --stylepreset relic --duration 4 --target-motif triangles --target-motif-count 7 --target-motif-scale 1 --target-motif-speed 1 --target-motif-breaks 0.7 --code-layer behind --code-style light
 ```
 
 ## Murphy with a thinking caption
