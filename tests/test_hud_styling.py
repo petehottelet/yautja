@@ -60,7 +60,7 @@ class HudStylingTests(unittest.TestCase):
         subjects = [Subject(mask, 'person', .95, track_id=1)]
         def render(element=None, analysis=False):
             renderer = Renderer(*self.size, show_timecode=True, verbose=True, glow=0,
-                                analysis=analysis,
+                                analysis=analysis, analysis_target=analysis,
                                 geo_grid=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_blur_elements=None if element is None else element + '=8')

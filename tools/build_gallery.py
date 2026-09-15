@@ -144,7 +144,7 @@ def main():
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
                               surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
-                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('subject_code') or o.get('target_mode') == 'auto') and o.get('hud', True) for o in resolved_settings))
+                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode') == 'auto') and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
         if 'timecode' in resolved:
@@ -239,6 +239,8 @@ def main():
                                      'settings': settings[name], 'colors': renderers[name].colors.report(),
                                      'thermal_transfer': renderers[name].transfer.report()}
                     results[name]['scene'] = renderers[name].signal.report()
+                    results[name]['analysis'] = renderers[name].analysis.report(renderers[name].hud)
+                    results[name]['geometry'] = renderers[name].geometry.report(renderers[name].hud)
                     results[name]['hud_glyphs'] = renderers[name].hud_glyphs
                     if name.removeprefix('large/').startswith('target-'):
                         if not renderers[name].target_overlay.seen:

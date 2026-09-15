@@ -84,8 +84,10 @@ Conversion reports retain `look_preset` and add `preset_name`, `preset_kind` (`l
 
 ## Fremont
 
-`fremont` is a complete visual preset with source-scene grading and automatic readable analysis. The visual settings `analysis`, `analysis_speed`, `analysis_blink_rate`, `analysis_margin`, `analysis_outline_width`, `hud_font`, and `scene_highlights` save/load with the preset and accept explicit overrides in either command order. See [analysis.md](analysis.md) for the recipe and new HUD elements. Detection classes such as vehicles remain per-conversion `--warm-objects` choices.
+`fremont` is a complete visual preset with source-scene grading and automatic readable analysis. The visual settings `analysis`, `analysis_speed`, `analysis_blink_rate`, `analysis_margin`, `analysis_outline_width`, `analysis_target`, `analysis_target_size`, `analysis_target_response`, `hud_font`, and `scene_highlights` save/load with the preset and accept explicit overrides in either command order. See [analysis.md](analysis.md) for the recipe and new HUD elements. Detection classes such as vehicles remain per-conversion `--warm-objects` choices.
 
 ## Focus, Relic, and Murphy
 
 These complete presets and their independent geometry, shimmer, code placement, and readable-font controls require 2.8.0+. See [focus.md](focus.md). Schema version 1 remains appropriate: visual settings are flat, additive options; local custom-font paths and source-specific target IDs are excluded.
+
+The persistent Fremont scan target requires 2.9.0+. Its enablement is independent of readable analysis, while both share subject selection and cycle speed. Motion state and current track/position are report data, never saved settings. Schema version 1 remains unchanged.

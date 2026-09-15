@@ -145,3 +145,5 @@ JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, 
 ## Analysis HUD elements
 
 Fremont adds `analysis-grid`, `analysis-text`, and `analysis-outline` to every HUD color, blur, opacity, and neon map. Standard colors are pale white; the palette theme uses its accent for the grid and its light color for text/outlines. `--scene-highlights` restores neutral highlights above source-mode tint independently of thermal palettes. See [analysis.md](analysis.md).
+
+Fremont’s persistent target (2.9.0+) adds `analysis-target-fill` (gray `#8FA1B0`, native alpha 40%) and `analysis-target` (dark `#11161E`, native alpha about 90%). Per-element opacity multiplies native alpha; color, blur, and neon remain independently configurable. The palette theme uses its light color for the fill and a dark primary color for the marks.

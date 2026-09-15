@@ -47,7 +47,7 @@ class HudOpacityTests(unittest.TestCase):
         subjects = [Subject(mask, 'person', .95, track_id=1)]
         def picture(key=None, analysis=False):
             renderer = Renderer(960, 540, show_timecode=True, verbose=True,
-                                analysis=analysis,
+                                analysis=analysis, analysis_target=analysis,
                                 geo_grid=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_opacity_elements=None if key is None else key + '=0')

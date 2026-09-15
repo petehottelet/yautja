@@ -35,9 +35,11 @@ LOOK_PRESETS = {'hottropic': {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#E51A24',
     'scene_tint_strength': 1., 'scene_exposure': 1.25, 'scene_highlights': .95,
     'hud': True, 'hud_theme': 'custom',
-    'hud_colors': ','.join(f'{key}=#F2F6FA' for key in HUD_DEFAULTS),
+    'hud_colors': ','.join(f'{key}={value}' for key, value in {
+        **dict.fromkeys(HUD_DEFAULTS, '#F2F6FA'), 'analysis-target-fill': '#8FA1B0', 'analysis-target': '#11161E'}.items()),
     'analysis': True, 'analysis_speed': 1., 'analysis_blink_rate': 2., 'analysis_margin': .035,
     'hud_font': 'orbitron-bold', 'analysis_outline_width': 5.,
+    'analysis_target': True, 'analysis_target_size': .36, 'analysis_target_response': .6,
     'hud_opacity_elements': ','.join(f'{key}=0' for key in HUD_DEFAULTS if not key.startswith('analysis-')),
     'subject_outline': False, 'subject_code': False, 'subject_labels': False,
     'neon': False, 'glow': .25, 'verbose': False, 'timecode': False,
@@ -96,7 +98,7 @@ COMPLETE_PRESETS = {'hottropic', 'netrunner', 'fremont', 'focus', 'relic', 'murp
 PRESET_DESCRIPTIONS = {
     'hottropic': 'Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
-    'fremont': 'Detailed red/burgundy source scene, white readable analysis, moving XY search grid and blinking subject outlines.',
+    'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
     'focus': 'Blue-violet source scene, shimmering triangular grid and edge highlights, automatic thin hexagon targets.',
     'relic': 'Focus with pink triangle ornaments and rising code occluded behind every subject.',
     'murphy': 'Green Tech HUD, heavy CRT scanlines, frame-spanning box targets and a readable TARGETING caption; catalog targets optional.',

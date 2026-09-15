@@ -119,6 +119,7 @@ A **style preset** is the broadest visual option: a named bundle of settings for
 | Thermal detail | `--thermal` | How much subject and scenery detail is preserved |
 | Scene treatment | `--scene-mode`, `--scene-tint`, tint strength, exposure, `--scene-highlights` | Thermal recoloring or the original scene with a color grade |
 | Readable analysis | `--analysis`, scan speed, blink rate, safe margin | Moving XY grid, descriptive readouts, and selected-subject outlines |
+| Persistent scan target | `--analysis-target`, target size and response time | Translucent fixed-size reticle that glides between analysis subjects and sweeps during search |
 | Color palette | `--palette`, `--palette-colors` | The colors assigned from cold to hot |
 | Thermal levels and tone | `--thermal-levels`, `--thermal-band-softness`, black/white points, gamma, softness | Color bands, transitions, contrast, and smoothing |
 | HUD styling | `--hud`, `--HUDglyphs`, `--hud-theme`, colors, blur, opacity, `--neon` | Glyph set, overlay visibility and appearance, including individual element overrides |
@@ -275,17 +276,17 @@ Requires Yautja 2.8.0+. Conversion works with the lightweight install using an e
 
 ### Fremont style preset
 
-**Fremont** preserves fine source detail under a **red/burgundy grade**, with **white Orbitron Bold text**, a **moving XY search grid**, and **thicker white subject outlines that blink during analysis**. It searches, acquires a detected subject, analyzes it, and holds the result before moving on. Descriptions stay inside the screen, including portrait frames. The numbers are decorative; labels describe detected categories such as person, dog, car, or motorcycle.
+**Fremont** preserves fine source detail under a **red/burgundy grade**, with **white Orbitron Bold text**, a **moving XY search grid**, and **thicker white subject outlines that blink during analysis**. A **persistent translucent gray circular target** glides between subjects, with a dark inner ring and crosshair. Its size stays constant throughout search, acquisition, and analysis. Descriptions stay inside the screen, including portrait frames. The numbers are decorative; labels describe detected categories such as person, dog, car, or motorcycle.
 
-[![Fremont: detailed red scene with white scan grid, analysis text and blinking figure outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.8.0)
+[![Fremont: persistent translucent circular target glides between subjects over a detailed red scene with white analysis](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.9.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.9.0)
 
 ```bash
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont
 ```
 
-This bold-font and thicker-outline version requires Yautja 2.8.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show the complete scan sequence. Stills show the held analysis immediately. Empty scenes remain in search mode, and cuts or lost tracks restart scanning.
+This persistent-target version requires Yautja 2.9.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show a complete scan and the handoff to another subject. Stills show the held analysis immediately. Empty scenes keep the target sweeping in search mode, and cuts or lost tracks restart scanning.
 
-Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. The source highlights are adjustable with `--scene-highlights`. `--no-analysis` hides the scan overlay; `--no-hud` hides all overlays. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
+Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. `--analysis-target-size 0.45` enlarges the disk; `--analysis-target-response 0.9` makes focus changes more gradual. `--no-analysis-target` hides just the disk and crosshair, `--no-analysis` hides the grid/text/outline, and `--no-hud` hides every overlay. The source highlights are adjustable with `--scene-highlights`. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
 
 Use `--hud-font orbitron-medium` for medium-weight text and `--analysis-outline-width 5` to set outline thickness in reference pixels at a 1080px short edge. These controls save with the style preset.
 

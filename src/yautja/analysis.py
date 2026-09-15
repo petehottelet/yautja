@@ -9,9 +9,11 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from .signal import stable_number
+from .analysis_target import AnalysisTarget
 
-ANALYSIS_OPTIONS = ('analysis', 'analysis_speed', 'analysis_blink_rate', 'analysis_margin', 'analysis_outline_width')
-ANALYSIS_ELEMENTS = ('analysis-grid', 'analysis-text', 'analysis-outline')
+ANALYSIS_OPTIONS = ('analysis', 'analysis_speed', 'analysis_blink_rate', 'analysis_margin', 'analysis_outline_width',
+                    'analysis_target', 'analysis_target_size', 'analysis_target_response')
+ANALYSIS_ELEMENTS = ('analysis-grid', 'analysis-text', 'analysis-outline', 'analysis-target-fill', 'analysis-target')
 
 
 @lru_cache(maxsize=32)
@@ -28,17 +30,22 @@ def category(label):
 
 class AnalysisHUD:
     def __init__(self, *, analysis=False, analysis_speed=1., analysis_blink_rate=2., analysis_margin=.035,
-                 analysis_outline_width=2.4):
+                 analysis_outline_width=2.4, analysis_target=False, analysis_target_size=.36, analysis_target_response=.6):
         for name, value, low, high in (
             ('analysis-speed', analysis_speed, 0, 5),
             ('analysis-blink-rate', analysis_blink_rate, 0, 4),
-            ('analysis-margin', analysis_margin, .01, .15), ('analysis-outline-width', analysis_outline_width, .5, 12)):
+            ('analysis-margin', analysis_margin, .01, .15), ('analysis-outline-width', analysis_outline_width, .5, 12),
+            ('analysis-target-size', analysis_target_size, .1, .8),
+            ('analysis-target-response', analysis_target_response, 0, 3)):
             if not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f'--{name} must be between {low} and {high}')
         self.analysis = bool(analysis)
         self.analysis_speed, self.analysis_blink_rate = analysis_speed, analysis_blink_rate
         self.analysis_margin = analysis_margin
         self.analysis_outline_width = analysis_outline_width
+        self.analysis_target = bool(analysis_target)
+        self.analysis_target_size, self.analysis_target_response = analysis_target_size, analysis_target_response
+        self.target = AnalysisTarget(analysis_target_size, analysis_target_response)
         self.font = analysis_font
         self.shot, self.origin, self.last_time = None, None, None
         self.selected, self.previous, self.cycle = None, None, None
@@ -46,10 +53,13 @@ class AnalysisHUD:
         self.text_boxes = []
 
     def report(self, hud=True):
+        active = hud and (self.analysis or self.analysis_target)
         return {**{key: getattr(self, key) for key in ANALYSIS_OPTIONS},
                 'analysis': bool(hud and self.analysis),
-                'analysis_phase': self.phase if hud and self.analysis else 'OFF',
-                'analysis_track': self.selected if hud and self.analysis else None,
+                'analysis_target': bool(hud and self.analysis_target),
+                'analysis_target_position': self.target.position.tolist() if hud and self.analysis_target and self.target.position is not None else None,
+                'analysis_phase': self.phase if active else 'OFF',
+                'analysis_track': self.selected if active else None,
                 'analysis_numbers': 'seeded decorative telemetry, not measurements'}
 
     def state(self, subjects, time, shot, static=False):
@@ -119,14 +129,27 @@ class AnalysisHUD:
         return None
 
     def draw(self, renderer, image, subjects, time, shot, static=False):
-        if not self.analysis:
+        if not (self.analysis or self.analysis_target):
             return
         self.font = renderer.typography.font
         subject, phase, elapsed = self.state(subjects, time, shot, static)
         width, height = image.size
+        if self.analysis_target:
+            if subject is None:
+                aim = (.5 + .36 * math.sin(elapsed * .72), .5 + .3 * math.sin(elapsed * .53))
+            else:
+                yy, xx = np.nonzero(subject.mask >= .5)
+                # Upper center of the current silhouette, independent of its size.
+                aim = ((xx.min() + xx.max()) / (2 * subject.mask.shape[1]),
+                       (yy.min() + .35 * (yy.max() - yy.min())) / subject.mask.shape[0])
+            self.target.advance(aim, time, shot, image.size, static)
+            self.target.draw(renderer, image)
+        if not self.analysis:
+            self.text_boxes = []
+            return
         margin = max(2, round(min(width, height) * self.analysis_margin))
         self.text_boxes = []
-        panel = renderer.hud_panel(image.size, *ANALYSIS_ELEMENTS)
+        panel = renderer.hud_panel(image.size, 'analysis-grid', 'analysis-text', 'analysis-outline')
         grid, text = panel.layer('analysis-grid'), panel.layer('analysis-text')
         grid_ink, text_ink = renderer.hud_ink('analysis-grid'), renderer.hud_ink('analysis-text')
         # Side columns leave the central scene and faces readable. Portrait
@@ -141,7 +164,9 @@ class AnalysisHUD:
             px, py = gx + round(grid_size * i / 10), gy + round(grid_size * i / 10)
             d.line((px, gy, px, gy + grid_size), fill=dim, width=stroke)
             d.line((gx, py, gx + grid_size, py), fill=dim, width=stroke)
-        if self.phase == 'SEARCH':
+        if self.analysis_target:
+            px, py = self.target.position
+        elif self.phase == 'SEARCH':
             # Independent smooth XY sweeps, avoiding per-frame random jumps.
             px = .5 + .46 * math.sin(elapsed * 2.3 + .3)
             py = .5 + .46 * math.sin(elapsed * 1.7 + 1.8)

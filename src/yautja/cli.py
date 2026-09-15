@@ -247,7 +247,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis or args.subject_code or args.target_mode == 'auto') and not args.list_figures)
+                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis or args.analysis_target or args.subject_code or args.target_mode == 'auto') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -573,6 +573,9 @@ def parser():
     p.add_argument('--analysis-speed', type=float, default=1., help='Search/acquire/analysis/hold cycle speed, 0-5; 1 takes six seconds, 0 freezes the search')
     p.add_argument('--analysis-blink-rate', type=float, default=2., help='Outline blinks per second during analysis, 0-4; 0 keeps it steady')
     p.add_argument('--analysis-margin', type=float, default=.035, help='Safe margin for readable analysis text as a fraction of the short frame edge, 0.01-0.15')
+    p.add_argument('--analysis-target', action=argparse.BooleanOptionalAction, default=False, help='Persistent translucent scan target with smooth focus motion and no acquisition zoom; independent of --analysis, shares its subject selection and speed')
+    p.add_argument('--analysis-target-size', type=float, default=.36, help='Constant scan target diameter as a fraction of the short frame edge, 0.1-0.8')
+    p.add_argument('--analysis-target-response', type=float, default=.6, help='Seconds to cover 95 percent of a focus change, 0-3; 0 follows immediately')
     p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
     p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
     p.add_argument('--outline-style', choices=['solid', 'shimmer'], default='solid', help='Subject outline rendering style; enable with --subject-outline')
@@ -705,8 +708,8 @@ def main(argv=None):
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
         GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
         HUDTypography(args.hud_font, args.hud_font_file)
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis or (args.target_mode == 'auto' and not args.target)):
-            p.error('Subject outlines, code, titles, analysis, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode == 'auto' and not args.target)):
+            p.error('Subject outlines, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:

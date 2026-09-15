@@ -1,6 +1,6 @@
 # Fremont and readable analysis
 
-This version requires Yautja 2.8.0+ and the segmented runtime. Run:
+This version requires Yautja 2.9.0+ and the segmented runtime. Run:
 
 ```bash
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont
@@ -19,6 +19,9 @@ yautja "street.mov" "street-fremont.mp4" --stylepreset fremont --warm-objects "p
 | Option | Default | Behavior |
 | --- | --- | --- |
 | `--analysis` / `--no-analysis` | Off; on in Fremont | Adds/removes the readable scan HUD; requires segmented mode when HUD is visible |
+| `--analysis-target` / `--no-analysis-target` | Off; on in Fremont | Persistent translucent circular target; independently enabled, sharing analysis selection and speed |
+| `--analysis-target-size` | `0.36` | 0.1–0.8 of the short frame edge as a constant diameter; never zooms during acquisition |
+| `--analysis-target-response` | `0.6` | 0–3 seconds to move 95% toward a new stationary focus; 0 follows immediately |
 | `--analysis-speed` | `1` | 0–5; six-second cycle at 1; higher values shorten the sequence; 0 freezes search |
 | `--analysis-blink-rate` | `2` | 0–4 blinks/second during analysis; 0 keeps the outline steady |
 | `--analysis-outline-width` | `2.4`; Fremont `5` | 0.5–12 reference pixels at a 1080px short edge |
@@ -28,14 +31,18 @@ yautja "street.mov" "street-fremont.mp4" --stylepreset fremont --warm-objects "p
 
 Fremont's source settings are `--scene-mode source --scene-tint "#E51A24" --scene-tint-strength 1 --scene-exposure 1.25 --scene-highlights 0.95`. Thermal palette/detail settings do not recolor the source image in this mode. Texture effects remain available.
 
-All these visual options save/load in JSON presets and use the existing explicit-option precedence. The new element names are `analysis-grid`, `analysis-text`, and `analysis-outline`. Each accepts the ordinary HUD color, opacity, blur, and neon overrides. For example:
+All these visual options save/load in JSON presets and use the existing explicit-option precedence. The element names are `analysis-grid`, `analysis-text`, `analysis-outline`, `analysis-target-fill`, and `analysis-target`. Each accepts the ordinary HUD color, opacity, blur, and neon overrides. For example:
 
 ```bash
 yautja "clip.mov" "quiet-analysis.mp4" --stylepreset fremont --analysis-blink-rate 0 --hud-opacity-elements "analysis-grid=0.4,analysis-text=1,analysis-outline=1,waveform=0,waveform-axis=0,waveform-ticks=0,waveform-glyphs=0,readout=0"
 ```
 
-An explicit element-map option replaces the preset's map; specify any hidden elements you want to keep hidden. `--no-hud` hides every overlay, including scan outlines, while preserving the source grade. `--no-analysis` hides just the analysis HUD. Adding `--analysis` to another preset composes it with that preset's existing overlays.
+An explicit element-map option replaces the preset's map; specify any hidden elements you want to keep hidden. `--no-hud` hides every overlay while preserving the source grade. `--no-analysis` hides the grid, text, and blinking outline; `--no-analysis-target` hides the persistent reticle. Adding either component to another preset composes it with that preset's existing overlays.
 
-Descriptions reposition and wrap to stay inside the safe area, scaling down on small frames. Numeric rows are revealed during analysis rather than randomized every frame. Outlines use current-frame mask refinement, with no spatial lag smoothing; detection and occlusion quality depend on the footage. The report includes the configured scan controls, effective `analysis` enablement, `analysis_phase`, `analysis_track`, and an `analysis_numbers` description.
+The target has a translucent gray disk (`analysis-target-fill`, `#8FA1B0`) and dark ring/crosshair (`analysis-target`, `#11161E`). Native alpha is 40% for the disk and about 90% for the marks; ordinary HUD opacity multiplies that alpha. For a subtler disk, set its element opacity to 0.5 (20% effective alpha before glow). The disk remains visible while searching, analyzing, or handing off to another subject. It aims toward the upper center of the current silhouette, with continuous damped movement and a fixed size. The small XY grid shows the same moving aim. Only the reticle position is smoothed; outlines use current masks. The circle stays within the frame, including when the subject is partly offscreen.
+
+Legacy catalog/automatic reticles keep their existing `--target-shape`, acquisition, flash, and ornament controls. Those controls do not change this scan target. An explicit catalog selection does not change the analysis subject cycle; use `--no-analysis-target` when only catalog reticles are wanted. No source-specific target IDs or motion state are saved in a style preset.
+
+Descriptions reposition and wrap to stay inside the safe area, scaling down on small frames. Numeric rows are revealed during analysis rather than randomized every frame. Outlines use current-frame mask refinement, with no spatial lag smoothing; detection and occlusion quality depend on the footage. The report includes the configured scan controls, effective `analysis` and `analysis_target` enablement, `analysis_phase`, `analysis_track`, normalized `analysis_target_position`, and an `analysis_numbers` description. Position is null when the target is hidden or has not rendered. Shared phase/track remain active when either component is enabled.
 
 See [readable typography](focus.md#readable-typography) for bundled weights and local font overrides. The bundled Michroma font is unmodified and retains its [SIL Open Font License](https://github.com/google/fonts/blob/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/michroma/OFL.txt). It is included with its license in the application wheel and source distribution.

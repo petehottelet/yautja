@@ -93,7 +93,7 @@ class NeonTests(unittest.TestCase):
         target = [{'id': 'one', 'bbox': [.4, .25, .6, .8]}]
         def render(key=None):
             renderer = Renderer(960, 540, neon=True, neon_flicker=.4, show_timecode=True, verbose=True,
-                                analysis=True,
+                                analysis=True, analysis_target=True,
                                 geo_grid=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 neon_elements=None if key is None else key + '=0')

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.0
+
+- Enable Fremont's persistent translucent circular scan target, with dark ring/crosshair marks, constant size, and smooth motion between analysis subjects. It stays visible during search and track loss, resets on cuts, and never uses the legacy acquisition zoom or flash.
+- Add independent scan-target enablement, diameter and response-time controls, plus separate fill/mark HUD elements supporting color, opacity, blur and neon. Share selection and scan speed with readable analysis; keep current-frame outlines and safe text placement.
+- Preserve flat schema-1 visual presets, explicit-option precedence, existing catalog targets, and the completed Focus, Relic and Murphy styles. Expand motion, lifecycle, per-element and packaged-runtime checks; refresh both Fremont GIF sizes with a full subject handoff.
+
 ## 2.8.0
 
 - Add Focus and Relic source-scene presets with shimmering triangular grids, partial moving edge highlights, automatic hexagon targets, and pink ornaments/code behind figures.

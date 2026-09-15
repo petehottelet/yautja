@@ -229,7 +229,8 @@ class Renderer:
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
                  subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
                  analysis=False, analysis_speed=1., analysis_blink_rate=2., analysis_margin=.035,
-                 analysis_outline_width=2.4, hud_font='michroma', hud_font_file=None,
+                 analysis_outline_width=2.4, analysis_target=False, analysis_target_size=.36, analysis_target_response=.6,
+                 hud_font='michroma', hud_font_file=None,
                  outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside',
                  geo_grid=False, geo_grid_scale=160., geo_grid_jitter=.65, geo_grid_speed=1.,
                  target_mode='selected', target_motif='none', target_motif_count=7, target_motif_scale=1., target_label=None):
@@ -245,7 +246,8 @@ class Renderer:
                                       target_label=target_label)
         self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
                                     analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin,
-                                    analysis_outline_width=analysis_outline_width)
+                                    analysis_outline_width=analysis_outline_width, analysis_target=analysis_target,
+                                    analysis_target_size=analysis_target_size, analysis_target_response=analysis_target_response)
         self.signal = SignalStyle(scene_mode=scene_mode, scene_tint=scene_tint, scene_tint_strength=scene_tint_strength,
                                   scene_exposure=scene_exposure, scene_highlights=scene_highlights,
                                   subject_outline=subject_outline, subject_code=subject_code,
@@ -313,7 +315,7 @@ class Renderer:
         # Alpha keeps gray ink gray over highlights and makes black ink visible.
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
-        self.overlay_mode = 'RGBA' if self.neon or geo_grid or target_motif != 'none' or target_label is not None or analysis or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None

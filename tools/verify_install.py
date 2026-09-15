@@ -126,6 +126,8 @@ result = renderer.render(frame, 0, subjects=[Subject(mask, 'person', .9, track_i
 assert renderer.analysis.phase == 'HOLD' and len(renderer.analysis.text_boxes) == 3
 assert 'Bold' in renderer.typography.font(16).getname()[1]
 assert renderer.analysis.analysis_outline_width == 5
+assert renderer.analysis.analysis_target and renderer.analysis.target.radius == min(frame.size) * .36 / 2
+assert renderer.analysis.target.position is not None
 result.save('fremont.png')
 from yautja.typography import FONT_FILES, HUDTypography
 for face in FONT_FILES:

@@ -30,6 +30,8 @@ HUD_DEFAULTS = {
     'geo-grid': (44, 120, 131),
     'target-motif': (65, 232, 239),
     'target-label': (255, 48, 43),
+    'analysis-target-fill': (143, 161, 176),
+    'analysis-target': (17, 22, 30),
 }
 HUD_THEMES = ('standard', 'palette', 'muted-cyan', 'custom', 'random')
 
@@ -153,6 +155,7 @@ def resolve_colors(palettes, *, palette='auto', palette_colors=None, hud_theme='
                     'subject-labels': primary, 'subject-carets': light})
         hud.update({'analysis-grid': accent, 'analysis-text': light, 'analysis-outline': light,
                     'geo-grid': tuple(round(c * .55) for c in accent), 'target-motif': light, 'target-label': primary})
+        hud.update({'analysis-target-fill': light, 'analysis-target': tuple(round(c * .12) for c in primary)})
     elif hud_theme == 'custom':
         hud.update(hud_hexes(hud_colors))
     elif hud_theme == 'random':
