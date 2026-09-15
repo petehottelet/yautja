@@ -1,0 +1,774 @@
+{
+  "assets/examples/colors-custom.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/colors-matched-green.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/colors-matched-ironbow.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/colors-random.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/glow-abyss.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/glow-green.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/hero.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/hud-off.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/colors-custom.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/colors-matched-green.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/colors-matched-ironbow.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/colors-random.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/glow-abyss.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/glow-green.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/hud-off.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/look-focus.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-fremont.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-murphy.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-netrunner.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-relic.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-yautja.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-abyss.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-amber-phosphor.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-black-hot.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-costa-rica.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-green-phosphor.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-ironbow.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-redline.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-thermal-spectrum.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/palette-virtualboy.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/palette-white-hot.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/preset-tropic-glow.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/style-cinematic.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/style-detailed.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/style-low-detail.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/style-very-detailed.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-abyss-steady.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-blur.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-custom.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-hud-blur.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-lock.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-opacity-elements.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-opacity-neon.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-opacity.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-outline.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-shape-round-dot.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 78,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-shape-triangle-dots.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 78,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/target-wave-blur.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/texture-bleed-soft.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-bleed-strong.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-crt-crosshatch.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-crt-grid.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-crt-lines.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-crt-vertical.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-grain.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-heat-glow.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-motion-soft.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-motion-strong.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-neon-flicker.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/texture-neon.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/texture-pixelation.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-sensor-texture.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-vhs-crt.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/texture-vhs.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/waveform-digital-blocks.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/waveform-digital-circuit.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/waveform-digital-shards.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/large/waveform-led-rorschach.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/waveform-rorschach-hollow.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/waveform-rorschach-split.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/large/waveform-rorschach.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/look-focus.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-fremont.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-murphy.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-netrunner.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-relic.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-yautja.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-abyss.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-amber-phosphor.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-black-hot.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-costa-rica.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-green-phosphor.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-ironbow.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-redline.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-thermal-spectrum.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/palette-virtualboy.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/palette-white-hot.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/poster.png": {
+    "width": 960,
+    "height": 540,
+    "frames": 1
+  },
+  "assets/examples/preset-tropic-glow.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/style-cinematic.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/style-detailed.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/style-low-detail.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/style-very-detailed.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-abyss-steady.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-blur.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-custom.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-hud-blur.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-lock.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-opacity-elements.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-opacity-neon.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-opacity.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-outline.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-shape-round-dot.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 78,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-shape-triangle-dots.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 78,
+    "duration_ms": 3250
+  },
+  "assets/examples/target-shapes.png": {
+    "width": 1020,
+    "height": 782,
+    "frames": 1
+  },
+  "assets/examples/target-wave-blur.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/texture-bleed-soft.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-bleed-strong.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-crt-crosshatch.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-crt-grid.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-crt-lines.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-crt-vertical.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-grain.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-heat-glow.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-motion-soft.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-motion-strong.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-neon-flicker.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/texture-neon.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/texture-pixelation.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-sensor-texture.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-vhs-crt.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/texture-vhs.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/waveform-digital-blocks.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/waveform-digital-circuit.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/waveform-digital-shards.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 39,
+    "duration_ms": 3250
+  },
+  "assets/examples/waveform-led-rorschach.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/waveform-rorschach-hollow.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/waveform-rorschach-split.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  },
+  "assets/examples/waveform-rorschach.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 36,
+    "duration_ms": 3000
+  }
+}

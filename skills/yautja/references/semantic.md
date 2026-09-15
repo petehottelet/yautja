@@ -13,7 +13,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 The base `yautja` package provides Classic mode. To use the segmented gallery looks, install `yautja[semantic]` in the selected virtual environment; it can also be installed directly as your first Yautja installation. This skill uses the compatible version range below. Keep installation, model setup, diagnosis, and conversion in the same environment:
 
 ```bash
-python -m pip install "yautja[semantic]>=2.8.0,<3"
+python -m pip install "yautja[semantic]"
 python -m yautja --download-models
 python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "outputs/photo-cinematic.png" --thermal cinematic --verbose
@@ -44,7 +44,7 @@ The historical comparison uses Python 3.11 with PyTorch 2.6.0/torchvision 0.21.0
 ```powershell
 python -m venv .venv-gpu
 .venv-gpu\Scripts\python.exe -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
-.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]>=2.8.0,<3"
+.venv-gpu\Scripts\python.exe -m pip install "yautja[semantic]"
 .venv-gpu\Scripts\python.exe -m yautja --doctor --thermal semantic --device cuda
 .venv-gpu\Scripts\python.exe -m yautja "clip.mov" "outputs/clip-cuda.mp4" --thermal semantic --device cuda --verbose --timecode
 ```
@@ -57,38 +57,7 @@ The JSON conversion report includes actual PyTorch/device/precision information,
 
 ## Controls
 
-| Option | Purpose |
-| --- | --- |
-| `--thermal classic` | Original lightweight luminance effect; still the default |
-| `--thermal low-detail` | Broad soft blobs with subdued anatomy; aliases: `silhouette`, `semantic` |
-| `--thermal cinematic` | Broad surface patches between Low Detail and Detailed |
-| `--thermal detailed` | Separate skin, clothing, and gear; alias: `realistic` |
-| `--thermal very-detailed` | Preserve visible source facial features and fabric texture inside segmented surfaces |
-| `--palette yautja` | Original colors, default for every style; `auto` is an alias |
-| `--palette ironbow` | Purple/red/orange through yellow-white |
-| `--palette redline` | Near-black, vivid blue, dominant red, and restrained pink highlights |
-| `--palette virtualboy` | Red/black only; explicit custom/random HUD colors can override the red HUD |
-| `--palette green-phosphor` / `--palette amber-phosphor` | Green or amber display colors |
-| `--palette white-hot` / `--palette black-hot` | Grayscale with simulated warm areas light or dark |
-| `--hud-theme palette` | Coordinate all HUD ink with the selected thermal palette |
-| `--palette custom` / `--hud-theme custom` | Independent hex colors; see [color controls](colors.md) |
-| `--random-colors` | Seeded random thermal and HUD colors, fixed throughout the video |
-| `--sensor-texture` / `--no-sensor-texture` | Combined preset: grain, pixels, scanlines, and quantization; default off |
-| `--grain` / `--grain 0.02` | Independent noise, bare flag 0.035; 0 disables |
-| `--pixelation` / `--pixelation 80` | Independent chunky pixels; bare flag longest edge 96, range 32–640; 0 disables |
-| `--crt-lines` / `--no-crt-lines` | Horizontal CRT lines over the finished image and HUD; `--scanlines` is an alias |
-| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid over the finished image and HUD; default off |
-| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees over the finished image and HUD; default off |
-| `--crt-strength 0.12` | Darkness of every enabled line pattern, 0–1 |
-| `--vhs` / `--no-vhs` | Analog color bleed, wobble, tape noise, dropouts, and tracking defects |
-| `--sensor-resolution 160` | More abstraction; default 256, range 64–640 on the longest edge |
-| `--warm-objects "person,dog,bird"` | Categories to simulate as warm |
-| `--hot-objects "fire"` | Explicit artistic hot-object overrides; empty by default |
-| `--confidence 0.4` | Stricter detection; may miss small or obscured subjects |
-| `--detect-interval 0.25` | More frequent detection at a higher computational cost; default 0.5 seconds |
-| `--verbose` | Cyan leaders and varied, stable six-symbol labels per track; works with all four segmented looks |
-| `--device cpu` / `--device cuda` | Select the inference device explicitly |
-| `--precision fp32` / `--precision bf16` | Full precision by default; experimental bfloat16 requires supported CUDA |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Warm defaults are people, birds, cats, dogs, horses, sheep, cows, elephants, bears, zebras, and giraffes. This is a category list, not a universal detector of living things. Add a category when relevant; detection of arbitrary objects is not guaranteed. Cars and appliances are not automatically assumed hot. When nothing is detected, the environment remains cool and the converter reports that result explicitly.
 
@@ -109,3 +78,7 @@ The bundled checkpoint describes a SAM video configuration; Transformers may pri
 Verbose labels use six distinct decorative patterns built from the bundled broad, nine-segment geometry. Dim outlines preserve the complete shape, while selected segments receive shaded cyan highlights and the HUD's glow. A seeded shuffle assigns separate groups of patterns to consecutive track IDs, reducing repetition across nearby targets. Each track keeps its combination as it moves, independent of frame time or detection order; `--seed` changes the combinations. The symbols are fictional readouts, not a translation, literal numeric ID, or thermometer. Glyph rows sit beside each silhouette, with connectors aimed at its smoothed center of area (an image-based approximation of center of mass). If that center falls outside a concave or partly occluded mask, the marker uses the nearest visible point. Labels retain their relative positions while clear, reserve space for the main HUD, avoid subjects and other labels, and fade with lost tracks. Time-based smoothing damps small mask changes with bounded lag during fast motion; cuts, reversed or repeated time, long frame gaps, and lost tracks reset its history. This stabilization is automatic. Up to eight labels are shown; a label is omitted when there is no nearby clear space. Track IDs identify detections within a shot, not individual people; no face recognition is performed.
 
 The JSON conversion report includes the selected mode, model revisions, device, detection-frame count, maximum concurrent subjects, and detected scene cuts. See [dependencies.md](dependencies.md) for licenses.
+
+## Mask stability
+
+Overlay silhouettes use flow-aligned hysteresis, closing and small-island filtering. The probability field remains separate for thermal coloring. `--mask-stability 0 --mask-min-region 0` restores the previous contour behavior. These are semantic runtime settings, alongside detection interval, and are never saved with a visual preset. [Defaults, ranges and examples](options.md#mask-stability).

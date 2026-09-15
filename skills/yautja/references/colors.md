@@ -121,14 +121,7 @@ or model setup.
 
 `--palette thermal-spectrum` selects only these colors and does not change the thermal mode, levels, or HUD. The preset is a reproducible treatment of the supplied visual reference; its 12-level setting is not a measurement of that compressed image.
 
-| Control | Range / behavior |
-| --- | --- |
-| `--thermal-levels N` | 2–64 representative values including both endpoints; 0 continuous; omitted preserves legacy grading |
-| `--thermal-band-softness S` | 0–1 transition width; 0 hard bands, default 0.35 when levels are set; requires N ≥ 2 |
-| `--thermal-black-point B` | 0–0.95; normalized synthetic warmth mapped to the cold end |
-| `--thermal-white-point W` | 0.05–1; at least 0.01 above B |
-| `--thermal-gamma G` | 0.25–4; 1 neutral, above 1 darkens intermediate values |
-| `--thermal-softness R` | 0–8 Gaussian pixels at a 1920px longest edge, scaled to output resolution |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Grading controls require explicit levels (including 0) or a look preset. Spatial softness, band softness, heat glow, and HUD blur are independent. The transfer spatially softens the float field, normalizes between black and white points, applies gamma, applies requested pixelation/grain, then quantizes and maps colors. Explicit levels bypass Cinematic's old mild bands and sensor texture's fixed quantizer. HUD readouts receive the underlying field, before grading; changing level count does not change detection or the model setup. With level controls and the look preset omitted, the existing grading path remains unchanged. Soft bands, glow, and later display effects introduce intermediate RGB values; N counts representative thermal values, not all colors in the final image.
 

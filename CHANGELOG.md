@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.1
+
+- Reorganize the README around installation, choosing a look, customization, portable presets, output controls and troubleshooting. Retain the hero, four leading presets, two animated lock-dot reticles and compact target contact sheet.
+- Add a canonical reference covering every option family, alias, effective default, prerequisite and persistence rule, with complete runnable examples and one authoritative HUD role table. Include all three resources in the skill bundle.
+- Add documentation checks for parser/reference drift, example coverage, repository links/anchors and measured preview metadata. Exercise tagged README/reference commands on generated fixtures; opt-in segmented verification uses cached local models.
+- Correct comparison baselines, preview timing and dimensions, update instructions, all three glyph choices, automatic Murphy targeting and CRF/encoder examples. Move maintainer workflows and redundant comparisons into development/gallery documentation.
+
 ## 2.12.0
 
 - Stabilize flow-aligned overlay masks with temporal blending, hysteresis, seam closing and small-island removal. New runtime controls: [`--mask-stability`](skills/yautja/references/options.md#mask-stability) and [`--mask-min-region`](skills/yautja/references/options.md#mask-min-region). Set both to zero to restore the previous contour behavior.

@@ -16,18 +16,7 @@ People and animals use the standard detection classes. Include vehicles explicit
 yautja "street.mov" "street-fremont.mp4" --stylepreset fremont --warm-objects "person,car,motorcycle,bicycle,bus,truck,dog"
 ```
 
-| Option | Default | Behavior |
-| --- | --- | --- |
-| `--analysis` / `--no-analysis` | Off; on in Fremont | Adds/removes the readable scan HUD; requires segmented mode when HUD is visible |
-| `--analysis-target` / `--no-analysis-target` | Off; on in Fremont | Persistent translucent circular target; independently enabled, sharing analysis selection and speed |
-| `--analysis-target-size` | `0.36` | 0.1–0.8 of the short frame edge as a constant diameter; never zooms during acquisition |
-| `--analysis-target-response` | `0.6` | 0–3 seconds to move 95% toward a new stationary focus; 0 follows immediately |
-| `--analysis-speed` | `1` | 0–5; six-second cycle at 1; higher values shorten the sequence; 0 freezes search |
-| `--analysis-blink-rate` | `2` | 0–4 blinks/second during analysis; 0 keeps the outline steady |
-| `--analysis-outline-width` | `2.4`; Fremont `5` | 0.5–12 reference pixels at a 1080px short edge |
-| `--hud-font` | `michroma`; Fremont `orbitron-bold` | Readable font; `orbitron-medium` selects medium weight |
-| `--analysis-margin` | `0.035` | 0.01–0.15 of the short frame edge; safe margin for descriptions and readouts |
-| `--scene-highlights` | `0`; Fremont `0.95` | 0–1; restores neutral highlights above a source tint while retaining midtone color |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Fremont's source settings are `--scene-mode source --scene-tint "#E51A24" --scene-tint-strength 1 --scene-exposure 1.25 --scene-highlights 0.95`. Thermal palette/detail settings do not recolor the source image in this mode. Texture effects remain available.
 

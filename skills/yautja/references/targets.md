@@ -1,5 +1,7 @@
 # Figure selection, targets, and display effects
 
+This guide covers geometric reticles (`--target-*`). Fremont's independently styled persistent scan disk uses `--analysis-target-*`; see [the analysis guide](analysis.md). [All target options](options.md#target-mode) and [HUD roles](hud-elements.md) are authoritative.
+
 All effects are optional. A scan lists detected figures, not people's identities. IDs belong to the saved catalog and its detected shots.
 
 ## List, inspect, select
@@ -44,19 +46,13 @@ Select geometry with `--target-shape`. Every shape uses the same selected figure
 | `hexagon` | Hexagon, circle at 90% of the inscribed radius, four outer and six inner targeting circles, central square |
 | `frame-box` | Rectangle with horizontal and vertical axes crossing at its center and extending to the frame edges |
 
-`crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size.
+`crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at a compact locked size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size.
 
 Shapes contract and settle with `--target-motion acquire`. `--target-motion persistent` keeps one constant-size reticle moving fluidly between subjects. Lock dots vanish on target loss and reappear only after reacquisition; still images show the locked state immediately. Center details share the target's colors and transparency. `--no-hud` hides all shapes. Reports include `target_shape`.
 
 Three solid-color blades contract into a compact reticle centered on the selected bounding box, with a narrow, clear gap through each corner. The landed radius is 39% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
 
-| Control | Default and range |
-| --- | --- |
-| `--target-acquire 0.8` | Assembly duration in seconds; 0.1–5 |
-| `--target-scale 1` | Multiplier for the compact reticle centered on the detected box; 0.25–3 |
-| `--target-colors "#ff302b,#ffffff"` | Primary/landing and flash color, in that order; RGB hex pair |
-| `--target-flash` / `--no-target-flash` | Flashing on by default for videos; off holds the primary color |
-| `--target-flash-rate 1.5` | Full red/white cycles per second; 0–3; 0 disables flashing |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 `--no-target-flash` keeps the assembly animation. Equal colors also hold a constant hue. The target honors `--hud-theme palette`, `--hud-theme random`, and custom `target` / `target-flash` HUD keys. An explicit `--target-colors` pair overrides those two theme colors. Defaults on Abyss remain red/white against its muted cyan HUD. White Hot uses light gray and Black Hot uses black for both target states with standard or palette-matched HUD colors. Virtual Boy keeps standard/matched targets red-only; explicit target colors or custom/random HUD themes can introduce other hues.
 
@@ -68,12 +64,7 @@ yautja "clip.mov" "abyss-target.mp4" --thermal cinematic --palette abyss --figur
 
 `--neon` illuminates all active HUD elements with a bright core and two colored halos, inspired by Saber Alight's neon tube rendering. It works on stills and video, with every palette and target shape. Default off; `--no-neon` overrides a preset.
 
-| Option | Behavior |
-| --- | --- |
-| `--neon-intensity 1` | Overall strength, 0–2; default 1. Zero keeps original ink without emission or whitening |
-| `--neon-spread 0.6` | Halo radius relative to stroke width, 0–2; default 0.6 |
-| `--neon-flicker 0.5` | Smooth synchronized hum, 0–1; default 0 is steady. Uses an independent stream derived from `--seed`; stills evaluate time zero |
-| `--neon-elements "waveform=0.6,target=1.2,timecode=0"` | Per-element intensity, 0–2; omitted keys inherit the global intensity; zero disables that element's neon |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Keys: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`. The target override covers both flash states. Hidden elements emit nothing. Tuning flags without `--neon` are validated and saved but inactive; the CLI prints a notice on stderr.
 
@@ -93,13 +84,7 @@ Save all controls with `--save-preset`, or start with [Abyss Neon](../assets/pre
 
 Both options are off by default and work for images and videos. The reticle remains solid-colored without a stroke. Its size, blade thickness, acquisition animation, and corner gaps use the existing settings.
 
-| Control | Effect |
-| --- | --- |
-| `--target-stroke 3` | Inward outline width on all three blades, 0–12; 0 disables, bare flag uses 2 |
-| `--target-stroke-colors "#660b12,#687a8d"` | Outline colors for landing and flash; a single hex value uses that color in both states |
-| `--target-stroke-colors auto` | Default: darker shades of the current target colors, following its flash state and HUD theme |
-| `--hud-blur 3` | Shared Gaussian blur radius for all HUD artwork, 0–20; default 0 |
-| `--hud-blur-elements "waveform=6,target=4,timecode=0"` | Independent radius overrides; unspecified elements inherit the shared value and explicit 0 restores sharp artwork |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Stroke widths and blur radii are **reference pixels at a 1080px short edge**. A value of 4 becomes 2 output pixels at 960×540 and 1 at 480×270. The same scaling applies to portrait and still outputs. Very fine outlines may round away at low resolution. Large stroke widths can cover a narrow blade; they never expand its outer boundary or close its corner gaps. Explicit outline colors remain independent of fill colors and can introduce other hues in Virtual Boy when the stroke is enabled. Black Hot's automatic outline remains black; choose an explicit color for contrast.
 
@@ -142,17 +127,7 @@ For the same red in the waveform, timecode, and both reticle states, set `--hud-
 
 For HUD-only softness and target outlines, see [reticle stroke and independent HUD blur](#reticle-stroke-and-independent-hud-blur).
 
-| Control | Effect |
-| --- | --- |
-| `--heat-glow 0.6` | Bloom and moving luminous patches from the synthetic hot regions; strength 0–1, default 0 |
-| `--heat-glow-speed 1` | Glow movement rate 0–5; 0 freezes the pattern |
-| `--motion-blur 0.4` | Temporal frame persistence/trails; strength 0–1, default 0 |
-| `--crt-bleed 0.4` | Horizontal phosphor smear across the finished picture and HUD; strength 0–1, default 0 |
-| `--crt-vertical-lines` / `--no-crt-vertical-lines` | Vertical CRT stripes, off by default; `--vertical-crt-lines` is an alias |
-| `--crt-lines` / `--no-crt-lines` | Existing horizontal CRT stripes, independently selectable |
-| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid; off by default |
-| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees, with two diagonal line directions; off by default |
-| `--crt-strength 0.12` | Darkness of all enabled line patterns, 0–1; 0 hides them |
+[All option ranges, defaults and examples](options.md); [HUD element roles](hud-elements.md).
 
 Heat glow works with every palette, including custom and random ramps, before HUD composition. It follows synthetic heat rather than merely bright source pixels, and retains the palette's color channels. In inverted palettes such as Black Hot, it produces dark diffusion around hot regions. `--heat-glow 0` disables it. This is separate from `--glow`, the existing HUD bloom setting. Still images show a fixed glow pattern.
 

@@ -89,6 +89,12 @@ def variants():
     # Preserve the published image URLs while replacing the old sight geometry.
     result['target-shape-iron-sights']['target_shape'] = 'hollow-cross'
     result['target-opacity-neon'] = {**result['target-opacity-elements'], 'neon': True}
+    result['waveform-led-rorschach'] = {
+        **result['waveform-rorschach'], 'wave_display': 'led', 'wave_backlight': .2,
+        'hud_theme': 'custom', 'hud_colors': 'waveform=#FF302B',
+        'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1.2',
+        'neon_spread': .4, 'neon_core_whiten': 0.,
+    }
     custom = load_preset(Path(__file__).resolve().parents[1] / 'skills/yautja/assets/presets/tropic-glow.json')
     options = resolve_look(custom.get('base'), custom['settings'])
     options['show_timecode'] = options.pop('timecode')

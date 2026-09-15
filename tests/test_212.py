@@ -150,6 +150,34 @@ class Release212Tests(unittest.TestCase):
                 self.assertEqual(main(['in.png','out.png',flag,value]),1)
             convert.assert_not_called()
 
+    def test_behind_code_keeps_streams_inside_figure_width(self):
+        size = (480, 360)
+        r = Renderer(*size, subject_code=True, code_layer='behind', code_density=1.65,
+                     glow=0, neon=False)
+        mask = np.zeros((360, 480), np.float32)
+        mask[140:320, 100:220] = 1
+        subject = Subject(mask, 'person', .95, track_id=1)
+        frame = Image.new('RGB', size)
+        r.signal.draw(r, frame, [subject], 1.2, 1)
+        ink = np.asarray(frame).max(axis=2)
+        self.assertTrue(ink[:140, 100:220].any())
+        self.assertFalse(ink[:, :100].any())
+        self.assertFalse(ink[:, 220:].any())
+        self.assertFalse(ink[140:320, 100:220].any())  # final subject occlusion
+
+        # Packing the former wider span into the figure preserves its glyph
+        # identities and count, so narrowing does not thin the waterfall.
+        calls = []
+        def glyph(identity, cell):
+            calls.append((identity, cell))
+            return Image.new('L', (cell, cell), 255)
+        r.signal.streams(size, (85.6, 77, 234.4, 320), (160, 230), 1.2, 42, 1, glyph)
+        original = calls[:]
+        calls.clear()
+        r.signal.streams(size, (100, 77, 220, 320), (160, 230), 1.2, 42, 1, glyph, fit_columns=True)
+        self.assertGreater(len(calls), 50)
+        self.assertEqual(calls, original)
+
     def test_attached_motifs_follow_selection_and_search(self):
         r=Renderer(320,180,look_preset='relic',glow=0,neon=False)
         def draw(subjects,t):

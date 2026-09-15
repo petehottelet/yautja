@@ -6,6 +6,7 @@ recursive-include tools *.py
 recursive-include tests *.py
 recursive-include skills/yautja *.md *.yaml *.json LICENSE
 recursive-include docs *.md
+include docs/media.json
 prune assets
 prune outputs
 prune 00_project_files
