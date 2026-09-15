@@ -6,13 +6,14 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from .signal import stable_number
 from .aim import Aim
+from .hologram import weak_spot_ink
 
 GEO_OPTIONS = ('geo_grid', 'geo_grid_scale', 'geo_grid_jitter', 'geo_grid_speed', 'geo_grid_projection',
-               'geo_grid_center_fade', 'geo_grid_width', 'geo_grid_breaks')
+               'geo_grid_center_fade', 'geo_grid_width', 'geo_grid_breaks', 'geo_grid_details')
 TARGET_OPTIONS = ('target_mode', 'target_motif', 'target_motif_count', 'target_motif_scale', 'target_label',
                   'target_motion', 'target_hold', 'target_response', 'target_fill', 'target_outline',
-                  'target_label_scale', 'target_cursor', 'target_motif_speed', 'target_motif_breaks')
-GEOMETRY_ELEMENTS = ('geo-grid', 'target-motif', 'target-label', 'target-outline')
+                  'target_label_scale', 'target_cursor', 'target_motif_speed', 'target_motif_breaks', 'target_weak_spots')
+GEOMETRY_ELEMENTS = ('geo-grid', 'target-motif', 'target-label', 'target-outline', 'target-weak-spots')
 
 
 def noise(seed, time):
@@ -58,7 +59,7 @@ class GeometryStyle:
                  target_motif_scale=1., target_label=None, target_motion='acquire', target_hold=3.,
                  target_response=.6, target_fill='auto', target_outline=False, target_label_scale=1., target_cursor=False,
                  geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
-                 target_motif_speed=1., target_motif_breaks=0.):
+                 target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False, target_weak_spots=False):
         for key, value, choices in (
                 ('target-mode', target_mode, ('selected', 'auto', 'cycle')),
                 ('target-motion', target_motion, ('acquire', 'persistent')),
@@ -90,13 +91,15 @@ class GeometryStyle:
         self.curves = None
         self.grid_paths = self.grid_paths_key = None
         self.grid_fade = self.grid_fade_key = None
+        self.accents = self.accents_key = None
         self.label_box = None
         self.aim = Aim(target_hold, target_response)
         self.selected = []
 
     def report(self, hud=True):
         return {**{key: getattr(self, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)},
-                'geo_grid': bool(hud and self.geo_grid), 'target_outline': bool(hud and self.target_outline)}
+                'geo_grid': bool(hud and self.geo_grid), 'target_outline': bool(hud and self.target_outline),
+                'target_weak_spots': bool(hud and self.target_weak_spots)}
 
     def lattice(self, size, seed):
         signature = (size, seed, self.geo_grid_projection, self.geo_grid_scale, self.geo_grid_jitter)
@@ -177,6 +180,43 @@ class GeometryStyle:
         self.geometry = (signature, vertices, edges, nodes)
         return vertices, edges, nodes
 
+    def grid_accents(self, size, seed, time, static=False):
+        """Seeded node rings and satellites breathing along incident sphere arcs."""
+        vertices, edges, nodes = self.lattice(size, seed)
+        if self.accents_key != self.geometry[0]:
+            neighbors = {i: [] for i in nodes}
+            for index, (a, b) in enumerate(edges):
+                path = self.curves[index] if self.curves is not None else np.array([vertices[a], vertices[b]])
+                for node, curve in ((a, path), (b, path[::-1])):
+                    if node in neighbors:
+                        neighbors[node].append(curve)
+            self.accents = []
+            for node, curves in neighbors.items():
+                rng = np.random.default_rng(stable_number(seed, 'grid-accents', node))
+                self.accents.append((node, curves, rng.random() < .28, rng.uniform(0, math.tau),
+                                     rng.uniform(2.4, 4.8), rng.uniform(8, 14)))
+            self.accents_key = self.geometry[0]
+        t = 0 if static else time * self.geo_grid_speed
+        scale = min(size) / 1080
+        for node, curves, ring, phase, period, radius in self.accents:
+            center = vertices[node]
+            if not (-30 <= center[0] <= size[0]+30 and -30 <= center[1] <= size[1]+30):
+                continue
+            breath = .5 - .5 * math.cos(t * math.tau / period + phase)
+            points = [center + max(2., radius * scale) * np.array([math.cos(a), math.sin(a)])
+                      for a in np.arange(7) * math.tau / 7 + phase] if ring else []
+            dots = []
+            for curve in curves:
+                distance = np.r_[0., np.cumsum(np.linalg.norm(np.diff(curve, axis=0), axis=1))]
+                length = distance[-1]
+                if length < 1:
+                    continue
+                reach = min(length * .27, 74 * scale) * (.27 + .73 * breath)
+                for fraction in (.45, .72, 1.):
+                    offset = max(2 * scale, reach * fraction)
+                    dots.append(tuple(np.interp(offset, distance, curve[:, axis]) for axis in (0, 1)))
+            yield {'node': node, 'ring': points, 'dots': dots, 'brightness': .6 + .4 * breath}
+
     def draw_grid(self, renderer, image, time, static=False):
         if not self.geo_grid:
             return
@@ -201,6 +241,17 @@ class GeometryStyle:
         for i in nodes:
             x, y = (v * ss for v in vertices[i])
             draw.ellipse((x-radius, y-radius, x+radius, y+radius), fill=(*color, 230))
+        if self.geo_grid_details:
+            accent_color = tuple(round(c + (255-c) * .55) for c in color) if max(color) else color
+            for accent in self.grid_accents(image.size, renderer.seed, time, static):
+                if accent['ring']:
+                    points = [tuple(p * ss) for p in accent['ring']]
+                    draw.line(points + points[:1], fill=(*accent_color, 215),
+                              width=max(1, round(1.6 * scale * ss)), joint='curve')
+                for x, y in accent['dots']:
+                    r = max(.5, 1.35 * scale) * ss
+                    draw.ellipse((x*ss-r, y*ss-r, x*ss+r, y*ss+r),
+                                 fill=(*accent_color, round(240 * accent['brightness'])))
         panel = renderer.hud_panel(image.size, 'geo-grid')
         ink = ink.resize(image.size, Image.Resampling.LANCZOS)
         if self.geo_grid_center_fade:
@@ -257,9 +308,8 @@ class GeometryStyle:
         self.selected = candidates
         return candidates
 
-    def draw_outline(self, renderer, image, subjects):
-        if not self.target_outline or not self.selected:
-            return
+    def selected_subjects(self, subjects):
+        """Resolve explicit catalog boxes as well as automatic tracking IDs."""
         available = self.targets(subjects)
         chosen = set()
         for target in self.selected:
@@ -274,10 +324,28 @@ class GeometryStyle:
             match = max(available, key=overlap, default=None)
             if match and overlap(match) > .15:
                 chosen.add(match['track_id'])
-        panel = renderer.hud_panel(image.size, 'target-outline')
-        for subject in subjects:
-            if subject.track_id not in chosen:
+        return [subject for subject in subjects if subject.track_id in chosen and subject.opacity > 0]
+
+    def draw_weak_spots(self, renderer, image, subjects, time, shot, static=False):
+        if not self.target_weak_spots or not self.selected:
+            return
+        panel = renderer.hud_panel(image.size, 'target-weak-spots')
+        for subject in self.selected_subjects(subjects):
+            mask = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
+            bounds = mask.getbbox()
+            if bounds is None:
                 continue
+            ink = weak_spot_ink(mask.crop(bounds), renderer.hud_colors['target-weak-spots'],
+                                0 if static else time, stable_number(renderer.seed, 'weak-spots', shot, subject.track_id))
+            ink.putalpha(ink.getchannel('A').point(lambda v: round(v * min(1., subject.opacity))))
+            panel.layer('target-weak-spots').alpha_composite(ink, bounds[:2])
+        renderer.composite_panel(image, panel, 0, 0)
+
+    def draw_outline(self, renderer, image, subjects):
+        if not self.target_outline or not self.selected:
+            return
+        panel = renderer.hud_panel(image.size, 'target-outline')
+        for subject in self.selected_subjects(subjects):
             mask = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
             width = max(1, round(3 * min(image.size) / 1080))
             inner = mask.filter(ImageFilter.MinFilter(width * 2 + 1))

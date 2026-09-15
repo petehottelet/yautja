@@ -95,7 +95,7 @@ class NeonTests(unittest.TestCase):
         def render(key=None):
             renderer = Renderer(960, 540, neon=True, neon_flicker=.4, show_timecode=True, verbose=True,
                                 analysis=True, analysis_target=True,
-                                geo_grid=True, target_outline=True, target_motif='triangles', target_label='TARGETING',
+                                geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 neon_elements=None if key is None else key + '=0')
             with patch.object(renderer.neon_style, 'apply', wraps=renderer.neon_style.apply) as apply:

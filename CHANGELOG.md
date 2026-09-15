@@ -2,6 +2,9 @@
 
 ## 2.11.0
 
+- Add pulsing geodesic satellite dots and seven-sided node rings to Focus/Relic, with an independent detail switch and shared grid speed.
+- Add thicker partial holographic contours with blue/lavender/white texture, plus independently styled yellow decorative scan patches on the selected current silhouette. Support both effects in CLI, reports and portable presets.
+
 - Inset the large circle inside the Focus/Relic hexagon by 10%, keeping the smaller circles and center square unchanged.
 - Fade the geodesic grid toward the center, with thicker purple lines and seeded irregular breaks. Add independent center-fade, line-width and break controls.
 - Animate Relic's broken-edge triangles upward, then contract, spin and fade them away. Add ornament speed and break controls, including a frozen state.

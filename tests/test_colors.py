@@ -59,7 +59,7 @@ class ColorTests(unittest.TestCase):
         all_green = ','.join(f'{key}=#00ff00' for key in HUD_DEFAULTS)
         options = dict(hud_theme='custom', hud_colors=all_green, glow=0, verbose=True, show_timecode=True,
                        subject_outline=True, subject_code=True, subject_labels=True,
-                       geo_grid=True, target_outline=True, target_motif='triangles', target_label='TARGETING')
+                       geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING')
         for key in HUD_DEFAULTS:
             with self.subTest(element=key):
                 original = Renderer(640, 360, **options, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'))

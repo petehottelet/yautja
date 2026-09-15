@@ -1,5 +1,7 @@
 # Integration contract
 
+`geo_grid_details` enables seeded satellite dots that travel outward and back along grid edges, plus seven-sided node rings. `outline_style="holographic"` gives partial contours raster texture and pale cores; `outline_width` is optional (0.5–20 reference pixels, or `None` for the style default). `target_weak_spots` enables fictional yellow scan patches only on selected current silhouettes. Its independent HUD role is `target-weak-spots`. These settings support schema-1 presets, reports and explicit overrides. Grid details share `geo_grid_speed`; holographic contours share `outline_speed`. Stills freeze their motion. Patches are decorative and make no physical assessment.
+
 Grid center fade, width and irregular breaks (`geo_grid_center_fade`, `geo_grid_width`, `geo_grid_breaks`) and triangle animation speed/breaks (`target_motif_speed`, `target_motif_breaks`) are visual preset settings. `code_density` accepts 0–3: existing 0–1 values retain sparse-column behavior; higher values increase stream count at the same glyph size. These remain flat schema-1 settings; animation phase and cached paths are runtime state.
 
 The supported interface is the `yautja` CLI, equivalently the chosen environment's `python -m yautja`, its exit codes (0 success, 1 conversion/runtime failure, 2 invalid arguments, 130 cancellation), and the versioned JSON conversion report. Inspect `--help` for available controls.

@@ -247,7 +247,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
+                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.target_weak_spots or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -578,7 +578,8 @@ def parser():
     p.add_argument('--analysis-target-response', type=float, default=.6, help='Seconds to cover 95 percent of a focus change, 0-3; 0 follows immediately')
     p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
     p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
-    p.add_argument('--outline-style', choices=['solid', 'shimmer'], default='solid', help='Subject outline rendering style; enable with --subject-outline')
+    p.add_argument('--outline-style', choices=['solid', 'shimmer', 'holographic'], default='solid', help='Continuous edge, partial shimmer, or textured partial holographic glow; enable with --subject-outline')
+    p.add_argument('--outline-width', type=float, default=None, help='Subject edge thickness at 1080p, 0.5-20; automatic: solid 2, shimmer 3, holographic 8')
     p.add_argument('--outline-coverage', type=float, default=.35, help='Shimmer edge coverage, 0-1')
     p.add_argument('--outline-arcs', type=int, default=5, help='Shimmer highlight count, 1-12')
     p.add_argument('--outline-speed', type=float, default=1., help='Shimmer speed, 0-5; 0 freezes travel and twinkle')
@@ -590,12 +591,14 @@ def parser():
     p.add_argument('--geo-grid-center-fade', type=float, default=0., help='Fade the grid toward the screen center, 0-1; 0 is uniform, 1 clears the center')
     p.add_argument('--geo-grid-width', type=float, default=1.3, help='Grid line thickness, 0.5-6 pixels at a 1080px short edge')
     p.add_argument('--geo-grid-breaks', type=float, default=0., help='Seeded irregular gaps in grid edges, 0-1; 0 keeps continuous lines')
+    p.add_argument('--geo-grid-details', action=argparse.BooleanOptionalAction, default=False, help='Pulsing satellite dots along grid edges and seven-sided rings at selected vertices; motion follows --geo-grid-speed')
     p.add_argument('--target-mode', choices=['selected', 'auto', 'cycle'], default='selected', help='Catalog selections, all automatic subjects, or one cycling subject; explicit --target selections supply the candidate pool')
     p.add_argument('--target-motion', choices=['acquire', 'persistent'], default='acquire', help='Acquisition animation or one persistent reticle gliding between subjects without zoom')
     p.add_argument('--target-hold', type=float, default=3., help='Seconds before cycling to another target, 0.5-30')
     p.add_argument('--target-response', type=float, default=.6, help='Persistent motion response in seconds, 0-3; 0 follows immediately')
     p.add_argument('--target-fill', choices=['auto', 'filled', 'stroked'], default='auto', help='Original shape styling, filled interiors, or stroked contours; filled enclosing shapes use translucent interiors')
     p.add_argument('--target-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline only targeted subjects using their current segmentation masks')
+    p.add_argument('--target-weak-spots', action=argparse.BooleanOptionalAction, default=False, help='Decorative holographic scan patches on selected subjects, not physical weak-point detection; requires segmentation')
     p.add_argument('--target-label-scale', type=float, default=1., help='Target caption size multiplier, 0.5-4')
     p.add_argument('--target-cursor', action=argparse.BooleanOptionalAction, default=False, help='Blink an underscore after the target caption')
     p.add_argument('--geo-grid-projection', choices=['flat', 'sphere'], default='flat', help='Flat triangular lattice or curved geodesic sphere viewed from its center')
@@ -721,8 +724,8 @@ def main(argv=None):
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
         GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
         HUDTypography(args.hud_font, args.hud_font_file)
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.target_outline or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
-            p.error('Subject outlines, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.target_outline or args.target_weak_spots or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
+            p.error('Subject outlines, weak-spot highlights, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:

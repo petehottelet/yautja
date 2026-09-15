@@ -23,7 +23,7 @@ VISUAL_OPTIONS = (
     'target_colors', 'target_shape', 'target_acquire', 'target_flash', 'target_flash_rate',
     'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS,
 )
-NULLABLE = {'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
+NULLABLE = {'outline_width', 'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
             'grain', 'pixelation', 'scanlines', 'wave_width', 'wave_height', 'target_colors',
             'target_stroke_colors', 'thermal_levels', 'thermal_band_softness'}
 MAX_BYTES = 65536

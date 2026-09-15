@@ -238,7 +238,8 @@ class Renderer:
                  target_motion='acquire', target_hold=3., target_response=.6, target_fill='auto', target_outline=False,
                  target_label_scale=1., target_cursor=False,
                  geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
-                 target_motif_speed=1., target_motif_breaks=0.):
+                 target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False,
+                 outline_width=None, target_weak_spots=False):
         self.width, self.height = width, height
         if hud_glyphs not in ('yautja', 'cyber', 'tech'):
             raise ValueError('--HUDglyphs must be yautja, cyber, or tech')
@@ -253,7 +254,8 @@ class Renderer:
                                       target_label_scale=target_label_scale, target_cursor=target_cursor,
                                       geo_grid_center_fade=geo_grid_center_fade, geo_grid_width=geo_grid_width,
                                       geo_grid_breaks=geo_grid_breaks, target_motif_speed=target_motif_speed,
-                                      target_motif_breaks=target_motif_breaks)
+                                      target_motif_breaks=target_motif_breaks, geo_grid_details=geo_grid_details,
+                                      target_weak_spots=target_weak_spots)
         self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
                                     analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin,
                                     analysis_outline_width=analysis_outline_width, analysis_target=analysis_target,
@@ -264,7 +266,8 @@ class Renderer:
                                   subject_labels=subject_labels, code_size=code_size, code_speed=code_speed, code_density=code_density,
                                   subject_head_gap=subject_head_gap, subject_title_gap=subject_title_gap, subject_caret_scale=subject_caret_scale,
                                   outline_style=outline_style, outline_coverage=outline_coverage,
-                                  outline_arcs=outline_arcs, outline_speed=outline_speed, code_layer=code_layer)
+                                  outline_arcs=outline_arcs, outline_speed=outline_speed, code_layer=code_layer,
+                                  outline_width=outline_width)
         self.transfer = ThermalTransfer(thermal_levels, thermal_band_softness, thermal_black_point,
                                         thermal_white_point, thermal_gamma, thermal_softness)
         self.seed, self.glow = seed, glow
@@ -325,7 +328,7 @@ class Renderer:
         # Alpha keeps gray ink gray over highlights and makes black ink visible.
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
-        self.overlay_mode = 'RGBA' if self.neon or target_outline or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or target_outline or target_weak_spots or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -670,6 +673,7 @@ class Renderer:
 
     def draw_targets(self, image, time, subjects, targets, colors, *, shot=None, static=False, neon_gain=1.):
         targets = self.geometry.prepare_targets(subjects, targets, time, shot, image.size, static)
+        self.geometry.draw_weak_spots(self, image, subjects, time, shot, static)
         self.geometry.draw_outline(self, image, subjects)
         image = self.target_overlay.draw(image, time, targets, colors, shot=shot, static=static, neon_gain=neon_gain)
         self.geometry.draw_targets(self, image, time, static)

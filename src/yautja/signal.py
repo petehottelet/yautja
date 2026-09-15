@@ -10,11 +10,12 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from .colors import parse_hex
+from .hologram import holographic_ink
 
 SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure', 'scene_highlights',
                   'subject_outline', 'subject_code', 'subject_labels',
                   'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale',
-                  'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'code_layer')
+                  'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'outline_width', 'code_layer')
 SUBJECT_ELEMENTS = ('subject-outline', 'subject-code', 'subject-labels', 'subject-carets')
 
 
@@ -74,9 +75,13 @@ class SignalStyle:
                  scene_exposure=.65, subject_outline=False, subject_code=False, subject_labels=False,
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
                  subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
-                 outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside'):
-        if outline_style not in ('solid', 'shimmer'):
-            raise ValueError('--outline-style must be solid or shimmer')
+                 outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside',
+                 outline_width=None):
+        if outline_style not in ('solid', 'shimmer', 'holographic'):
+            raise ValueError('--outline-style must be solid, shimmer or holographic')
+        if outline_width is not None and (not math.isfinite(outline_width) or not .5 <= outline_width <= 20):
+            raise ValueError('--outline-width must be between 0.5 and 20')
+        self.outline_width = outline_width
         if code_layer not in ('inside', 'behind'):
             raise ValueError('--code-layer must be inside or behind')
         if type(outline_arcs) is not int or not 1 <= outline_arcs <= 12:
@@ -235,25 +240,34 @@ class SignalStyle:
             if self.subject_outline:
                 # Outline the visible silhouette, without tracing segmentation
                 # pinholes in clothing and equipment as extra interior contours.
-                # Shimmer can process only occupied bounds: the padded empty
+                # Partial highlights process only occupied bounds: the padded empty
                 # border preserves connectivity without walking the whole frame.
-                region = binary.crop(bounds) if self.outline_style == 'shimmer' else binary
+                partial = self.outline_style in ('shimmer', 'holographic')
+                region = binary.crop(bounds) if partial else binary
                 exterior = Image.new('L', (region.width + 2, region.height + 2))
                 exterior.paste(region, (1, 1))
                 ImageDraw.floodfill(exterior, (0, 0), 255)
                 holes = ImageChops.invert(exterior.crop((1, 1, region.width + 1, region.height + 1)))
-                if self.outline_style == 'shimmer':
+                if partial:
                     local_holes = holes
                     holes = Image.new('L', image.size)
                     holes.paste(local_holes, bounds[:2])
                 silhouette = ImageChops.lighter(binary, holes)
-                radius = max(1, round((3 if self.outline_style == 'shimmer' else 2) * scale))
-                # A single inner edge is half the width of the previous
-                # two-sided gradient and stays inside the current silhouette.
+                default_width = {'solid': 2, 'shimmer': 3, 'holographic': 8}[self.outline_style]
+                radius = max(1, round((self.outline_width if self.outline_width is not None else default_width) * scale))
+                # Keep the luminous core on the inner contour of the current
+                # silhouette, rather than smoothing or displacing its boundary.
                 edge = ImageChops.subtract(silhouette, silhouette.filter(ImageFilter.MinFilter(radius * 2 + 1)))
-                if self.outline_style == 'shimmer':
+                if partial:
                     edge = self.shimmer(edge, current[:2], 0 if static else time, renderer.seed, subject.track_id)
-                paste('subject-outline', edge)
+                if self.outline_style == 'holographic':
+                    layer = holographic_ink(edge.crop(bounds), renderer.hud_colors['subject-outline'],
+                                             0 if static else time * self.outline_speed,
+                                             stable_number(renderer.seed, 'holographic-edge', subject.track_id))
+                    layer.putalpha(layer.getchannel('A').point(lambda v: round(v * opacity)))
+                    panel.layer('subject-outline').alpha_composite(layer, bounds[:2])
+                else:
+                    paste('subject-outline', edge)
             if self.subject_labels:
                 cell = max(8, round(30 * scale))
                 label_w = cell * 5

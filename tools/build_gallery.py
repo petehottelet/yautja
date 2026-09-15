@@ -149,7 +149,7 @@ def main():
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
                               surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
-                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode', 'selected') != 'selected' or o.get('target_outline')) and o.get('hud', True) for o in resolved_settings))
+                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode', 'selected') != 'selected' or o.get('target_outline') or o.get('target_weak_spots')) and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
         if 'timecode' in resolved:
