@@ -402,9 +402,9 @@ All 11 target types support **`--target-fill filled`** and **`--target-fill stro
 
 Both previews play at normal source speed and 24 fps. The three dots appear only on lock and reset when the target is lost. The triangle's dots are 12% smaller; the circle's dots retain their size. Click either GIF for the larger version.
 
-The remaining types are shown below, **filled on the left and stroked on the right** in each cell. The labels give the corresponding `--target-shape` value.
+The complete contact sheet includes all **11 geometric shapes**, including both lock-dot designs, plus **Fremont's scan disk**. Geometric shapes are **filled on the left and stroked on the right**; their labels give the corresponding `--target-shape` value. Fremont uses `--analysis-target` and is shown with its default translucent fill and with the fill off (`--hud-opacity-elements "analysis-target-fill=0"`). Its controls are explained in the [analysis guide](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
 
-[![Target contact sheet: triangle, crosshair, hollow-cross, square, square-cross, square-mil, square-x, hexagon and frame-box, each shown filled and stroked](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.11.0)
+[![Complete target contact sheet: all 11 geometric shapes including triangle and circle with three lock dots, plus Fremont's translucent scan disk](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.12.1-all-targets)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shapes.png?v=2.12.1-all-targets)
 
 ```bash
 yautja "clip.mov" "filled.mp4" --stylepreset yautja --figures "figures.json" --target S001-F002 --target-shape triangle-dots --target-fill filled
