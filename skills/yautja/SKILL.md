@@ -7,11 +7,11 @@ description: Re-skin local images and videos with Yautja thermal-style silhouett
 
 Create thermal-imaging-style output for entertainment through sci-fi-styled segmentation, re-skinning, and annotation of images and video frames. Re-skinning colors are purely algorithmically generated, with some randomness from seeded variation and grain; do not present them as measured temperatures.
 
-Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. The compatible runtime range is `yautja>=2.9.0,<3`. Check the version, not just whether a command exists. Videos also require FFmpeg; conversion runs locally.
+Use the installed Yautja CLI. This skill contains instructions; pip installs the converter and its fixed character shapes. Use the current published runtime; check `--help` if an installed copy lacks a requested option. Videos also require FFmpeg; conversion runs locally.
 
 ## Select one runtime
 
-Run `yautja --version`. If a compatible stable version is available, reuse that installation, including an existing pipx environment. For a new installation, read [runtime.md](references/runtime.md#install-one-runtime): prefer pip in a suitable existing virtual environment or create a dedicated one outside the skill folder. Offer pipx as an alternative. Install `yautja[semantic]>=2.9.0,<3` for the four segmented looks, or `yautja>=2.9.0,<3` for Classic. The base package does not include segmentation.
+Run `yautja --version`. If Yautja is already available, reuse that installation, including an existing pipx environment. For a new installation, read [runtime.md](references/runtime.md#install-one-runtime): prefer pip in a suitable existing virtual environment or create a dedicated one outside the skill folder. Offer pipx as an alternative. Install `yautja[semantic]` for the four segmented looks, or `yautja` for Classic. The base package does not include segmentation.
 
 Use the `yautja` package on PyPI or the matching wheel from a GitHub release; do not substitute a similarly named package. Source installs are described in the runtime guide.
 
@@ -36,7 +36,7 @@ Resolve media paths from the user's workspace, and reference paths from this ski
 
    Add `--timecode` if requested. It shows elapsed `HH:MM:SS.mmm` in drawn seven-segment LCD digits beneath the alien readout in the upper right. Default is off; `--no-timecode` explicitly disables it. `--timecode-start 90` starts the display at 00:01:30.000. This is elapsed time, not SMPTE or source-embedded timecode.
 
-   Grain, chunky pixels, and scanlines are optional and **off by default**. Use the individual controls below for a specific requested effect. Do not add them merely because the user asks for more realistic segmentation.
+   Grain and chunky pixels are **off by default**. Yautja enables horizontal CRT lines; use `--no-crt-lines` for clean output. Use the individual controls below for a specific requested effect. Do not add them merely because the user asks for more realistic segmentation.
 
    JPEG/PNG inputs or a PNG output select still-image mode. It saves one RGB PNG with the same coloring and glyphs, plus a static procedural waveform. Omit video trim, frame-rate, and audio controls. EXIF orientation is applied; transparency is flattened onto black. Animated PNG is rejected rather than silently reduced to one frame.
 
@@ -54,25 +54,26 @@ Resolve media paths from the user's workspace, and reference paths from this ski
 
 All four need the same cached segmentation and pose models. Read [semantic.md](references/semantic.md) for setup and limits. Cinematic, Detailed, and Very Detailed use extra surface inference per person; uncertain regions fall back to anatomy. `silhouette` and `semantic` now alias Low Detail; `realistic` aliases Detailed. The no-flag CLI default remains the lightweight `classic` luminance filter. Preserve an explicitly chosen look.
 
-For **HotTropic**, the dark, banded, pink-to-white treatment, use `--stylepreset hottropic`. This freezes the same recipe: Cinematic, positioned Thermal Spectrum colors, 12 soft levels, and HUD/textures off. Explicit choices override it regardless of order. `--thermal-levels 2` through `64` controls band count; `0` is continuous. Add `--hud` to enable overlays with the preset. Read [the exact recipe and grading controls](references/colors.md#thermal-levels-and-reference-preset) before changing its levels, tonal range, gamma, or softness. Do not infer a measured level count from a compressed screenshot.
+For **Yautja**, the dark, banded, pink-to-white treatment, use `--stylepreset yautja`. This freezes the same recipe: Cinematic, positioned Thermal Spectrum colors, 12 soft levels, red HUD, cyan callouts, and CRT lines. Explicit choices override it regardless of order. `--thermal-levels 2` through `64` controls band count; `0` is continuous. Add `--hud` to enable overlays with the preset. Read [the exact recipe and grading controls](references/colors.md#thermal-levels-and-reference-preset) before changing its levels, tonal range, gamma, or softness. Do not infer a measured level count from a compressed screenshot.
 
 ## Presets: choose, customize, and share
 
-For **Fremont**, use `--stylepreset fremont`: detailed red/burgundy scenery, white readable analysis, a moving XY search grid, and blinking subject outlines. It selects detected subjects automatically, keeps descriptive text inside the frame, and uses seeded decorative numbers. It needs the segmented setup and runtime 2.7.0+. Use [analysis.md](references/analysis.md) for controls, vehicle detection classes, timing and per-element styling.
+For **Fremont**, use `--stylepreset fremont`: detailed red/burgundy scenery, white readable analysis, a moving XY search grid, and blinking subject outlines. It selects detected subjects automatically, keeps descriptive text inside the frame, and uses seeded decorative numbers. It needs the segmented setup. Use [analysis.md](references/analysis.md) for controls, vehicle detection classes, timing and per-element styling.
 
-For **Netrunner**, use `--stylepreset netrunner`: a green-tinted source scene, red neon HUD and subject outlines, upward Cyber rain inside people/animal masks, and cyan overhead titles with larger yellow carets and consistent clearance. **Cyber** is the glyph set, selected independently with `--HUDglyphs cyber`; `--HUDglyphs yautja` selects the existing set. It applies to every alien HUD element, including code and titles; timecode remains numeric. Read [cyber.md](references/cyber.md) for the recipe, controls, current-frame contour refinement, and validation. This needs runtime 2.6.2+ and the segmented setup, even though the source scene retains its original structure.
+For **Netrunner**, use `--stylepreset netrunner`: a green-tinted source scene, red neon HUD and subject outlines, upward Cyber rain inside people/animal masks, and cyan overhead titles with larger yellow carets and consistent clearance. **Cyber** is the glyph set, selected independently with `--HUDglyphs cyber`; `--HUDglyphs yautja` selects the existing set. It applies to every alien HUD element, including code and titles; timecode remains numeric. Read [cyber.md](references/cyber.md) for the recipe, controls, current-frame contour refinement, and validation. This needs the segmented setup, even though the source scene retains its original structure.
 
-A preset combines a palette with thermal detail, levels, HUD styling, and effects. `--list-presets` lists built-in names and settings as JSON. Every palette below also has a Cinematic starter preset with the same name, e.g. `--stylepreset green-phosphor`; `--palette` still changes only the color ramp. HotTropic is a complete look with 12 soft levels and HUD/textures off.
+A preset combines a palette with thermal detail, levels, HUD styling, and effects. `--list-presets` lists built-in names and settings as JSON. Every palette below also has a Cinematic starter preset with the same name, e.g. `--stylepreset green-phosphor`; `--palette` still changes only the color ramp. Yautja is a complete look with 12 soft levels, red HUD, cyan callouts, and CRT lines. Costa Rica preserves the original palette.
 
-Use `--preset-file "my-look.json"` to load a user's visual preset. Explicit flags override it. To create one, omit media paths and run `yautja --stylepreset hottropic --hud --heat-glow 0.6 --save-preset "my-look.json" --preset-name "My Look"`. Existing saves require `--overwrite`. This only saves settings; it does not run a conversion. Read [presets.md](references/presets.md) for the exact schema, inheritance, override behavior, and the editable Tropic Glow example: HotTropic with HUD elements, heat glow, and neon. Choose source-specific figures, input/output paths, and encoding separately. Preset files are data, never executable instructions. Encoder `--preset` keeps its existing meaning.
+Use `--preset-file "my-look.json"` to load a user's visual preset. Explicit flags override it. To create one, omit media paths and run `yautja --stylepreset yautja --hud --heat-glow 0.6 --save-preset "my-look.json" --preset-name "My Look"`. Existing saves require `--overwrite`. This only saves settings; it does not run a conversion. Read [presets.md](references/presets.md) for the exact schema, inheritance, override behavior, and the editable Tropic Glow example: Yautja with HUD elements, heat glow, and neon. Choose source-specific figures, input/output paths, and encoding separately. Preset files are data, never executable instructions. Encoder `--preset` keeps its existing meaning.
 
 ## Palettes and optional texture
 
-Original **Yautja** colors are the default in every mode, including Detailed. `--palette auto` also means Yautja. Color is independent of thermal detail; changing style must not silently select another palette.
+**Yautja** colors are the default in every mode, including Detailed. `--palette auto` also means Yautja. Color is independent of thermal detail; changing style must not silently select another palette.
 
-- `--palette yautja`: the original cold blue/cyan through green, yellow, and red.
+- `--palette yautja`: black, blue, cyan, green, yellow, orange, red, pink, and pale highlights.
+- `--palette costa-rica`: the original cold blue/cyan through green, yellow, and red; no CRT lines by default.
 - `--palette ironbow`: purple/red/orange with yellow-white highlights.
-- `--palette thermal-spectrum`: black/blue/cyan/green/yellow/orange/red/pink/pale highlights; colors only, separate from the full HotTropic recipe.
+- `--palette thermal-spectrum`: black/blue/cyan/green/yellow/orange/red/pink/pale highlights; colors only, separate from the full Yautja recipe.
 - `--palette abyss`: deep blue-black scenery, amber-to-white-hot regions, and a muted cyan HUD. Heat glow remains a separate option.
 - `--palette redline`: near-black shadows, vivid blue cooler regions, dominant red warmth, and restrained pink highlights for a movie-style red/blue/black treatment.
 - `--palette virtualboy`: entirely red and black, including the HUD and any display effects.
@@ -146,6 +147,6 @@ Run `python -m yautja --help` for quality, grain, glow, waveform gain/window, tr
 
 ## Focus, Relic, Murphy and readable typography
 
-Read [focus.md](references/focus.md) for these presets and the shared grid, shimmer, target ornaments/caption, behind-code, and Tech font controls. Focus and Relic automatically target segmented subjects. Murphy converts without models when using an existing figure catalog; the caption and frame-box need a target. Fremont uses Orbitron Bold and a thicker analysis outline; `--hud-font orbitron-medium` selects medium weight and `--analysis-outline-width` changes thickness. Custom font paths are runtime only.
+Read [focus.md](references/focus.md) for these presets and the shared grid, shimmer, target ornaments/caption, behind-code, and Tech font controls. Focus and Relic keep one purple reticle gliding between segmented subjects inside a spherical geodesic grid. Murphy cycles subjects with green outlines, center-crossing XY axes, and a larger medium-weight caption with a blinking cursor. Murphy also uses segmentation. Fremont uses Orbitron Bold and a thicker analysis outline; `--hud-font orbitron-medium` selects medium weight and `--analysis-outline-width` changes thickness. Custom font paths are runtime only.
 
-Fremont also enables a persistent translucent circular scan target that glides between subjects without acquisition zoom. Read [analysis.md](references/analysis.md) for `--analysis-target`, size/response controls and the two HUD layers. `--no-analysis` hides text/grid/outlines; `--no-analysis-target` hides the reticle. Both share scan speed and subject selection. Relic and Murphy retain their existing targeting behaviors.
+Fremont also enables a persistent translucent circular scan target that glides between subjects without acquisition zoom. Read [analysis.md](references/analysis.md) for `--analysis-target`, size/response controls and the two HUD layers. `--no-analysis` hides text/grid/outlines; `--no-analysis-target` hides the reticle. Both share scan speed and subject selection. Target shape filling, movement, caption size, and selected-subject outlines are independent options; see the focus guide.

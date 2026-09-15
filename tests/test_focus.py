@@ -56,7 +56,7 @@ class FocusTests(unittest.TestCase):
             data = load_preset(path)
             settings = validate_settings(data['settings'], parser())
             renderer = Renderer(*self.size, **{k: v for k, v in settings.items() if k not in ('waveform', 'wave_window', 'wave_gain')})
-            self.assertEqual(renderer.geometry.target_mode, 'auto')
+            self.assertEqual(renderer.geometry.target_mode, 'cycle')
             args = parser().parse_args(['--preset-file', str(path), '--neon-elements', 'geo-grid=0'])
             self.assertEqual(args.neon_elements, 'geo-grid=0')
             data['settings']['hud_font_file'] = 'private.ttf'
@@ -193,7 +193,7 @@ class FocusTests(unittest.TestCase):
         overlay=TargetOverlay(shape='frame-box',flash_rate=0)
         result=np.asarray(overlay.draw(Image.new('RGB', self.size),0,target,((255,255,255),)*2,static=True))
         cx,cy=160,94
-        self.assertLess(result[cy,cx].max(),10)
+        self.assertGreater(result[cy,cx].max(),100)
         self.assertGreater(result[cy,0].max(),100)
         self.assertGreater(result[0,cx].max(),100)
 

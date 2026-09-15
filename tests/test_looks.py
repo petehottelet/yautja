@@ -15,7 +15,7 @@ from yautja.render import Renderer
 from yautja.semantic import Subject, SurfacePart
 from yautja.thermal import HeatField, LowDetailHeatField, SurfaceHeatField, VeryDetailedHeatField
 
-NAME = 'hottropic'
+NAME = 'yautja'
 
 
 class LevelTests(unittest.TestCase):
@@ -65,14 +65,14 @@ class LevelTests(unittest.TestCase):
 class PresetTests(unittest.TestCase):
     def test_reference_recipe_and_positioned_colors_are_frozen(self):
         r = Renderer(320, 180, look_preset=NAME)
-        self.assertEqual((r.thermal, r.palette_name, r.sensor_resolution, r.hud), ('cinematic', 'thermal-spectrum', 192, False))
+        self.assertEqual((r.thermal, r.palette_name, r.sensor_resolution, r.hud), ('cinematic', 'yautja', 192, True))
         self.assertEqual((r.transfer.levels, r.transfer.band_softness, r.transfer.black, r.transfer.white,
                           r.transfer.gamma, r.transfer.softness), (12, .65, .2, .9, 1.1, .8))
         self.assertEqual([hexval['hex'] for hexval in r.colors.report()['palette_stops']],
                          ['#000000', '#081328', '#173b82', '#176dad', '#26a5ac', '#62b84e', '#d9c742',
                           '#f26427', '#ff303a', '#ff65ab', '#e6d8dd'])
         self.assertEqual([x[0] for x in SPECTRUM], [0, .06, .2, .33, .45, .56, .64, .72, .8, .91, 1])
-        self.assertFalse(any((r.grain, r.pixelation, r.sensor_texture, r.scanlines, r.vhs, r.heat_glow,
+        self.assertFalse(any((r.grain, r.pixelation, r.sensor_texture, r.vhs, r.heat_glow,
                               r.display.motion_blur, r.display.crt_bleed, r.crt_vertical_lines)))
 
     def test_overrides_are_order_independent_and_continuous_clears_softness(self):
@@ -100,7 +100,7 @@ class PresetTests(unittest.TestCase):
             with patch('sys.stdout', new_callable=io.StringIO) as stdout:
                 self.assertEqual(main([str(source), str(output), '--stylepreset', NAME, '--thermal', 'classic']), 0)
             report = json.loads(stdout.getvalue())
-            self.assertEqual((report['look_preset'], report['thermal_levels'], report['hud']), (NAME, 12, False))
+            self.assertEqual((report['look_preset'], report['thermal_levels'], report['hud']), (NAME, 12, True))
             self.assertEqual(report['thermal'], 'classic')
             with Image.open(output) as image:
                 self.assertEqual(image.size, (256, 180))

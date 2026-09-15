@@ -33,7 +33,7 @@ def catalog():
     return {'schema_version': 1, 'presets': [
         {'id': name, 'name': label, 'kind': 'look' if name in COMPLETE_PRESETS else 'palette',
          'description': PRESET_DESCRIPTIONS.get(name, f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
-         'aliases': ['ghost-signal'] if name == 'netrunner' else [],
+         'aliases': ['ghost-signal'] if name == 'netrunner' else ['hottropic', 'hot-tropic'] if name == 'yautja' else [],
          'settings': dict(LOOK_PRESETS[name])} for name, label in PRESET_LABELS.items()]}
 
 

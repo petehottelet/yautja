@@ -63,7 +63,7 @@ def extra_report(renderer, selection, *, static=False):
             'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
             'target_colors': [renderer.colors.report()['hud_colors'][k] for k in ('target', 'target-flash')],
             'target_acquire': renderer.target_overlay.acquire,
-            'target_flash': bool(renderer.hud and (selected or renderer.geometry.target_mode == 'auto') and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
+            'target_flash': bool(renderer.hud and (selected or renderer.geometry.target_mode != 'selected') and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
             'target_scale': renderer.target_overlay.scale, 'motion_blur': renderer.display.motion_blur,
             'target_stroke': renderer.target_overlay.stroke if renderer.hud else 0.,
             'target_stroke_colors': [hex_color(color) for color in outline],
@@ -247,7 +247,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis or args.analysis_target or args.subject_code or args.target_mode == 'auto') and not args.list_figures)
+                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -547,10 +547,10 @@ def parser():
     p.add_argument('--media', choices=['auto', 'image', 'video'], default='auto', help='Auto selects images for JPEG/PNG input or PNG output; use image with --doctor to skip FFmpeg checks')
     p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
     p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='Four segmented looks: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Classic is the lightweight luminance filter; semantic/realistic aliases remain supported')
-    p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
+    p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Yautja by default; Costa Rica preserves the original palette; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
-    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
     source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
     management = p.add_mutually_exclusive_group()
     management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
@@ -587,7 +587,15 @@ def parser():
     p.add_argument('--geo-grid-scale', type=float, default=160., help='Grid spacing, 40-480 pixels at a 1080px short edge')
     p.add_argument('--geo-grid-jitter', type=float, default=.65, help='Seeded grid irregularity, 0-1')
     p.add_argument('--geo-grid-speed', type=float, default=1., help='Grid brightness animation speed, 0-5; 0 freezes it')
-    p.add_argument('--target-mode', choices=['selected', 'auto'], default='selected', help='Selected catalog targets or automatic segmented subjects; explicit --target selections take precedence')
+    p.add_argument('--target-mode', choices=['selected', 'auto', 'cycle'], default='selected', help='Catalog selections, all automatic subjects, or one cycling subject; explicit --target selections supply the candidate pool')
+    p.add_argument('--target-motion', choices=['acquire', 'persistent'], default='acquire', help='Acquisition animation or one persistent reticle gliding between subjects without zoom')
+    p.add_argument('--target-hold', type=float, default=3., help='Seconds before cycling to another target, 0.5-30')
+    p.add_argument('--target-response', type=float, default=.6, help='Persistent motion response in seconds, 0-3; 0 follows immediately')
+    p.add_argument('--target-fill', choices=['auto', 'filled', 'stroked'], default='auto', help='Original shape styling, filled interiors, or stroked contours; filled enclosing shapes use translucent interiors')
+    p.add_argument('--target-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline only targeted subjects using their current segmentation masks')
+    p.add_argument('--target-label-scale', type=float, default=1., help='Target caption size multiplier, 0.5-4')
+    p.add_argument('--target-cursor', action=argparse.BooleanOptionalAction, default=False, help='Blink an underscore after the target caption')
+    p.add_argument('--geo-grid-projection', choices=['flat', 'sphere'], default='flat', help='Flat triangular lattice or curved geodesic sphere viewed from its center')
     p.add_argument('--target-motif', choices=['none', 'triangles'], default='none', help='Independent hollow-triangle target ornaments')
     p.add_argument('--target-motif-count', type=int, default=7, help='Triangles per visible target, 0-24')
     p.add_argument('--target-motif-scale', type=float, default=1., help='Triangle ornament scale, 0.25-3')
@@ -618,7 +626,7 @@ def parser():
     p.add_argument('--random-colors', action='store_true', help='Randomize both the thermal palette and every HUD element once using --seed; colors stay fixed throughout the clip')
     p.add_argument('--sensor-texture', action=argparse.BooleanOptionalAction, default=False, help='Preset combining sensor pixels, grain, and scanlines (default: off); individual controls override the preset')
     p.add_argument('--pixelation', nargs='?', type=int, const=96, help='Chunky pixels: longest grid edge, 32-640 (bare flag: 96); 0 disables. Independent of grain and segmentation')
-    p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; default off unless sensor texture is enabled')
+    p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; on by default for Yautja; use --no-crt-lines to disable')
     p.add_argument('--vhs', action=argparse.BooleanOptionalAction, default=False, help='VHS-style color bleed, horizontal wobble, tape noise, and tracking defects; default off')
     p.add_argument('--list-figures', action='store_true', help='Scan shots into a JSON figure catalog and HTML contact sheet; optional output defaults beside the input. Requires the semantic runtime')
     p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target')
@@ -708,7 +716,7 @@ def main(argv=None):
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
         GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
         HUDTypography(args.hud_font, args.hud_font_file)
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode == 'auto' and not args.target)):
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.target_outline or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
             p.error('Subject outlines, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)

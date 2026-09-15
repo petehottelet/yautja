@@ -19,7 +19,7 @@ macOS/Linux:
 ```bash
 python3 -m venv .venv-yautja
 source .venv-yautja/bin/activate
-python -m pip install "yautja>=2.9.0,<3"
+python -m pip install "yautja"
 python -m yautja --version
 python -m yautja --doctor --media image
 ```
@@ -29,7 +29,7 @@ Windows PowerShell:
 ```powershell
 py -m venv .venv-yautja
 .\.venv-yautja\Scripts\Activate.ps1
-python -m pip install "yautja>=2.9.0,<3"
+python -m pip install "yautja"
 python -m yautja --version
 python -m yautja --doctor --media image
 ```
@@ -38,11 +38,11 @@ If activation is unavailable, use `.venv-yautja/bin/python` on macOS/Linux or `.
 
 ### Alternatives
 
-**pipx:** `pipx install "yautja>=2.9.0,<3"`, or `pipx install "yautja[semantic]>=2.9.0,<3"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for later extras or GPU setup. A dedicated venv is easier for a custom CUDA stack.
+**pipx:** `pipx install "yautja"`, or `pipx install "yautja[semantic]"` for segmentation. Run `yautja --version` and `yautja --doctor`. Locate its Python with `pipx environment --value PIPX_LOCAL_VENVS`: under that directory use `yautja/bin/python` on Unix or `yautja/Scripts/python.exe` on Windows. Use this exact interpreter for later extras or GPU setup. A dedicated venv is easier for a custom CUDA stack.
 
-**User site:** `python -m pip install --user "yautja>=2.9.0,<3"` only when supported and a virtual environment or pipx is unsuitable. Invoke `python -m yautja` with that same Python if the console script is not on PATH. If Python is externally managed, create a virtual environment; never use `--break-system-packages`.
+**User site:** `python -m pip install --user "yautja"` only when supported and a virtual environment or pipx is unsuitable. Invoke `python -m yautja` with that same Python if the console script is not on PATH. If Python is externally managed, create a virtual environment; never use `--break-system-packages`.
 
-Confirm a stable version in `>=2.9.0,<3` before using this skill. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
+Confirm the installed runtime with `yautja --version` and inspect `--help` for requested options. `--doctor` reports the package version/location, exact Python, virtual-environment status, script directory, PATH membership, a conflicting CLI if found, and a `module_command` array for this interpreter. It reports observed environment facts; it does not infer pipx ownership from a path name. For image-only setup use `--doctor --media image` to skip video tool checks.
 
 ## Offline install
 
@@ -58,16 +58,16 @@ Transfer the extracted bundle and complete wheelhouse. In a fresh target venv, f
 
 <!-- offline-install: tested from the extracted skill by tools.verify_install -->
 ```bash
-python -m pip install --no-index --no-cache-dir --find-links wheelhouse --find-links wheels "yautja>=2.9.0,<3"
+python -m pip install --no-index --no-cache-dir --find-links wheelhouse --find-links wheels "yautja"
 yautja --version
 yautja --doctor --media image
 ```
 
-Use `"yautja[semantic]>=2.9.0,<3"` in that install for a semantic wheelhouse. If a dependency is missing, stop and complete the wheelhouse on the connected computer; do not drop `--no-index`. Model use is independently offline: transfer the complete cache of the three pinned snapshots after an explicit connected `yautja --download-models`, then set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and run `yautja --doctor --thermal cinematic`. These variables do not disable pip networking. For videos separately install FFmpeg/ffprobe and their system libraries before going offline.
+Use `"yautja[semantic]"` in that install for a semantic wheelhouse. If a dependency is missing, stop and complete the wheelhouse on the connected computer; do not drop `--no-index`. Model use is independently offline: transfer the complete cache of the three pinned snapshots after an explicit connected `yautja --download-models`, then set `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and run `yautja --doctor --thermal cinematic`. These variables do not disable pip networking. For videos separately install FFmpeg/ffprobe and their system libraries before going offline.
 
 ## Updates
 
-Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja>=2.9.0,<3"` to keep the major-version bound (retain `[semantic]` when used), then verify the compatible major and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja>=2.9.0,<3"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL to follow development; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. The 2.x CLI preserves existing flags; newly documented flags require raising the skill's minimum minor version or checking availability. No conversion automatically updates packages or the skill.
+Use the original environment. For pipx use `pipx runpip yautja install --upgrade "yautja"` (retain `[semantic]` when used), then check the version and diagnose again. For a venv/user install use its Python with `python -m pip install --upgrade "yautja"` (retain `[semantic]` when used). For a GitHub source installation, upgrade from the same source URL to follow development; check the resulting version before conversion. Update skill instructions separately with the original skill installer and restart the agent session. If a requested option is missing, update the runtime in that same environment. No conversion automatically updates packages or the skill.
 
 ## Video tools
 
@@ -98,7 +98,7 @@ Audio analysis decodes the selected track to 8 kHz floating-point samples in tem
 
 By default, a fixed seed makes the procedural waveform reproducible. Grain is also deterministic for a given frame time and seed. The waveform's envelope and frequency come from audio in audio mode, not image brightness. The alien readout continues to respond to image statistics.
 
-Grain, chunky pixels, and scanlines are independently optional and off by default. Use `--grain 0.02`, `--pixelation 80`, or `--scanlines` on their own or together. Bare `--grain` means 0.035; bare `--pixelation` means a longest grid edge of 96. `--grain 0`, `--pixelation 0`, and `--no-scanlines` disable individual components. `--sensor-texture` is a combined preset with grain 0.035, a grid at `--sensor-resolution`, scanlines, and light intensity quantization; explicit controls override its defaults. Disabling the preset does not cancel explicit individual effects. Display treatments do not change the underlying detections or HUD readouts. The original Yautja palette is the default in every mode; `auto` also means Yautja. Redline, red-only Virtual Boy, Ironbow, Green Phosphor, Amber Phosphor, White Hot, and Black Hot are optional palettes.
+Grain and chunky pixels are off by default. Horizontal CRT lines are on for Yautja; use `--no-crt-lines` to disable them. Use `--grain 0.02`, `--pixelation 80`, or `--scanlines` on their own or together. Bare `--grain` means 0.035; bare `--pixelation` means a longest grid edge of 96. `--grain 0`, `--pixelation 0`, and `--no-scanlines` disable individual components. `--sensor-texture` is a combined preset with grain 0.035, a grid at `--sensor-resolution`, scanlines, and light intensity quantization; explicit controls override its defaults. Disabling the preset does not cancel explicit individual effects. Display treatments do not change the underlying detections or HUD readouts. The Yautja palette is the default in every mode; `auto` also means Yautja. Redline, red-only Virtual Boy, Ironbow, Green Phosphor, Amber Phosphor, White Hot, and Black Hot are optional palettes.
 
 Audio timestamp gaps are padded before waveform analysis and soundtrack trimming, so a trim starting inside a gap retains its leading silence. Analysis still decodes the full selected track for peak calibration; short trims of long recordings therefore have setup costs proportional to the source duration.
 

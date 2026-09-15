@@ -20,7 +20,8 @@ class HudOpacityTests(unittest.TestCase):
         field = np.random.default_rng(12).integers(40, 180, (270, 480), dtype=np.uint8)
         mask = np.zeros(field.shape, np.float32)
         mask[70:250, 210:300] = 1
-        subjects = [Subject(mask, 'person', .95, track_id=1)]
+        subjects = [Subject(mask, 'person', .95, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .95, track_id=2)]
         for colors in ({}, {'palette': 'black-hot'}, {'hud_theme': 'custom', 'hud_colors': 'waveform=#f00'}):
             for style in ('trace', 'rorschach'):
                 options = dict(**colors, wave_style=style, hud_blur=5, target_stroke=5, target_stroke_colors='#0f0',
@@ -44,11 +45,12 @@ class HudOpacityTests(unittest.TestCase):
         field = np.full((540, 960), 100, np.uint8)
         mask = np.zeros(field.shape, np.float32)
         mask[130:470, 400:580] = 1
-        subjects = [Subject(mask, 'person', .95, track_id=1)]
+        subjects = [Subject(mask, 'person', .95, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .95, track_id=2)]
         def picture(key=None, analysis=False):
             renderer = Renderer(960, 540, show_timecode=True, verbose=True,
                                 analysis=analysis, analysis_target=analysis,
-                                geo_grid=True, target_motif='triangles', target_label='TARGETING',
+                                geo_grid=True, target_outline=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_opacity_elements=None if key is None else key + '=0')
             return np.asarray(renderer.render_field(field, 1, subjects=subjects,

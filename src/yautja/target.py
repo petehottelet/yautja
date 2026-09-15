@@ -24,6 +24,15 @@ def detail_shapes(shape, radius, locked):
     if shape == 'hexagon':
         paths.append(([(.74 * math.cos(a), .74 * math.sin(a))
                        for a in np.arange(6) * math.tau / 6 - math.pi / 2], True))
+        def ring(x, y, r):
+            paths.append(([(x + r * math.cos(a), y + r * math.sin(a))
+                           for a in np.linspace(0, math.tau, 65)[:-1]], True))
+        ring(0, 0, .74 * math.cos(math.pi / 6))
+        for x in (-1.03, -.84, .84, 1.03):
+            ring(x, 0, .038)
+        for x, y in ((-.4,0),(-.22,0),(.22,0),(.4,0),(0,-.24),(0,.24)):
+            ring(x, y, .036)
+        paths.append(([(-.045,-.045),(.045,-.045),(.045,.045),(-.045,.045)], True))
     elif shape == 'frame-box':
         paths.append(([(-.30, -.44), (.30, -.44), (.30, .44), (-.30, .44)], True))
     if shape.startswith('square'):
@@ -92,9 +101,12 @@ def parse_stroke_colors(value):
 class TargetOverlay:
     """Keep a bounded animation state for only the currently visible selections."""
     def __init__(self, acquire=.8, flash_rate=1.5, scale=1., *, stroke=0., stroke_colors=None, blur=0.,
-                 opacity=1., flash_opacity=None, shape='triangle', neon=None):
+                 opacity=1., flash_opacity=None, shape='triangle', neon=None, fill='auto'):
         self.neon = neon
         self.shape = resolve_target_shape(shape)
+        if fill not in ('auto', 'filled', 'stroked'):
+            raise ValueError('--target-fill must be auto, filled or stroked')
+        self.fill = fill
         flash_opacity = opacity if flash_opacity is None else flash_opacity
         for value, low, high, flag in ((acquire, .1, 5, 'target-acquire'),
                                        (flash_rate, 0, 3, 'target-flash-rate'),
@@ -136,7 +148,7 @@ class TargetOverlay:
                 overlay = Image.new('RGBA', (width * 2, height * 2))
                 draw = ImageDraw.Draw(overlay)
             start = self.active.setdefault(item['id'], time)
-            age = self.acquire if static else time - start
+            age = self.acquire if static else time - start + (self.acquire if item.get('persistent') else 0)
             progress = min(1., max(0., age / self.acquire))
             ease = 1 - (1 - progress) ** 3
             x0, y0, x1, y1 = item['bbox']
@@ -147,6 +159,9 @@ class TargetOverlay:
             lock_radius = min(radius, max(width, height) * .65) * .30
             if self.shape not in ('triangle', 'triangle-dots'):
                 lock_radius *= .85
+            if item.get('persistent'):
+                cx, cy = item['center'][0] * width, item['center'][1] * height
+                lock_radius = min(width, height) * .16 * self.scale / 1.3
             stroke_radius = lock_radius + (max(width, height) * .75 - lock_radius) * (1 - ease)
             radius = stroke_radius + lock_radius * .30 * ease
             angle = -.17 * (1 - ease)
@@ -183,7 +198,11 @@ class TargetOverlay:
                                      a + direction * cutback + inward * thickness])
                 vertices += np.array([cx, cy]) + offset
                 polygon = [tuple(point * 2) for point in vertices]
-                draw.polygon(polygon, fill=(*color, opacity))
+                if self.fill == 'stroked':
+                    draw.line([*polygon, polygon[0]], fill=(*color, opacity),
+                              width=max(1, round(2 * min(width, height) / 1080 * 2)), joint='curve')
+                else:
+                    draw.polygon(polygon, fill=(*color, opacity))
                 # Draw inward so an outline never expands the blades into the gaps.
                 stroke_width = round(self.stroke * min(width, height) / 1080 * 2)
                 if stroke_width:
@@ -194,14 +213,11 @@ class TargetOverlay:
             paths, circles = detail_shapes(self.shape, radius, progress == 1)
             line_width = max(2, round(radius * .085 * 2))
             if self.shape == 'hexagon':
-                line_width = max(2, round(radius * .034 * 2))
+                line_width = max(2, round(radius * .014 * 2))
             elif self.shape == 'frame-box':
                 line_width = max(3, round(2 * min(width, height) / 1080 * 2))
-                # Frame axes end at the box, keeping its interior empty.
-                for a, b in (((0, cy), (cx - radius * .30, cy)),
-                             ((cx + radius * .30, cy), (width, cy)),
-                             ((cx, 0), (cx, cy - radius * .44)),
-                             ((cx, cy + radius * .44), (cx, height))):
+                # Both axes intersect at the exact center of the target box.
+                for a, b in (((0, cy), (width, cy)), ((cx, 0), (cx, height))):
                     if ((a[0] <= b[0] and 0 <= a[1] <= height and 0 <= b[1] <= height) or
                         (a[0] == b[0] and a[1] <= b[1] and 0 <= a[0] <= width)):
                         draw.line([(a[0] * 2, a[1] * 2), (b[0] * 2, b[1] * 2)], fill=(*color, opacity), width=line_width)
@@ -215,11 +231,14 @@ class TargetOverlay:
 
             for path, closed in paths:
                 vertices = [point(x, y) for x, y in path]
-                if self.shape == 'hollow-cross':
+                if self.shape == 'hollow-cross' and self.fill != 'stroked':
                     draw.polygon(vertices, fill=(*color, opacity))
                     if outline_width:
                         draw.polygon(vertices, outline=(*outline, opacity), width=outline_width)
                     continue
+                if closed and self.fill == 'filled':
+                    # Translucent interiors preserve the scene and small details.
+                    draw.polygon(vertices, fill=(*color, round(opacity * .24)))
                 if closed:
                     vertices.append(vertices[0])
                 draw.line(vertices, fill=(*(outline if outline_width else color), opacity), width=line_width, joint='curve')
@@ -229,7 +248,8 @@ class TargetOverlay:
                 px, py = point(x, y)
                 r = radius * dot_radius * 2
                 box = (px - r, py - r, px + r, py + r)
-                draw.ellipse(box, fill=(*color, opacity))
+                draw.ellipse(box, fill=None if self.fill == 'stroked' else (*color, opacity),
+                             outline=(*color, opacity), width=max(1, min(line_width, round(r))))
                 if outline_width:
                     draw.ellipse(box, outline=(*outline, opacity), width=min(outline_width, max(1, round(r))))
             if self.neon:

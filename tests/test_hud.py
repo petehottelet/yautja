@@ -83,7 +83,7 @@ class HudTests(unittest.TestCase):
             source, output = root / 'source.png', root / 'out.png'
             Image.new('RGB', (320, 180), (100, 100, 100)).save(source)
             with patch('sys.stdout', new_callable=io.StringIO) as report:
-                status = main([str(source), str(output), '--no-hud', '--timecode', '--verbose'])
+                status = main([str(source), str(output), '--no-hud', '--timecode', '--verbose', '--no-crt-lines'])
             self.assertEqual(status, 0)
             data = json.loads(report.getvalue())
             self.assertEqual((data['hud'], data['timecode'], data['verbose'], data['waveform']), (False, False, False, 'off'))

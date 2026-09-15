@@ -32,13 +32,13 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(report['presets'][-1]['id'], 'fremont')
         self.assertEqual(presets['netrunner']['name'], 'Netrunner')
         self.assertEqual(presets['netrunner']['aliases'], ['ghost-signal'])
-        self.assertEqual(set(presets) - {'hottropic', 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}, set(PALETTES))
+        self.assertEqual(set(presets) - { 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}, set(PALETTES))
         for name in PALETTES:
             args = parser().parse_args(['--stylepreset', name])
-            self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'palette'))
-        self.assertEqual(presets['hottropic']['name'], 'HotTropic')
-        self.assertEqual(parser().parse_args(['--stylepreset', 'HotTropic']).look_preset, 'hottropic')
-        self.assertEqual(presets['hottropic']['aliases'], [])
+            self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'look' if name == 'yautja' else 'palette'))
+        self.assertEqual(presets['yautja']['name'], 'Yautja')
+        self.assertEqual(parser().parse_args(['--stylepreset', 'HotTropic']).look_preset, 'yautja')
+        self.assertEqual(presets['yautja']['aliases'], ['hottropic', 'hot-tropic'])
 
     def test_removed_reference_name_is_rejected_by_cli_api_and_preset_base(self):
         removed = 'thermal-spectrum-reference-v1'
@@ -112,7 +112,7 @@ class PresetTests(unittest.TestCase):
             self.assertEqual((args.thermal_levels, args.thermal_band_softness, args.hud, args.heat_glow), (0, None, True, .6))
             args = parser().parse_args(['--preset-file', str(preset), '--sensor-texture'])
             self.assertEqual((args.grain, args.pixelation, args.scanlines), (None, None, None))
-            self.assertEqual(LOOK_PRESETS['hottropic']['thermal_levels'], 12)
+            self.assertEqual(LOOK_PRESETS['yautja']['thermal_levels'], 12)
 
     def test_changing_modes_clears_inherited_dependent_values(self):
         base = {'palette': 'custom', 'palette_colors': '#000,#fff', 'hud_theme': 'custom',

@@ -1,6 +1,6 @@
 # Figure selection, targets, and display effects
 
-These options require Yautja 2.1 or newer within the supported 2.x range. All effects are optional. A scan lists detected figures, not people's identities. IDs belong to the saved catalog and its detected shots.
+All effects are optional. A scan lists detected figures, not people's identities. IDs belong to the saved catalog and its detected shots.
 
 ## List, inspect, select
 
@@ -29,7 +29,7 @@ Using a saved catalog with Classic needs only the base runtime. Selecting a segm
 
 ## Target animation and color
 
-Select geometry with `--target-shape`. Every shape uses the same selected figure tracks, acquisition duration, scale, red/white flash defaults, custom colors, inward outline, target blur, and opacity controls. Default `triangle` retains the existing three-blade design. Hollow Cross replaces Vector Lock in 2.4.2+; `vector-lock` and `iron-sights` remain aliases for the replacement in commands and saved presets.
+Select geometry with `--target-shape`. Every shape uses the same selected figure tracks, acquisition duration, scale, red/white flash defaults, custom colors, inward outline, target blur, and opacity controls. Default `triangle` retains the existing three-blade design. Hollow Cross replaces Vector Lock; `vector-lock` and `iron-sights` remain aliases for the replacement in commands and saved presets.
 
 | Shape | Geometry / center detail |
 | --- | --- |
@@ -37,14 +37,16 @@ Select geometry with `--target-shape`. Every shape uses the same selected figure
 | `crosshair` | Four radial arms and a segmented circular ring, with an open center |
 | `hollow-cross` | Four thick, square-cornered L bands outline a plus; the center and all four arm ends stay open, including on lock |
 | `square` | Four open corner brackets |
-| `round-dot` | Circular outline with four evenly spaced gaps and three center dots arranged in a triangle: one above and two below; dots appear on lock (three dots in 2.5.8+) |
+| `round-dot` | Circular outline with four evenly spaced gaps and three center dots arranged in a triangle: one above and two below; dots appear on lock |
 | `square-cross` | Corner brackets with an open-center cross |
 | `square-mil` | Corner brackets with a graduated cross |
 | `square-x` | Corner brackets with four diagonal center marks |
+| `hexagon` | Hexagon, inscribed circle, four outer and six inner targeting circles, central square |
+| `frame-box` | Rectangle with horizontal and vertical axes crossing at its center and extending to the frame edges |
 
-In 2.5.7+, `crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size.
+`crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size.
 
-New shapes contract and settle during acquisition. Lock dots vanish on target loss and reappear only after reacquisition; still images show the locked state immediately. Center details share the target's colors and transparency. `--no-hud` hides all shapes. Reports include `target_shape`.
+Shapes contract and settle with `--target-motion acquire`. `--target-motion persistent` keeps one constant-size reticle moving fluidly between subjects. Lock dots vanish on target loss and reappear only after reacquisition; still images show the locked state immediately. Center details share the target's colors and transparency. `--no-hud` hides all shapes. Reports include `target_shape`.
 
 Three solid-color blades contract into a compact reticle centered on the selected bounding box, with a narrow, clear gap through each corner. The landed radius is 39% of the original enclosing-triangle radius; `--target-scale 1` selects this compact size. The broad acquisition sweep remains animated. The reticle lands in red, then alternates between red and white. A lost target disappears and reacquires when it returns; a cut resets the acquisition. Stills show the assembled primary-color triangle immediately.
 
@@ -64,7 +66,7 @@ yautja "clip.mov" "abyss-target.mp4" --thermal cinematic --palette abyss --figur
 
 ## Neon HUD
 
-Available in Yautja 2.5+. `--neon` illuminates all active HUD elements with a bright core and two colored halos, inspired by Saber Alight's neon tube rendering. It works on stills and video, with every palette and target shape. Default off; `--no-neon` overrides a preset.
+`--neon` illuminates all active HUD elements with a bright core and two colored halos, inspired by Saber Alight's neon tube rendering. It works on stills and video, with every palette and target shape. Default off; `--no-neon` overrides a preset.
 
 | Option | Behavior |
 | --- | --- |
@@ -148,8 +150,8 @@ For HUD-only softness and target outlines, see [reticle stroke and independent H
 | `--crt-bleed 0.4` | Horizontal phosphor smear across the finished picture and HUD; strength 0–1, default 0 |
 | `--crt-vertical-lines` / `--no-crt-vertical-lines` | Vertical CRT stripes, off by default; `--vertical-crt-lines` is an alias |
 | `--crt-lines` / `--no-crt-lines` | Existing horizontal CRT stripes, independently selectable |
-| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid; off by default, requires 2.4+ |
-| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees, with two diagonal line directions; off by default, requires 2.4+ |
+| `--crt-grid` / `--no-crt-grid` | Horizontal and vertical grid; off by default |
+| `--crt-crosshatch` / `--no-crt-crosshatch` | Grid at 45 degrees, with two diagonal line directions; off by default |
 | `--crt-strength 0.12` | Darkness of all enabled line patterns, 0–1; 0 hides them |
 
 Heat glow works with every palette, including custom and random ramps, before HUD composition. It follows synthetic heat rather than merely bright source pixels, and retains the palette's color channels. In inverted palettes such as Black Hot, it produces dark diffusion around hot regions. `--heat-glow 0` disables it. This is separate from `--glow`, the existing HUD bloom setting. Still images show a fixed glow pattern.
@@ -169,9 +171,9 @@ For a wide, mirrored inkblot column in place of the thin trace, select a Rorscha
 | `--wave-style rorschach` | Broad, connected, mirrored lobes with shaded, spiky edges driven by waveform peaks |
 | `--wave-style rorschach-split` | Broken-up lobes separated by dark gaps |
 | `--wave-style rorschach-hollow` | Mirrored rings and lobes with dark interior pockets |
-| `--wave-style digital-blocks` | Bitcrush Blocks: broad pixel slabs with square cutouts (2.6.0+) |
-| `--wave-style digital-shards` | Packet Shards: detached, unequal pixel packets displaced around the axis (2.6.0+) |
-| `--wave-style digital-circuit` | Vocoder Bars: rounded horizontal bars filled with vertical LED segments, bright active segments over dim, persistent inactive bars (2.7.0+) |
+| `--wave-style digital-blocks` | Bitcrush Blocks: broad pixel slabs with square cutouts |
+| `--wave-style digital-shards` | Packet Shards: detached, unequal pixel packets displaced around the axis |
+| `--wave-style digital-circuit` | Vocoder Bars: rounded horizontal bars filled with vertical LED segments, bright active segments over dim, persistent inactive bars |
 | `--wave-width 0.14` | Maximum styled waveform width as a frame fraction, 0.02–0.3; default 0.12 |
 | `--wave-height 1` | Styled waveform height as a frame fraction, 0.1–1; default 0.96, vertically centered |
 | `--wave-detail 0.6` | Detail, 0–1; 0 is broad/smooth, higher values strengthen audio-driven edge spikes and lobe complexity |
@@ -187,3 +189,7 @@ Blocks and Shards quantize audio energy onto square pixel cells. Lower `--wave-d
 Stills show the time-zero procedural shape. `--no-hud` hides it entirely. `--glow` adjusts its HUD bloom; `--crt-bleed` softens it horizontally, and `--motion-blur` leaves video trails. Higher width/detail can occupy more of the scene, so inspect the result at the intended resolution. Width and height overrides require a non-trace style. Reports include effective `wave_style`, `wave_width`, `wave_height`, and `wave_detail`, alongside requested settings.
 
 Vocoder Bars use one vertical stack of rounded horizontal rows, alternating shorter and longer bars. Each contains small vertical LED segments. Audio activates bright segments with a pronounced response; inactive segments remain dim burgundy-to-black with red ink, or a dim version of another chosen ink color. The dark casing and inactive segments share waveform opacity and blur, and emit no light. Use `--wave-width 0.09 --wave-height 1` to match the narrow, full-height gallery example. Casings and idle segments stay fixed while local audio energy controls the width and brightness of the illuminated segments. `--wave-detail` controls row count; silence turns active lights off while keeping the inactive bars visible. The reference preview uses `--hud-theme custom --hud-colors "waveform=#FF302B"` and `--neon --neon-intensity 0 --neon-elements "waveform=1.2" --neon-spread 0.4 --neon-core-whiten 0` for vivid red active segments with a strong halo above dim burgundy inactive segments. All colors and neon controls remain configurable.
+
+## Shared targeting controls
+
+Choose `--target-fill filled` for translucent enclosed interiors, `--target-fill stroked` for contours, or `auto` for each shape's original treatment. Open paths stay lines. `--target-mode cycle` selects one subject at a time, and `--target-hold` sets its dwell time. Persistent motion uses `--target-response`; current-mask outlines use `--target-outline` and the independent `target-outline` HUD role. Caption size and blinking cursor are controlled by `--target-label-scale` and `--target-cursor`. See the [full ranges and examples](focus.md#grid-targets-and-captions).

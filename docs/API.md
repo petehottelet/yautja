@@ -1,6 +1,6 @@
 # Integration contract
 
-The supported 2.x interface is the `yautja` CLI, equivalently the chosen environment's `python -m yautja`, its exit codes (0 success, 1 conversion/runtime failure, 2 invalid arguments, 130 cancellation), and the versioned JSON conversion report. Existing flags retain their meanings within the major version; new flags can require a newer minor version. Inspect `--help` and the installed `__version__` before using newly added controls.
+The supported interface is the `yautja` CLI, equivalently the chosen environment's `python -m yautja`, its exit codes (0 success, 1 conversion/runtime failure, 2 invalid arguments, 130 cancellation), and the versioned JSON conversion report. Inspect `--help` for available controls.
 
 `import yautja` exposes `__version__` without loading image or ML libraries. `yautja.runtime` is also safe to import without those dependencies. Installation metadata comes from the installed distribution; contributors should use an editable install.
 
@@ -18,7 +18,7 @@ with Image.open('photo.jpg') as source:
 
 This low-level example does not perform the CLI's orientation, metadata, input/output protection or atomic-write checks. Prefer the CLI for end-user conversion. Other helpers, classes and module internals are not a promised stable API merely because tests or repository tools import them.
 
-## 2.9 persistent scan target
+## persistent scan target
 
 Fremont enables `analysis_target` independently of the readable `analysis` overlay. Both share the same subject selector and `analysis_speed`; no figure catalog is required. `analysis_target_size` is a fixed diameter of 0.1–0.8 times the short frame edge (default 0.36). `analysis_target_response` is 0–3 seconds to travel 95% toward a new stationary focus (default 0.6); zero follows immediately. These additive visual keys save in schema-1 presets and accept explicit overrides in either order.
 
@@ -26,7 +26,7 @@ The reticle persists through search and track loss, uses smooth damped position/
 
 Reports add effective `analysis_target`, configured size/response, and `analysis_target_position` (normalized XY, or null when hidden/unrendered). Shared `analysis_phase`/`analysis_track` remain active when either analysis component is enabled. Low-level renderers use the same supplied subjects and `target_static=True` path. [Controls and recipe](../skills/yautja/references/analysis.md).
 
-## 2.8 geometry and typography
+## geometry and typography
 
 `--stylepreset focus`, `relic`, and `murphy` add shared grid, shimmer, code-layer, target ornament/caption, and readable-font controls. [Options and ranges](../skills/yautja/references/focus.md). The preset schema remains version 1 with additive flat visual keys; local `hud_font_file` paths are excluded. `hud_font` selects a portable bundled font and `hud_glyphs` now accepts `tech`.
 
@@ -34,13 +34,13 @@ The experimental renderer uses `targets=None` to permit automatic segmented targ
 
 Fremont now selects `hud_font="orbitron-bold"` and `analysis_outline_width=5` (0.5–12 reference pixels, default 2.4). These are ordinary saved visual settings. Readable font selection also applies to analysis and captions when the glyph set remains Yautja or Cyber. `--no-target-label` clears an inherited caption.
 
-## 2.7 Fremont analysis
+## Fremont analysis
 
 `--stylepreset fremont` combines a detailed red/burgundy source scene with white readable analysis text, a moving XY grid and blinking subject outlines. It requires segmented setup, automatically selects visible subjects, and needs no figure catalog. The JSON/experimental Python keys are `analysis` (bool), `analysis_speed` (0–5), `analysis_blink_rate` (0–4), `analysis_margin` (0.01–0.15), and `scene_highlights` (0–1). All are visual preset settings. The HUD maps add `analysis-grid`, `analysis-text`, and `analysis-outline`.
 
 Descriptions use detector labels and stay in the frame; numeric telemetry is seeded and decorative. Current-frame mask refinement also applies when analysis is enabled. Reports include `analysis_phase`, `analysis_track`, and `analysis_numbers`; `analysis` is false when the HUD is hidden. Low-level Python callers provide `subjects` and use `target_static=True` for a still's held analysis. [Timing, selection, source grading, and controls](../skills/yautja/references/analysis.md).
 
-## 2.6 source scenes, subject code, and Cyber glyphs
+## source scenes, subject code, and Cyber glyphs
 
 `--stylepreset netrunner` combines source-scene grading, automatic silhouette outlines, upward code, overhead glyph titles and carets, and warm-red neon styling. `--HUDglyphs cyber|yautja` selects the glyph set for all alien HUD text, code, and titles; timecode is unaffected. The JSON/experimental Python keyword is `hud_glyphs`. See [the full controls and recipe](../skills/yautja/references/cyber.md).
 
@@ -50,23 +50,23 @@ Subject outlines enable current-frame SAM contour refinement between detections.
 
 In `scene_mode='source'`, call `Renderer.render` with an RGB source frame at the renderer's dimensions. `render_field` rejects source mode because a scalar heat field cannot reconstruct source colors. Source mode uses tint/exposure rather than the thermal palette/transfer; display texture remains available. Experimental Python callers supply subject masks to activate overlays. The CLI enforces segmented-mode setup for subject overlays and reuses its tracked masks without requiring a figure catalog. `Renderer` preset configuration translates the CLI preset's `timecode` setting to its Python `show_timecode` keyword.
 
-## 2.2 looks, levels, and reticle shapes
+## looks, levels, and reticle shapes
 
 `--thermal low-detail` replaces the simpler Silhouette presentation; `silhouette` and `semantic` remain aliases. `--thermal very-detailed` preserves resolved source facial and fabric features. All four segmented modes use the same model setup.
 
-`--stylepreset hottropic` applies the frozen HotTropic recipe. Explicit choices override it in either argument order. `--thermal-levels` opts into unified grading (0 continuous, 2–64 banded); band softness, black/white points, gamma, and scalar softness are separately configurable. Reports include the resolved look and transfer parameters. The experimental `Renderer` supports the same grading keywords and preset precedence; explicit grading also accepts finite floating-point fields in the 0–255 range. Legacy `render_field` retains its uint8 contract. See [the grading reference](../skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
+`--stylepreset yautja` applies the frozen Yautja recipe. Explicit choices override it in either argument order. `--thermal-levels` opts into unified grading (0 continuous, 2–64 banded); band softness, black/white points, gamma, and scalar softness are separately configurable. Reports include the resolved look and transfer parameters. The experimental `Renderer` supports the same grading keywords and preset precedence; explicit grading also accepts finite floating-point fields in the 0–255 range. Legacy `render_field` retains its uint8 contract. See [the grading reference](../skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
-`--target-shape` selects `triangle`, `triangle-dots`, `crosshair`, `hollow-cross`, `square`, `round-dot`, `square-cross`, `square-mil`, or `square-x`. `round-dot` provides a circular outline with four evenly spaced gaps (2.5.6+) and three center dots arranged in a triangle, appearing on lock (2.5.8+). In 2.4.2+, Hollow Cross replaces Vector Lock with four thick L-shaped bands and an open center and arm ends. `vector-lock` and `iron-sights` remain input aliases and reports resolve them to `hollow-cross`. Reports include the chosen shape. All inherit existing target styling/timing controls; lock dots appear only after acquisition completes. In 2.5.7+, `crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size. The default triangle geometry is unchanged.
+`--target-shape` selects `triangle`, `triangle-dots`, `crosshair`, `hollow-cross`, `square`, `round-dot`, `square-cross`, `square-mil`, or `square-x`. `round-dot` provides a circular outline with four evenly spaced gaps and three center dots arranged in a triangle, appearing on lock. Hollow Cross replaces Vector Lock with four thick L-shaped bands and an open center and arm ends. `vector-lock` and `iron-sights` remain input aliases and reports resolve them to `hollow-cross`. Reports include the chosen shape. All inherit existing target styling/timing controls; lock dots appear only after acquisition completes. `crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size. The default triangle geometry is unchanged.
 
-## 2.3 presets
+## presets
 
-`--stylepreset hottropic` selects HotTropic. All existing palette IDs also select Cinematic starter presets. `--palette` still changes only the ramp, and encoder `--preset` retains its meaning. The CLI selector is `--stylepreset` in 2.5.2+. The Python keyword and JSON report key remain `look_preset`, for example `Renderer(width, height, look_preset="hottropic")`.
+`--stylepreset yautja` selects Yautja. All existing palette IDs also select Cinematic starter presets. `--palette` still changes only the ramp, and encoder `--preset` retains its meaning. The CLI selector is `--stylepreset`. The Python keyword and JSON report key remain `look_preset`, for example `Renderer(width, height, look_preset="yautja")`.
 
 `--list-presets` returns a JSON catalog without media or inference. `--save-preset PATH --preset-name NAME` exports current visual settings without conversion; `--preset-file PATH` loads schema-1 JSON presets for images or videos. File settings override an optional built-in base; explicit CLI choices override file settings. The schema permits visual options only, with strict JSON types and no source paths, selected figure IDs, actions, or machine settings. Reports add `preset_name`, `preset_kind`, and `preset_file`. [Preset schema, examples, and precedence](../skills/yautja/references/presets.md).
 
 ## Neon illumination
 
-Yautja 2.5 adds renderer keywords `neon=False`, `neon_intensity=1.0`, `neon_spread=0.6`, `neon_flicker=0.0`, and `neon_elements=None`. The last value is a comma-separated `element=intensity` string. Intensity and spread accept finite 0–2 values; flicker accepts 0–1. Per-element intensity zero disables its entire neon treatment; target applies to both flash states. Invalid tuning fails even while neon is off. Geometry and default output are unchanged when neon is disabled.
+Renderer keywords include `neon=False`, `neon_intensity=1.0`, `neon_spread=0.6`, `neon_flicker=0.0`, and `neon_elements=None`. The last value is a comma-separated `element=intensity` string. Intensity and spread accept finite 0–2 values; flicker accepts 0–1. Per-element intensity zero disables its entire neon treatment; target applies to both flash states. Invalid tuning fails even while neon is off. Geometry and default output are unchanged when neon is disabled.
 
 Requested values are preserved in conversion `settings`. Top-level reports contain effective `neon`, `neon_intensity`, `neon_spread`, `neon_flicker`, and the resolved per-element map as both `neon_elements` and `neon_intensities`. Effective values are false/zero when neon or HUD is disabled. `neon_flicker_seed_stream` is `sha256(seed:neon-flicker)` when enabled, otherwise null. Stills evaluate time zero; all HUD layers share one deterministic flicker gain per frame. No new runtime dependencies are required.
 
@@ -84,4 +84,12 @@ The experimental renderer accepts `targets`, `shot_id`, and `target_static` keyw
 
 Rorschach waveform controls add `wave_style`, `wave_width`, `wave_height`, and `wave_detail` to reports and renderer construction. The default style is `trace`; the other styles are `rorschach`, `rorschach-split`, and `rorschach-hollow`. Effective geometry/detail are null for the trace or HUD off. The existing `waveform` field still describes the signal source (audio, procedural, or off), independently of its visual style.
 
-CRT grid and crosshatch are available in 2.4+. `crt_grid` combines horizontal and vertical lines without duplicating separately enabled directions; `crt_crosshatch` adds two diagonal directions at 45 degrees. Both default to false, apply after HUD composition, use `crt_strength`, and are supported by stills, videos, and saved presets. Existing `scanlines`/`crt_lines` and `crt_vertical_lines` report their individual controls; `crt_grid` reports the combined-grid control.
+CRT grid and crosshatch are available. `crt_grid` combines horizontal and vertical lines without duplicating separately enabled directions; `crt_crosshatch` adds two diagonal directions at 45 degrees. Both default to false, apply after HUD composition, use `crt_strength`, and are supported by stills, videos, and saved presets. Existing `scanlines`/`crt_lines` and `crt_vertical_lines` report their individual controls; `crt_grid` reports the combined-grid control.
+
+## Preset naming and persistent targets
+
+`yautja` is the complete Cinematic recipe with the former HotTropic colors, red HUD, cyan annotations, and CRT lines. `costa-rica` preserves the original ramp. `hottropic` and `hot-tropic` normalize to `yautja`. Plain CLI use remains Classic with the new Yautja palette and CRT lines; `--no-crt-lines` turns them off.
+
+The renderer and schema-1 visual presets accept `geo_grid_projection` (`flat` or `sphere`), `target_mode` (`selected`, `auto`, or `cycle`), `target_motion` (`acquire` or `persistent`), `target_hold`, `target_response`, `target_fill` (`auto`, `filled`, or `stroked`), `target_outline`, `target_label_scale`, and `target_cursor`. Read the [defaults and ranges](../skills/yautja/references/focus.md). `target-outline` is an independent HUD color/opacity/blur/neon role. Enclosed filled shapes use translucent interiors; open paths remain strokes.
+
+Persistent movement keeps one constant-size reticle. Automatic empty scenes sweep in search; explicit empty target lists suppress targeting. Catalogs supply the candidate pool, while cycle mode and persistent motion choose one candidate. Selection and motion reset on cuts/backward seeks. Current masks drive outlines without spatial smoothing. Runtime selection and spring state are never exported as preset settings. The decorated `hexagon` and center-crossing `frame-box` use the same common target controls.

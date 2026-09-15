@@ -106,7 +106,8 @@ def check_runtime(python, env, cwd, prefix):
     neon = json.loads(run(['yautja', 'photo.jpg', 'neon.png', '--preset-file', 'neon.json'], cwd, image_env))
     assert neon['neon'] and neon['palette'] == 'abyss' and neon['target_colors'] == ['#267085', '#267085']
     presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
-    assert any(p['id'] == 'hottropic' and p['name'] == 'HotTropic' for p in presets['presets'])
+    assert any(p['id'] == 'yautja' and p['name'] == 'Yautja' for p in presets['presets'])
+    assert any(p['id'] == 'costa-rica' and p['name'] == 'Costa Rica' for p in presets['presets'])
     assert presets['presets'][-1]['id'] == 'fremont'
     run(['yautja', '--stylepreset', 'fremont', '--save-preset', 'fremont.json'], cwd, image_env)
     # Exercise the packaged font and analysis renderer offline with a supplied
@@ -143,7 +144,7 @@ for name in ('focus', 'relic', 'murphy'):
          '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)
     preset = json.loads(run(['yautja', 'photo.jpg', 'preset.png', '--preset-file', 'saved-look.json'], cwd, image_env))
     assert preset['preset_name'] == 'Saved HotTropic' and preset['preset_kind'] == 'custom'
-    assert preset['thermal_levels'] == 12 and preset['hud'] is False
+    assert preset['thermal_levels'] == 12 and preset['hud'] is True and preset['crt_lines']
     print(f'Passed isolated install and image/video conversion: {prefix.name}')
 
 

@@ -287,8 +287,8 @@ class DisplayTests(unittest.TestCase):
 
     def test_vertical_and_horizontal_lines_are_independent_and_adjustable(self):
         field = np.full((180, 320), 180, np.uint8)
-        base = np.asarray(Renderer(320, 180, hud=False).render_field(field, 0), np.float32)
-        vertical = np.asarray(Renderer(320, 180, hud=False, crt_vertical_lines=True, crt_strength=.4).render_field(field, 0))
+        base = np.asarray(Renderer(320, 180, hud=False, scanlines=False).render_field(field, 0), np.float32)
+        vertical = np.asarray(Renderer(320, 180, hud=False, scanlines=False, crt_vertical_lines=True, crt_strength=.4).render_field(field, 0))
         expected = base.copy(); expected[:, ::2] *= .6
         np.testing.assert_array_equal(vertical, np.uint8(expected))
         both = np.asarray(Renderer(320, 180, hud=False, scanlines=True, crt_vertical_lines=True, crt_strength=.4).render_field(field, 0))

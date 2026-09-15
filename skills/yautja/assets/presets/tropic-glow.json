@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "Tropic Glow",
-  "description": "HotTropic colors and thermal levels with palette-matched neon HUD elements and animated heat glow.",
-  "base": "hottropic",
+  "description": "Yautja colors and thermal levels with palette-matched neon HUD elements and animated heat glow.",
+  "base": "yautja",
   "settings": {
     "hud": true,
     "hud_theme": "palette",

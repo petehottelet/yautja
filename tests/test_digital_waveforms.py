@@ -125,7 +125,7 @@ class DigitalWaveformsTests(unittest.TestCase):
             if reference is not None:
                 np.testing.assert_array_equal(image[:, 160:], reference[:, 160:])
             reference = image
-            hidden = Renderer(480, 270, wave_style=style, hud=False).render_field(field, 1)
+            hidden = Renderer(480, 270, wave_style=style, hud=False, scanlines=False).render_field(field, 1)
             np.testing.assert_array_equal(hidden, Image.new('RGB', (480, 270), tuple(renderer.palette[100])))
 
 

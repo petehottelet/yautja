@@ -84,7 +84,7 @@ class SensorTextureTests(unittest.TestCase):
         frame = Image.new('RGB', (320, 240), (100, 100, 100))
         for mode in ('classic', 'silhouette', 'cinematic', 'detailed'):
             with self.subTest(mode=mode):
-                plain = Renderer(320, 240, thermal=mode).render(frame, 0, subjects=[person()])
+                plain = Renderer(320, 240, thermal=mode, scanlines=False).render(frame, 0, subjects=[person()])
                 explicit = Renderer(320, 240, thermal=mode, sensor_texture=False, grain=0, pixelation=0, scanlines=False).render(frame, 0, subjects=[person()])
                 textured = Renderer(320, 240, thermal=mode, sensor_texture=True).render(frame, 0, subjects=[person()])
                 np.testing.assert_array_equal(np.asarray(plain), np.asarray(explicit))

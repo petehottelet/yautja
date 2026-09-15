@@ -89,12 +89,13 @@ class NeonTests(unittest.TestCase):
         field = np.full((540, 960), 100, np.uint8)
         mask = np.zeros(field.shape, np.float32)
         mask[130:470, 400:580] = 1
-        subjects = [Subject(mask, 'person', .95, track_id=1)]
+        subjects = [Subject(mask, 'person', .95, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .95, track_id=2)]
         target = [{'id': 'one', 'bbox': [.4, .25, .6, .8]}]
         def render(key=None):
             renderer = Renderer(960, 540, neon=True, neon_flicker=.4, show_timecode=True, verbose=True,
                                 analysis=True, analysis_target=True,
-                                geo_grid=True, target_motif='triangles', target_label='TARGETING',
+                                geo_grid=True, target_outline=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 neon_elements=None if key is None else key + '=0')
             with patch.object(renderer.neon_style, 'apply', wraps=renderer.neon_style.apply) as apply:
@@ -202,9 +203,9 @@ class NeonTests(unittest.TestCase):
         field = np.full((180, 320), 100, np.uint8)
         for shape in ('rorschach', 'rorschach-split', 'rorschach-hollow'):
             with self.subTest(shape=shape):
-                plain = np.asarray(Renderer(320, 180, neon=True, wave_style=shape).render_field(field, 0))
+                plain = np.asarray(Renderer(320, 180, neon=True, wave_style=shape, scanlines=False).render_field(field, 0))
                 striped = np.asarray(Renderer(320, 180, neon=True, wave_style=shape,
-                                     crt_vertical_lines=True, crt_strength=1).render_field(field, 0))
+                                     scanlines=False, crt_vertical_lines=True, crt_strength=1).render_field(field, 0))
                 self.assertEqual(striped[:, ::2].max(), 0)
                 np.testing.assert_array_equal(plain[:, 1::2], striped[:, 1::2])
 

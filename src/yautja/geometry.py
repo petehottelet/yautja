@@ -2,13 +2,16 @@
 import math
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 from .signal import stable_number
+from .aim import Aim
 
-GEO_OPTIONS = ('geo_grid', 'geo_grid_scale', 'geo_grid_jitter', 'geo_grid_speed')
-TARGET_OPTIONS = ('target_mode', 'target_motif', 'target_motif_count', 'target_motif_scale', 'target_label')
-GEOMETRY_ELEMENTS = ('geo-grid', 'target-motif', 'target-label')
+GEO_OPTIONS = ('geo_grid', 'geo_grid_scale', 'geo_grid_jitter', 'geo_grid_speed', 'geo_grid_projection')
+TARGET_OPTIONS = ('target_mode', 'target_motif', 'target_motif_count', 'target_motif_scale', 'target_label',
+                  'target_motion', 'target_hold', 'target_response', 'target_fill', 'target_outline',
+                  'target_label_scale', 'target_cursor')
+GEOMETRY_ELEMENTS = ('geo-grid', 'target-motif', 'target-label', 'target-outline')
 
 
 def noise(seed, time):
@@ -21,9 +24,16 @@ def noise(seed, time):
 
 class GeometryStyle:
     def __init__(self, *, geo_grid=False, geo_grid_scale=160., geo_grid_jitter=.65, geo_grid_speed=1.,
-                 target_mode='selected', target_motif='none', target_motif_count=7, target_motif_scale=1., target_label=None):
-        if target_mode not in ('selected', 'auto'):
-            raise ValueError('--target-mode must be selected or auto')
+                 geo_grid_projection='flat', target_mode='selected', target_motif='none', target_motif_count=7,
+                 target_motif_scale=1., target_label=None, target_motion='acquire', target_hold=3.,
+                 target_response=.6, target_fill='auto', target_outline=False, target_label_scale=1., target_cursor=False):
+        for key, value, choices in (
+                ('target-mode', target_mode, ('selected', 'auto', 'cycle')),
+                ('target-motion', target_motion, ('acquire', 'persistent')),
+                ('target-fill', target_fill, ('auto', 'filled', 'stroked')),
+                ('geo-grid-projection', geo_grid_projection, ('flat', 'sphere'))):
+            if value not in choices:
+                raise ValueError(f'--{key} must be one of: {", ".join(choices)}')
         if target_motif not in ('none', 'triangles'):
             raise ValueError('--target-motif must be none or triangles')
         if type(target_motif_count) is not int or not 0 <= target_motif_count <= 24:
@@ -33,22 +43,30 @@ class GeometryStyle:
             raise ValueError('--target-label must contain 1-24 printable ASCII characters')
         for key, value, low, high in (('geo-grid-scale', geo_grid_scale, 40, 480),
                                     ('geo-grid-jitter', geo_grid_jitter, 0, 1), ('geo-grid-speed', geo_grid_speed, 0, 5),
-                                    ('target-motif-scale', target_motif_scale, .25, 3)):
+                                    ('target-motif-scale', target_motif_scale, .25, 3),
+                                    ('target-hold', target_hold, .5, 30), ('target-response', target_response, 0, 3),
+                                    ('target-label-scale', target_label_scale, .5, 4)):
             if not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f'--{key} must be between {low} and {high}')
         for key in (*GEO_OPTIONS, *TARGET_OPTIONS):
             setattr(self, key, locals()[key])
         self.geometry = None
+        self.curves = None
         self.label_box = None
+        self.aim = Aim(target_hold, target_response)
+        self.selected = []
 
     def report(self, hud=True):
         return {**{key: getattr(self, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)},
-                'geo_grid': bool(hud and self.geo_grid)}
+                'geo_grid': bool(hud and self.geo_grid), 'target_outline': bool(hud and self.target_outline)}
 
     def lattice(self, size, seed):
-        signature = (size, seed)
+        signature = (size, seed, self.geo_grid_projection, self.geo_grid_scale, self.geo_grid_jitter)
         if self.geometry and self.geometry[0] == signature:
             return self.geometry[1:]
+        if self.geo_grid_projection == 'sphere':
+            return self.sphere_lattice(size, seed, signature)
+        self.curves = None
         width, height = size
         spacing = self.geo_grid_scale * min(size) / 1080
         dy = spacing * math.sqrt(3) / 2
@@ -69,6 +87,58 @@ class GeometryStyle:
         self.geometry = (signature, vertices, edges, nodes)
         return vertices, edges, nodes
 
+    def sphere_lattice(self, size, seed, signature):
+        # Subdivide an icosahedron on the unit sphere. Stereographic projection
+        # from its center makes great-circle edges bow across a wide field of view.
+        phi = (1 + math.sqrt(5)) / 2
+        vertices = np.array([(-1,phi,0),(1,phi,0),(-1,-phi,0),(1,-phi,0),
+                             (0,-1,phi),(0,1,phi),(0,-1,-phi),(0,1,-phi),
+                             (phi,0,-1),(phi,0,1),(-phi,0,-1),(-phi,0,1)], dtype=float)
+        vertices /= np.linalg.norm(vertices, axis=1)[:, None]
+        faces = [(0,11,5),(0,5,1),(0,1,7),(0,7,10),(0,10,11),(1,5,9),(5,11,4),
+                 (11,10,2),(10,7,6),(7,1,8),(3,9,4),(3,4,2),(3,2,6),(3,6,8),
+                 (3,8,9),(4,9,5),(2,4,11),(6,2,10),(8,6,7),(9,8,1)]
+        depth = max(1, min(4, int(math.log2(1080 / self.geo_grid_scale))))
+        vertices = list(vertices)
+        for _ in range(depth):
+            midpoints, divided = {}, []
+            def midpoint(a, b):
+                key = tuple(sorted((a, b)))
+                if key not in midpoints:
+                    point = vertices[a] + vertices[b]
+                    midpoints[key] = len(vertices)
+                    vertices.append(point / np.linalg.norm(point))
+                return midpoints[key]
+            for a, b, c in faces:
+                ab, bc, ca = midpoint(a,b), midpoint(b,c), midpoint(c,a)
+                divided.extend(((a,ab,ca),(b,bc,ab),(c,ca,bc),(ab,bc,ca)))
+            faces = divided
+        vectors = np.asarray(vertices)
+        rng = np.random.default_rng(stable_number(seed, 'sphere-grid'))
+        vectors += rng.normal(0, .16 / 2**depth * self.geo_grid_jitter, vectors.shape)
+        vectors /= np.linalg.norm(vectors, axis=1)[:, None]
+        # Tilt avoids a pole or a conspicuous horizontal seam in the viewport.
+        ax, ay = .31, .47
+        vectors = vectors @ np.array([[math.cos(ay),0,math.sin(ay)],[0,1,0],[-math.sin(ay),0,math.cos(ay)]])
+        vectors = vectors @ np.array([[1,0,0],[0,math.cos(ax),-math.sin(ax)],[0,math.sin(ax),math.cos(ax)]])
+        focal = min(size) * .72 * self.geo_grid_scale / (640 / 2**depth)
+        def project(points):
+            return points[:, :2] / np.maximum(.02, 1 + points[:, 2:]) * focal + np.array(size) / 2
+        corner_radius = np.linalg.norm(size) / 2 + min(size) * .1
+        near_limit = min(-.65, max(-.99, (focal**2 - corner_radius**2) / (focal**2 + corner_radius**2) - .1))
+        edges = sorted({tuple(sorted((a,b))) for face in faces for a,b in zip(face, (*face[1:],face[0]))
+                        if min(vectors[a,2], vectors[b,2]) > near_limit})
+        self.curves = []
+        for a, b in edges:
+            t = np.linspace(0, 1, 9)[:, None]
+            arc = vectors[a] * (1-t) + vectors[b] * t
+            arc /= np.linalg.norm(arc, axis=1)[:, None]
+            self.curves.append(project(arc))
+        vertices = project(vectors)
+        nodes = [i for i in range(len(vertices)) if vectors[i,2] > near_limit and rng.random() < .45]
+        self.geometry = (signature, vertices, edges, nodes)
+        return vertices, edges, nodes
+
     def draw_grid(self, renderer, image, time, static=False):
         if not self.geo_grid:
             return
@@ -80,7 +150,8 @@ class GeometryStyle:
         t = 0 if static else time * self.geo_grid_speed
         for index, (a, b) in enumerate(edges):
             alpha = round(255 * (.45 + .55 * noise(stable_number(renderer.seed, 'grid-edge', index), t)))
-            draw.line([tuple(v * ss for v in vertices[i]) for i in (a, b)],
+            points = self.curves[index] if self.curves is not None else (vertices[a], vertices[b])
+            draw.line([tuple(v * ss for v in point) for point in points],
                       fill=(*color, alpha), width=max(1, round(1.3 * scale * ss)))
         radius = max(.8, 2.2 * scale) * ss
         for i in nodes:
@@ -97,9 +168,53 @@ class GeometryStyle:
             if subject.opacity <= 0 or not len(xx):
                 continue
             h, w = subject.mask.shape
-            result.append({'id': f'auto-{subject.track_id}', 'bbox': (xx.min()/w, yy.min()/h,
+            result.append({'id': f'auto-{subject.track_id}', 'track_id': subject.track_id, 'bbox': (xx.min()/w, yy.min()/h,
                           (xx.max()+1)/w, (yy.max()+1)/h), 'opacity': subject.opacity})
         return result
+
+    def prepare_targets(self, subjects, targets, time, shot, size, static=False):
+        automatic = targets is None and self.target_mode != 'selected'
+        candidates = self.targets(subjects) if automatic else list(targets or ())
+        threshold = .25 if self.target_mode == 'cycle' or self.target_motion == 'persistent' else 0
+        candidates = [item for item in candidates if item.get('opacity', 1) > threshold]
+        if self.target_mode == 'cycle' or self.target_motion == 'persistent':
+            selected = self.aim.select(candidates, time, shot, static)
+            self.selected = [selected] if selected else []
+            if self.target_motion == 'persistent' and (automatic or candidates):
+                return [self.aim.advance(selected, time, shot, size, static)]
+            return self.selected
+        self.selected = candidates
+        return candidates
+
+    def draw_outline(self, renderer, image, subjects):
+        if not self.target_outline or not self.selected:
+            return
+        available = self.targets(subjects)
+        chosen = set()
+        for target in self.selected:
+            if 'track_id' in target:
+                chosen.add(target['track_id'])
+                continue
+            def overlap(candidate):
+                a, b = target['bbox'], candidate['bbox']
+                intersection = max(0, min(a[2],b[2])-max(a[0],b[0])) * max(0, min(a[3],b[3])-max(a[1],b[1]))
+                union = (a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - intersection
+                return intersection / max(union, 1e-9)
+            match = max(available, key=overlap, default=None)
+            if match and overlap(match) > .15:
+                chosen.add(match['track_id'])
+        panel = renderer.hud_panel(image.size, 'target-outline')
+        for subject in subjects:
+            if subject.track_id not in chosen:
+                continue
+            mask = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
+            width = max(1, round(3 * min(image.size) / 1080))
+            inner = mask.filter(ImageFilter.MinFilter(width * 2 + 1))
+            edge = np.maximum(0, np.asarray(mask, dtype=np.int16) - np.asarray(inner, dtype=np.int16))
+            ink = Image.new('RGBA', image.size, (*renderer.hud_colors['target-outline'], 0))
+            ink.putalpha(Image.fromarray(np.uint8(edge * subject.opacity)))
+            panel.layer('target-outline').alpha_composite(ink)
+        renderer.composite_panel(image, panel, 0, 0)
 
     def draw_targets(self, renderer, image, time, static=False):
         states = renderer.target_overlay.placements
@@ -132,7 +247,18 @@ class GeometryStyle:
         if self.target_label is not None:
             opacity = max(state[-1] for state in states)
             margin = max(2, round(42 * scale))
-            ink = renderer.typography.mask(self.target_label, max(6, round(26 * scale)), .12)
+            # Reserve the cursor's width even while it is dark, keeping the
+            # caption at a fixed size and position throughout its blink cycle.
+            font_size = max(6, round(26 * scale * self.target_label_scale))
+            ink = renderer.typography.mask(self.target_label, font_size, .12)
+            if self.target_cursor:
+                cursor_width, gap = max(3, round(font_size * .65)), max(2, round(font_size * .3))
+                caption = ink
+                ink = Image.new('L', (caption.width + gap + cursor_width, caption.height + max(1, round(font_size * .15))))
+                ink.paste(caption, (0, 0))
+                if static or int(time * 2) % 2 == 0:
+                    ImageDraw.Draw(ink).line((caption.width + gap, ink.height-1, ink.width-1, ink.height-1),
+                                            fill=255, width=max(1, round(font_size * .12)))
             max_width = max(1, image.width - 2 * margin)
             if ink.width > max_width:
                 ink = ink.resize((max_width, max(1, round(ink.height * max_width / ink.width))), Image.Resampling.LANCZOS)

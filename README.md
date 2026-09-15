@@ -22,9 +22,15 @@ Yautja is a **local Python tool for sci-fi-styled image segmentation, re-skinnin
 
 Re-skin local images and video frames with cold blues, warm silhouettes, and alien HUD glyphs. Videos add an audio-reactive waveform. Install the converter from PyPI and use it directly, or add the optional **agent skill for Claude and OpenAI Codex**. Videos use FFmpeg. [yautja.ai](https://yautja.ai).
 
-[![Cinematic thermal look in the original Yautja palette, with broad warm regions, shaded cyan glyph callouts, and compact LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hero.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif)
+[![Yautja: soft thermal bands, red HUD, cyan annotations and CRT lines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hero.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-yautja.gif?v=2.10.0)
 
-A three-second loop from generated jungle-explorer footage, using **Cinematic** detail and the **original Yautja palette**, with texture off. The waveform follows the source audio; GIFs are silent. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png). The gallery reflects the 2.x source, including the centered waveform. The older [1.0 demo with sound](https://github.com/petehottelet/yautja/releases/download/v1.0.0/yautja-demo.mp4) uses the previous renderer.
+| Fremont | Murphy |
+| --- | --- |
+| [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.9.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.9.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.10.0) |
+| Netrunner | Focus |
+| [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.10.0) |
+
+The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The original look is now **Costa Rica** (`--stylepreset costa-rica`). The smaller previews show four alternative styles. GIFs are silent; the hero waveform follows the source audio. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png?v=2.10.0).
 
 ## Quick start
 
@@ -51,7 +57,7 @@ python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
 ```
 
-The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Netrunner, Focus, Relic, and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and Yautja select Cinematic; Netrunner, Focus, Relic, Murphy, and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
 
 ### Video
 
@@ -129,10 +135,10 @@ A **style preset** is the broadest visual option: a named bundle of settings for
 
 Choose a built-in style preset with **`--stylepreset NAME`**, or load a saved style preset with **`--preset-file "my-style.json"`**. Use one selector at a time; a JSON file can name a built-in preset as its starting point. Settings the preset does not specify use the normal defaults.
 
-**Individual options override the preset, regardless of argument order.** For example, this keeps HotTropic's colors and thermal levels while selecting Very Detailed, enabling the HUD, and adding heat glow:
+**Individual options override the preset, regardless of argument order.** For example, this keeps Yautja's colors and thermal levels while selecting Very Detailed, enabling the HUD, and adding heat glow:
 
 ```bash
-yautja "clip.mov" "my-tropic.mp4" --stylepreset hottropic --thermal very-detailed --hud --heat-glow 0.6
+yautja "clip.mov" "my-tropic.mp4" --stylepreset yautja --thermal very-detailed --hud --heat-glow 0.6
 ```
 
 For a JSON preset, the order is **defaults → optional built-in base → saved settings → explicit command-line options**; later values take priority. Overrides affect the current command. Use `--save-preset` to save the resulting visual settings. Group controls still apply: for example, `--no-hud` hides all HUD elements, and neon tuning takes effect when `--neon` is enabled.
@@ -141,7 +147,7 @@ Presets store **visual settings only**. Save bundled font choices and automatic-
 
 ### Four thermal detail modes
 
-Choose the level of detail separately from the color palette. All four examples use the **original Yautja colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
+Choose the level of detail separately from the color palette. All four examples use the **Costa Rica colors**, with grain, pixelation, and scanlines off. **Click any preview for its large, 960×540 animated GIF.**
 
 | Low Detail | Cinematic |
 | --- | --- |
@@ -159,14 +165,14 @@ All four use anatomy-guided fallback when estimates are uncertain. Cinematic, De
 
 Existing commands still work: `--thermal silhouette` and `--thermal semantic` now select Low Detail, and `--thermal realistic` remains an alias for Detailed. The lightweight `--thermal classic` luminance filter remains the no-flag CLI default; it does not segment subjects.
 
-### HotTropic style preset
+### Yautja style preset
 
-This preset uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, and no HUD or sensor texture.
+This preset uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, a red HUD, cyan annotations, and horizontal CRT lines. Grain and pixelation remain off.
 
-| HotTropic · complete preset | Thermal Spectrum · palette only |
+| Yautja · complete preset | Thermal Spectrum · palette only |
 | --- | --- |
-| [![HotTropic: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-thermal-spectrum-reference-v1.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-thermal-spectrum-reference-v1.gif) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
-| `--stylepreset hottropic` | `--palette thermal-spectrum` |
+| [![Yautja: dark scenery, soft color bands, pink and pale highlights](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-yautja.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-yautja.gif?v=2.10.0) | [![Thermal Spectrum palette with ordinary Cinematic grading and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-thermal-spectrum.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-thermal-spectrum.gif) |
+| `--stylepreset yautja` | `--palette thermal-spectrum` |
 
 Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--thermal-levels 0` for continuous color, and `--thermal-band-softness 0` for hard bands. Soft transitions and optional glow add intermediate visible colors; twelve representative levels does not limit a GIF to twelve RGB colors. Explicit options override the recipe regardless of argument order. For example, add `--hud --thermal very-detailed` to use its colors and levels with more source detail and overlays. [Exact recipe and grading controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md#thermal-levels-and-reference-preset).
 
@@ -174,33 +180,34 @@ Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--th
 
 Start from a built-in preset, a saved preset, or individual options. Customize the settings, then save your own named style preset:
 
-**Tropic Glow is the custom-preset example: HotTropic + HUD + heat glow + neon.** It demonstrates how to modify a built-in style and save that combination under your own name. Its thermal colors, detail mode, and levels come from HotTropic.
+**Tropic Glow is the custom-preset example: Yautja + palette-matched HUD + heat glow + neon.** It demonstrates how to modify a built-in style and save that combination under your own name. Its thermal colors, detail mode, and levels come from Yautja.
 
-| Setting | HotTropic · built-in style preset | Tropic Glow · editable custom preset |
+| Setting | Yautja · built-in style preset | Tropic Glow · editable custom preset |
 | --- | --- | --- |
 | Thermal image | Thermal Spectrum colors, Cinematic detail, 12 soft levels, dark scenery | Same thermal recipe |
-| HUD, timecode, and callouts | Hidden | Visible, with palette-matched colors |
+| HUD and callouts | Red HUD and cyan annotations | Palette-matched colors, with timecode |
+| CRT lines | On | On |
 | Heat glow | Off | 0.6 |
 | Neon HUD | Off | On |
 
 ```bash
 yautja --list-presets
-yautja --stylepreset hottropic --hud --hud-theme palette --neon --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
+yautja --stylepreset yautja --hud --hud-theme palette --neon --heat-glow 0.6 --timecode --verbose --save-preset "tropic-glow.json" --preset-name "Tropic Glow"
 yautja "clip.mov" "glowing.mp4" --preset-file "tropic-glow.json"
 ```
 
 Saving needs no source or models. `--save-preset` writes a complete snapshot of the resolved visual settings, including defaults, so the exported file can be reused without its starting preset. Share the JSON file with another person or agent, then override individual choices when using it, such as `--heat-glow 0.2`. Existing saves require `--overwrite`.
 
-| Tropic Glow · HotTropic with neon HUD and heat glow |
+| Tropic Glow · Yautja with neon HUD and heat glow |
 | --- |
-| [![Tropic Glow: HotTropic with palette-matched neon HUD and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif?v=2.5.5)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif?v=2.5.5) |
+| [![Tropic Glow: Yautja with palette-matched neon HUD and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif?v=2.10.0) |
 | [Editable JSON preset](skills/yautja/assets/presets/tropic-glow.json) · [Creation, schema, and sharing guide](skills/yautja/references/presets.md) |
 
-The editable JSON example uses `"base": "hottropic"` to inherit the starting settings and lists its changes under `settings`, including `"neon": true`. Load it with `--preset-file "tropic-glow.json"`. Presets exported with `--save-preset` contain the full settings, so they can be reused without the starting preset. Add `--no-neon` when loading Tropic Glow to disable only its neon styling.
+The editable JSON example uses `"base": "yautja"` to inherit the starting settings and lists its changes under `settings`, including `"neon": true`. Load it with `--preset-file "tropic-glow.json"`. Presets exported with `--save-preset` contain the full settings, so they can be reused without the starting preset. Add `--no-neon` when loading Tropic Glow to disable only its neon styling.
 
 ### Style presets based on palettes
 
-**Yautja remains the default palette.** Each palette has a built-in style preset that selects Cinematic plus its named colors; other settings use the normal defaults. These are the same kind of visual bundle as HotTropic, with fewer settings specified. Use `--stylepreset white-hot` to select the White Hot starter, or `--palette white-hot` to change the colors while keeping your thermal detail and other choices. HUD colors follow each palette's default theme unless customized. Optional timecode and subject callouts are enabled in these previews; all use identical segmentation and no added texture.
+**Yautja is the default look and palette; Costa Rica preserves the original colors.** Other palettes have a built-in style preset that selects Cinematic plus its named colors; other settings use the normal defaults. These are the same kind of visual bundle as Yautja, with fewer settings specified. Use `--stylepreset white-hot` to select the White Hot starter, or `--palette white-hot` to change the colors while keeping your thermal detail and other choices. HUD colors follow each palette's default theme unless customized. Optional timecode and subject callouts are enabled in these previews; all use identical segmentation and no added texture.
 
 | Redline · red, blue, and black | Virtual Boy · red only |
 | --- | --- |
@@ -209,17 +216,17 @@ The editable JSON example uses `"base": "hottropic"` to inherit the starting set
 
 Redline gives the movie-style red/blue/black treatment, with broad red warmth and small pink highlights. Virtual Boy uses only red and black, including the glyphs, waveform, and timecode, unless you explicitly choose custom or random HUD colors.
 
-| Yautja · original/default | Ironbow | Green Phosphor |
+| Costa Rica · original look | Ironbow | Green Phosphor |
 | --- | --- | --- |
-| [![Original Yautja palette: cool blue and cyan through yellow and red](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Ironbow palette: purple, orange, and yellow-white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-ironbow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-ironbow.gif) | [![Green Phosphor palette: a monochrome green night-vision style](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-green-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-green-phosphor.gif) |
-| `--stylepreset yautja` | `--stylepreset ironbow` | `--stylepreset green-phosphor` |
+| [![Costa Rica palette: cool blue and cyan through yellow and red](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-costa-rica.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-costa-rica.gif?v=2.10.0) | [![Ironbow palette: purple, orange, and yellow-white](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-ironbow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-ironbow.gif) | [![Green Phosphor palette: a monochrome green night-vision style](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-green-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-green-phosphor.gif) |
+| `--stylepreset costa-rica` | `--stylepreset ironbow` | `--stylepreset green-phosphor` |
 
 | Amber Phosphor | White Hot | Black Hot |
 | --- | --- | --- |
 | [![Amber Phosphor palette: warm amber display colors](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-amber-phosphor.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-amber-phosphor.gif) | [![White Hot palette: lighter warm regions with a light gray waveform and HUD](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-white-hot.gif?v=2.5.4)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-white-hot.gif?v=2.5.4) | [![Black Hot palette: simulated warm regions appear darker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/palette-black-hot.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/palette-black-hot.gif) |
 | `--stylepreset amber-phosphor` | `--stylepreset white-hot` | `--stylepreset black-hot` |
 
-`--palette auto` also selects the original Yautja palette. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
+`--palette auto` selects the new Yautja palette. `--palette costa-rica` selects the original colors without changing detail. Changing the level of detail never changes the palette automatically. Phosphor palettes are display styles, not a low-light recovery feature.
 
 ### Abyss and animated heat glow
 
@@ -234,7 +241,7 @@ Redline gives the movie-style red/blue/black treatment, with broad red warmth an
 
 ### Netrunner style preset
 
-**Netrunner** keeps the recognizable scene under a dark green tint, with **warm-red neon HUD and silhouette outlines**, **Cyber code raining upward inside detected people and animals**, and **cyan overhead titles with yellow downward carets**. It uses red `#FD5550`, cyan `#41E8EF`, and yellow `#FFC442`. Bold yellow carets keep fixed gaps of 30 reference pixels above the head and 20 below the cyan title, scaled to the frame size. Annotations crop naturally at the screen edge without squeezing these gaps or hiding a still-visible caret. The red silhouette outline is thinner, and upward code uses 95% of available columns. It requires the segmented setup above (Yautja 2.6.2+ for this spacing).
+**Netrunner** keeps the recognizable scene under a dark green tint, with **warm-red neon HUD and silhouette outlines**, **Cyber code raining upward inside detected people and animals**, and **cyan overhead titles with yellow downward carets**. It uses red `#FD5550`, cyan `#41E8EF`, and yellow `#FFC442`. Bold yellow carets keep fixed gaps of 30 reference pixels above the head and 20 below the cyan title, scaled to the frame size. Annotations crop naturally at the screen edge without squeezing these gaps or hiding a still-visible caret. The red silhouette outline is thinner, and upward code uses 95% of available columns. It requires the segmented setup above .
 
 [![Netrunner: green scenery, red outlined figures with rising Cyber code and yellow overhead carets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif?v=2.6.2)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif?v=2.6.2)
 
@@ -253,26 +260,28 @@ Outlines use freshly segmented contours on each frame, while optical flow predic
 
 ### Focus and Relic style presets
 
-**Focus** keeps source detail under a pale blue-violet tint, with a shimmering triangular grid, moving edge highlights, and thin hexagon targets. **Relic** adds pink triangle ornaments and upward code behind the figures; their silhouettes block the code and its glow.
+**Focus** keeps source detail under a blue-violet tint, with a glowing purple geodesic sphere surrounding the viewpoint. One persistent hexagon glides between subjects. It contains an inscribed circle, six small inner circles, four outer circles, and a central square. **Relic** adds pink triangle ornaments and upward code behind the figures; their silhouettes block the code and its glow.
 
 | Focus | Relic |
 | --- | --- |
-| [![Focus: blue-violet scene with a shimmering grid, partial edge highlights and hexagon targets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.8.0) | [![Relic: pink target ornaments and rising code behind figures](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.8.0) |
+| [![Focus: purple spherical geodesic grid, edge highlights and one persistent hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.10.0) | [![Relic: pink target ornaments and rising code behind figures](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.10.0) |
 | `--stylepreset focus` | `--stylepreset relic` |
 
-Both require Yautja 2.8.0+ and the segmented setup. They target detected subjects automatically. Add `--figures "figures.json" --target S001-F002` to select a particular figure instead. The previews slow one continuous shot to show the animation. Each ingredient is independently configurable: `--geo-grid`, `--outline-style shimmer`, `--target-shape hexagon`, `--target-motif triangles`, and `--code-layer behind`. [Recipes, controls, and an editable preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+Both use the segmented setup. They cycle through detected subjects one at a time, with smooth motion and no acquisition zoom. Add `--figures "figures.json" --target S001-F002` to select a particular figure instead. The previews slow one continuous shot to show the animation. Each ingredient is independently configurable: `--geo-grid`, `--outline-style shimmer`, `--target-shape hexagon`, `--target-motif triangles`, and `--code-layer behind`. [Recipes, controls, and an editable preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+
+Choose `--target-fill filled` for translucent enclosed shapes or `--target-fill stroked` for outlines. `auto` preserves each shape’s original styling. Movement is separate: `--target-motion persistent` keeps one reticle moving continuously; `--target-motion acquire` uses the assembly animation.
 
 ### Murphy style preset
 
-**Murphy** uses green readable Tech text, heavy CRT scanlines, and a frame-box reticle whose horizontal and vertical axes extend to the screen edges. A steady **TARGETING** caption appears while the selected figure is visible.
+**Murphy** adds a slight blue cast, a glowing green subject outline, and a larger frame-box whose XY axes cross at its center. Its lower-left **TARGETING_** caption uses larger Orbitron Medium lettering with a blinking cursor. The upper-right readout is hidden.
 
-[![Murphy: green frame-box targeting, readable text and CRT scanlines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.8.0)
+[![Murphy: green frame-box targeting, readable text and CRT scanlines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.10.0)
 
 ```bash
 yautja "clip.mov" "murphy.mp4" --stylepreset murphy --figures "figures.json" --target S001-F002
 ```
 
-Requires Yautja 2.8.0+. Conversion works with the lightweight install using an existing figure catalog; creating the catalog needs the segmented setup. Without a catalog, the source grade, CRT texture, and readout still work. `--HUDglyphs tech` selects readable letters and numbers; `--hud-font` chooses Michroma, Orbitron Light, Medium, or Bold. `--target-label "LOCK"` changes the caption. [Typography and targeting options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+Murphy uses the segmented setup and automatically cycles through subjects. An optional figure catalog restricts the selection. For a lightweight background-only treatment, add `--thermal classic --target-mode selected --no-target-outline`. `--HUDglyphs tech` selects readable letters and numbers; `--hud-font` chooses Michroma, Orbitron Light, Medium, or Bold. `--target-label "LOCK"` changes the caption. [Typography and targeting options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
 
 ### Fremont style preset
 
@@ -284,7 +293,7 @@ Requires Yautja 2.8.0+. Conversion works with the lightweight install using an e
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont
 ```
 
-This persistent-target version requires Yautja 2.9.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show a complete scan and the handoff to another subject. Stills show the held analysis immediately. Empty scenes keep the target sweeping in search mode, and cuts or lost tracks restart scanning.
+This preset uses the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show a complete scan and the handoff to another subject. Stills show the held analysis immediately. Empty scenes keep the target sweeping in search mode, and cuts or lost tracks restart scanning.
 
 Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. `--analysis-target-size 0.45` enlarges the disk; `--analysis-target-response 0.9` makes focus changes more gradual. `--no-analysis-target` hides just the disk and crosshair, `--no-analysis` hides the grid/text/outline, and `--no-hud` hides every overlay. The source highlights are adjustable with `--scene-highlights`. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
 
@@ -299,7 +308,7 @@ Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, 
 | [![Cinematic thermal output with the full HUD and annotations](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/style-cinematic.gif) | [![Cinematic thermal output with every HUD overlay hidden](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hud-off.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/hud-off.gif) |
 | Default HUD, with `--verbose --timecode` for annotations and clock | `--no-hud` |
 
-With `--verbose`, callout lines aim at a smoothed center of each visible silhouette—an image-based approximation of center of mass. Labels keep their position relative to the figure while that space remains clear, reducing jumps between moving arms and shoulders. If the center falls outside a concave or partly hidden silhouette, the marker uses the nearest visible point. This is automatic in 2.4.1+; no extra flag is needed.
+With `--verbose`, callout lines aim at a smoothed center of each visible silhouette—an image-based approximation of center of mass. Labels keep their position relative to the figure while that space remains clear, reducing jumps between moving arms and shoulders. If the center falls outside a concave or partly hidden silhouette, the marker uses the nearest visible point. This is automatic; no extra flag is needed.
 
 ```bash
 python -m yautja "clip.mov" "thermal-only.mp4" --thermal cinematic --no-hud
@@ -330,7 +339,7 @@ See the [color controls guide](https://github.com/petehottelet/yautja/blob/main/
 
 ### Grain and chunky pixels
 
-Every effect is **optional and off by default**. Add grain, chunky pixels, CRT lines, or VHS styling independently, or combine them. The heat field, glyph selection, and audio behavior stay the same.
+Every effect is optional. **Yautja enables CRT lines by default**; use `--no-crt-lines` to turn them off. The comparisons below use Costa Rica, with other effects off unless shown. Add grain, chunky pixels, CRT lines, or VHS styling independently, or combine them. The heat field, glyph selection, and audio behavior stay the same.
 
 | Clean · default | Grain only | Chunky pixels only |
 | --- | --- | --- |
@@ -379,7 +388,7 @@ All comparison GIFs use the same three-second slice at 12 fps, with the original
 | [![Vertical CRT lines at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-vertical.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-vertical.gif) | [![Horizontal and vertical CRT grid at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-grid.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-grid.gif) | [![45-degree CRT crosshatch at strength 0.25](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-crt-crosshatch.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/texture-crt-crosshatch.gif) |
 | `--crt-vertical-lines --crt-strength 0.25` | `--crt-grid --crt-strength 0.25` | `--crt-crosshatch --crt-strength 0.25` |
 
-Click any preview for its large animated GIF. Grid is equivalent to enabling `--crt-lines` and `--crt-vertical-lines` together; combining those flags with grid does not darken the same lines twice. Crosshatch adds two diagonal line directions and can be combined with grid or individual lines. Intersections are darker. Both new options default off; use `--no-crt-grid` or `--no-crt-crosshatch` to disable each independently. The sensor-texture preset continues to enable only its horizontal lines. Save these settings in [your own preset](skills/yautja/references/presets.md). Grid and crosshatch require Yautja 2.4 or newer.
+Click any preview for its large animated GIF. Grid is equivalent to enabling `--crt-lines` and `--crt-vertical-lines` together; combining those flags with grid does not darken the same lines twice. Crosshatch adds two diagonal line directions and can be combined with grid or individual lines. Intersections are darker. Both new options default off; use `--no-crt-grid` or `--no-crt-crosshatch` to disable each independently. The sensor-texture preset continues to enable only its horizontal lines. Save these settings in [your own preset](skills/yautja/references/presets.md). 4 or newer.
 
 **Motion blur** adds temporal frame persistence: higher values leave longer trails on moving subjects and HUD details. It resets at detected cuts and needs consecutive video frames; stills have no motion trail. **CRT bleed** adds horizontal phosphor smear to both images and videos. Both strengths range from **0–1**, default to 0, and leave the soundtrack unchanged.
 
@@ -404,7 +413,7 @@ Choose a Rorschach inkblot or one of three **digital distortion** waveforms. The
 | [![Filled mirrored Rorschach waveform spanning the image height](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach.gif) | [![Separated mirrored inkblots responding to the soundtrack](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-split.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-split.gif) | [![Hollow mirrored waveform lobes with dark pockets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-hollow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-hollow.gif) |
 | `--wave-style rorschach` | `--wave-style rorschach-split` | `--wave-style rorschach-hollow` |
 
-The digital styles use distinct geometries: stacked blocks with square cutouts, scattered data packets, or horizontal vocoder bars in one narrow vertical stack. The vocoder spans the frame height along the left edge; each rounded, dark bar contains small vertical LED segments, brightest at the center and fading toward the ends. Audio lights up vivid red segments across alternating shorter and longer rows, with an exaggerated response and a strong red halo. Inactive segments remain visible in dark burgundy fading to black, including during silence. Its red glow is inspired by KITT’s voice display. Blocks and Shards require Yautja 2.6.0+; this segmented Vocoder Bars styling uses 2.7.0+.
+The digital styles use distinct geometries: stacked blocks with square cutouts, scattered data packets, or horizontal vocoder bars in one narrow vertical stack. The vocoder spans the frame height along the left edge; each rounded, dark bar contains small vertical LED segments, brightest at the center and fading toward the ends. Audio lights up vivid red segments across alternating shorter and longer rows, with an exaggerated response and a strong red halo. Inactive segments remain visible in dark burgundy fading to black, including during silence. Its red glow is inspired by KITT’s voice display.
 
 | Bitcrush Blocks | Packet Shards | Vocoder Bars |
 | --- | --- | --- |
@@ -443,7 +452,7 @@ Click any preview for its large animated GIF. [Selection, target colors, and eff
 
 | Thin hexagon | Frame-box with screen axes |
 | --- | --- |
-| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.8.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.8.0) |
+| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.10.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.10.0) |
 | `--target-shape hexagon` | `--target-shape frame-box` |
 
 `--target-mode auto` uses segmented subjects automatically. The default `selected` mode uses the catalog below. Explicit catalog selections take precedence over automatic mode, including frames where a selected figure is absent. `--target-motif triangles` and `--target-label "TARGETING"` add independent ornaments and a readable caption; both follow target visibility.
@@ -490,7 +499,7 @@ These matched examples show seconds 0–3.25 with verbose callouts and timecode 
 
 Element names are the same as HUD blur below; `target` covers both flash states. Existing colors, outlines, blur and opacity still apply. Blur softens the core; opacity fades both core and halo. White Hot glows white, Black Hot diffuses black, and Virtual Boy retains its red-only display. `--heat-glow` remains independent. Neon replaces standard `--glow` bloom while enabled, and CRT/VHS effects run afterward. `--no-hud` hides all of it.
 
-Load or customize the bundled [Abyss Neon preset](skills/yautja/assets/presets/abyss-neon.json) with `--preset-file`. All five neon settings can be saved with `--save-preset`. Neon requires Yautja 2.5 or newer. [Full controls](skills/yautja/references/targets.md#neon-hud).
+Load or customize the bundled [Abyss Neon preset](skills/yautja/assets/presets/abyss-neon.json) with `--preset-file`. All five neon settings can be saved with `--save-preset`. 5 or newer. [Full controls](skills/yautja/references/targets.md#neon-hud).
 
 ### Reticle stroke and HUD blur
 
@@ -526,7 +535,7 @@ Set `--hud-opacity 0.5` for half-strength HUD artwork, or `--hud-opacity-element
 | [![Neon red waveform, target, and timecode with cyan callouts and independent opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-neon.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-opacity-neon.gif) |
 | Add `--neon` to the independent-opacity example above |
 
-This keeps the original Yautja thermal colors, red waveform/target/timecode, cyan callouts, and the same opacity values: waveform 0.3, target 0.7, and timecode 0.9. Neon adds bright cores and soft halos to the HUD; both target states stay red. Click the preview for the large animated GIF.
+This keeps the Costa Rica thermal colors, red waveform/target/timecode, cyan callouts, and the same opacity values: waveform 0.3, target 0.7, and timecode 0.9. Neon adds bright cores and soft halos to the HUD; both target states stay red. Click the preview for the large animated GIF.
 
 Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. A `target` override controls both states unless `target-flash` is explicitly set. Reticle outlines and glow follow their element's opacity. `--no-hud` still hides everything. Click either GIF for the large version. [Detailed transparency controls](skills/yautja/references/targets.md#hud-transparency).
 

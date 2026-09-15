@@ -1,10 +1,10 @@
 # Thermal and HUD colors
 
-`--neon` (2.5+) adds illumination without changing the selected palette or stored HUD colors: muted inks emit brighter halos of the same hue, thick cores approach white, and black ink uses dark diffusion. Existing color overrides still control each element and target flash state. [Neon controls and interactions](targets.md#neon-hud).
+`--neon` adds illumination without changing the selected palette or stored HUD colors: muted inks emit brighter halos of the same hue, thick cores approach white, and black ink uses dark diffusion. Existing color overrides still control each element and target flash state. [Neon controls and interactions](targets.md#neon-hud).
 
 These controls work with every thermal look, still images, and videos. They change
 color only; segmentation, glyph selection, waveform data, and timecode values stay
-the same. Omit them to keep the existing red/cyan HUD and original Yautja palette.
+the same. Omit them to keep the default red/cyan HUD and Yautja palette.
 
 `--no-hud` hides every overlay, regardless of the chosen HUD colors, timecode, or
 annotation settings. Thermal colors, textures, and video sound remain active.
@@ -26,7 +26,7 @@ states. Black ink is alpha-composited so it remains visible against light region
 Matching also works with custom and random thermal palettes. `--hud-theme standard`
 uses red/cyan for other palettes, with a muted cyan default for Abyss. `--hud-theme muted-cyan`
 selects that subdued theme with any palette. Abyss maps blue-black scenery through
-amber and white-hot regions. Matching remains optional; the original Yautja palette
+amber and white-hot regions. Matching remains optional; the Costa Rica palette
 and HUD defaults are unchanged. Heat glow is independent: add `--heat-glow 0.6`
 to any palette, and adjust movement with `--heat-glow-speed` (0 freezes it).
 
@@ -103,7 +103,7 @@ missing custom values, and conflicting color options fail before media processin
 or model setup.
 ## Thermal levels and reference preset
 
-`--stylepreset hottropic` applies **HotTropic**. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. HUD, grain, pixelation, sensor texture, horizontal/vertical CRT lines, VHS, heat glow, motion blur, and CRT bleed are off.
+`--stylepreset yautja` applies **Yautja**. It selects Cinematic, the eleven positioned colors below, 12 representative levels, band softness 0.65, black point 0.2, white point 0.9, gamma 1.1, scalar softness 0.8, sensor resolution 192, and seed 42. The red HUD, cyan callouts and horizontal CRT lines are on. Grain, pixelation, sensor texture, vertical CRT lines, VHS, heat glow, motion blur and CRT bleed are off.
 
 | Position | RGB |
 | --- | --- |
@@ -135,9 +135,9 @@ Grading controls require explicit levels (including 0) or a look preset. Spatial
 Explicit options override a preset regardless of order. `--thermal-levels 0` clears inherited band softness; explicitly combining continuous mode with band softness is an error. `--sensor-texture` enables its usual grain/pixels/horizontal-line defaults over the clean preset; explicit individual texture flags win. `--hud` enables overlays. Encoder `--preset` remains separate.
 
 ```bash
-yautja "clip.mov" "reference.mp4" --stylepreset hottropic
-yautja "photo.jpg" "six-levels.png" --stylepreset hottropic --thermal-levels 6 --thermal-band-softness 0
-yautja "clip.mov" "features.mp4" --stylepreset hottropic --thermal very-detailed --thermal-levels 0 --hud
+yautja "clip.mov" "reference.mp4" --stylepreset yautja
+yautja "photo.jpg" "six-levels.png" --stylepreset yautja --thermal-levels 6 --thermal-band-softness 0
+yautja "clip.mov" "features.mp4" --stylepreset yautja --thermal very-detailed --thermal-levels 0 --hud
 ```
 
 JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, or `banded`), all six grading values, scalar softness units, and resolved positioned palette colors. Built-in recipe values remain fixed; save a customized version as a separate JSON preset. See [presets.md](presets.md) for creation, sharing, and file validation.
@@ -146,4 +146,4 @@ JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, 
 
 Fremont adds `analysis-grid`, `analysis-text`, and `analysis-outline` to every HUD color, blur, opacity, and neon map. Standard colors are pale white; the palette theme uses its accent for the grid and its light color for text/outlines. `--scene-highlights` restores neutral highlights above source-mode tint independently of thermal palettes. See [analysis.md](analysis.md).
 
-Fremont’s persistent target (2.9.0+) adds `analysis-target-fill` (gray `#8FA1B0`, native alpha 40%) and `analysis-target` (dark `#11161E`, native alpha about 90%). Per-element opacity multiplies native alpha; color, blur, and neon remain independently configurable. The palette theme uses its light color for the fill and a dark primary color for the marks.
+Fremont’s persistent target adds `analysis-target-fill` (gray `#8FA1B0`, native alpha 40%) and `analysis-target` (dark `#11161E`, native alpha about 90%). Per-element opacity multiplies native alpha; color, blur, and neon remain independently configurable. The palette theme uses its light color for the fill and a dark primary color for the marks.

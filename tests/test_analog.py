@@ -29,7 +29,7 @@ class AnalogTests(unittest.TestCase):
 
     def test_crt_lines_cover_the_finished_picture_and_hud_without_changing_odd_rows(self):
         frame = Image.new('RGB', (320, 180), (100, 100, 100))
-        before = np.array(Renderer(320, 180, show_timecode=True).render(frame, 0))
+        before = np.array(Renderer(320, 180, scanlines=False, show_timecode=True).render(frame, 0))
         after = np.array(Renderer(320, 180, scanlines=True, show_timecode=True).render(frame, 0))
         np.testing.assert_array_equal(after[1::2], before[1::2])
         np.testing.assert_array_equal(after[::2], np.uint8(before[::2].astype(np.float32) * .88))
@@ -62,7 +62,7 @@ class AnalogTests(unittest.TestCase):
     def test_crosshatch_has_two_distinct_diagonals_and_adjustable_strength(self):
         frame = Image.new('RGB', (17, 25), (200, 160, 120))
         original = np.asarray(frame).copy()
-        pixels = np.asarray(Renderer(17, 25, crt_crosshatch=True, crt_strength=.5).display_effects(frame, 0))
+        pixels = np.asarray(Renderer(17, 25, scanlines=False, crt_crosshatch=True, crt_strength=.5).display_effects(frame, 0))
         # An X around an intersection: both diagonal arms are present, with
         # untouched cells between them instead of a collapsed checkerboard.
         self.assertEqual(pixels[8, 8, 0], 50)
@@ -70,14 +70,14 @@ class AnalogTests(unittest.TestCase):
             self.assertEqual(pixels[y, x, 0], 100)
         for y, x in ((8, 7), (8, 9), (7, 8), (9, 8), (8, 6)):
             self.assertEqual(pixels[y, x, 0], 200)
-        stronger = np.asarray(Renderer(17, 25, crt_crosshatch=True, crt_strength=.8).display_effects(frame, 0))
+        stronger = np.asarray(Renderer(17, 25, scanlines=False, crt_crosshatch=True, crt_strength=.8).display_effects(frame, 0))
         self.assertTrue(np.all(stronger <= pixels))
         np.testing.assert_array_equal(frame, original)
         for options in ({'crt_grid': True}, {'crt_crosshatch': True}, {'crt_grid': True, 'crt_crosshatch': True}):
             neutral = Renderer(17, 25, crt_strength=0, **options).display_effects(frame, 0)
             np.testing.assert_array_equal(neutral, frame)
         # Reusing a renderer does not make a fixed display pattern crawl.
-        renderer = Renderer(17, 25, crt_crosshatch=True)
+        renderer = Renderer(17, 25, scanlines=False, crt_crosshatch=True)
         np.testing.assert_array_equal(renderer.display_effects(frame, 0), renderer.display_effects(frame, 9))
 
     def test_grid_and_crosshatch_flags_default_off_and_disable_independently(self):
@@ -106,7 +106,7 @@ class AnalogTests(unittest.TestCase):
         for flag in ('--no-crt-lines', '--no-scanlines'):
             self.assertFalse(parser().parse_args(['--crt-lines', flag]).scanlines)
         self.assertFalse(parser().parse_args(['--vhs', '--no-vhs']).vhs)
-        renderer = Renderer(320, 180, vhs=True)
+        renderer = Renderer(320, 180, scanlines=False, vhs=True)
         self.assertEqual((renderer.grain, renderer.pixelation, renderer.scanlines), (0, 0, False))
         self.assertFalse(Renderer(320, 180, sensor_texture=True).vhs)
 
@@ -119,7 +119,7 @@ class AnalogTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000', '-t', '0.5',
                             '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', str(source)], check=True)
             decoded = []
-            for name, options in [('clean', []), ('analog', ['--vhs', '--crt-lines', '--crt-grid', '--crt-crosshatch', '--palette', 'virtualboy'])]:
+            for name, options in [('clean', ['--no-crt-lines']), ('analog', ['--vhs', '--crt-lines', '--crt-grid', '--crt-crosshatch', '--palette', 'virtualboy'])]:
                 output = root / (name + '.mp4')
                 with patch('sys.stdout', new_callable=io.StringIO) as report, patch('sys.stderr', new_callable=io.StringIO):
                     status = main([str(source), str(output), *options])

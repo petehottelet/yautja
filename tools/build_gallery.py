@@ -45,7 +45,7 @@ def variants():
         'look-focus': {'look_preset': 'focus'},
         'look-relic': {'look_preset': 'relic'},
         'look-murphy': {'look_preset': 'murphy'},
-        'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
+        'look-yautja': {'look_preset': 'yautja'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
@@ -93,6 +93,11 @@ def variants():
     options = resolve_look(custom.get('base'), custom['settings'])
     options['show_timecode'] = options.pop('timecode')
     result['preset-tropic-glow'] = options
+    # Existing comparison previews demonstrate the original Costa Rica ramp.
+    # Complete recipes and explicitly selected palettes supply their own colors.
+    for settings in result.values():
+        if 'look_preset' not in settings and 'palette' not in settings and not settings.get('random_colors'):
+            settings['palette'] = 'costa-rica'
     return result
 
 
@@ -117,14 +122,14 @@ def main():
     source, destination = args.input.resolve(), args.output_dir.resolve()
     settings = {name: options for name, options in variants().items() if not args.only or name in args.only}
     selected = None
-    if any(name.startswith('target-') or name == 'look-murphy' for name in settings):
+    if any(name.startswith('target-') for name in settings):
         if not args.figures or not args.target:
             parser.error('Target examples require --figures and --target from a saved scan.')
         selected = TargetSelection(args.figures, source, args.target)
     include_hero = not args.only or 'hero' in args.only
     settings.update({f'large/{name}': options for name, options in list(settings.items())})
     if include_hero:
-        settings['hero'] = {'thermal': 'cinematic'}
+        settings['hero'] = {'look_preset': 'yautja'}
     names = [*(name + '.gif' for name in settings), *(['poster.png'] if include_hero else [])]
     if any(source == destination / name for name in names):
         parser.error('The gallery cannot replace its source.')
@@ -144,15 +149,15 @@ def main():
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
                               surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
-                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode') == 'auto') and o.get('hud', True) for o in resolved_settings))
+                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode', 'selected') != 'selected' or o.get('target_outline')) and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
         if 'timecode' in resolved:
             resolved['show_timecode'] = resolved.pop('timecode')
         return {'verbose': True, 'show_timecode': True, **resolved}
 
-    renderers = {name: Renderer(*( (large_width, large_height) if name.startswith('large/') else
-                                  (width, height) if name == 'hero' else (gif_width, gif_height)),
+    renderers = {name: Renderer(*( (large_width, large_height) if name.startswith('large/') or name == 'hero'
+                                  else (gif_width, gif_height)),
                                 **gallery_options(options))
                  for name, options in settings.items()}
     def field_key(renderer):

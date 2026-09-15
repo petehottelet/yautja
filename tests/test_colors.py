@@ -53,12 +53,13 @@ class ColorTests(unittest.TestCase):
     def test_each_custom_hud_element_changes_its_own_visible_ink(self):
         mask = np.zeros((360, 640), np.float32)
         mask[100:300, 220:370] = 1
-        subjects = [Subject(mask, 'person', .9, track_id=1)]
+        subjects = [Subject(mask, 'person', .9, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .9, track_id=2)]
         field = np.full((360, 640), 100, np.uint8)
         all_green = ','.join(f'{key}=#00ff00' for key in HUD_DEFAULTS)
         options = dict(hud_theme='custom', hud_colors=all_green, glow=0, verbose=True, show_timecode=True,
                        subject_outline=True, subject_code=True, subject_labels=True,
-                       geo_grid=True, target_motif='triangles', target_label='TARGETING')
+                       geo_grid=True, target_outline=True, target_motif='triangles', target_label='TARGETING')
         for key in HUD_DEFAULTS:
             with self.subTest(element=key):
                 original = Renderer(640, 360, **options, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'))
@@ -94,7 +95,8 @@ class ColorTests(unittest.TestCase):
         field = np.full((360, 640), 100, np.uint8)
         mask = np.zeros(field.shape, np.float32)
         mask[100:300, 250:350] = 1
-        subjects = [Subject(mask, 'person', .9, track_id=1)]
+        subjects = [Subject(mask, 'person', .9, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .9, track_id=2)]
         targets = [{'id': 'S001-F001', 'bbox': [.4, .28, .55, .83]}]
         baseline = np.asarray(Renderer(640, 360, palette='black-hot', hud=False).render_field(field, .5))
         for theme in ('standard', 'palette'):
@@ -116,7 +118,8 @@ class ColorTests(unittest.TestCase):
         field = np.full((360, 640), 100, np.uint8)
         mask = np.zeros(field.shape, np.float32)
         mask[100:300, 250:350] = 1
-        subjects = [Subject(mask, 'person', .9, track_id=1)]
+        subjects = [Subject(mask, 'person', .9, track_id=1),
+                    Subject(np.roll(mask, -150, axis=1), 'person', .9, track_id=2)]
         targets = [{'id': 'S001-F001', 'bbox': [.4, .28, .55, .83]}]
         for theme in ('standard', 'palette'):
             for style in ('trace', 'rorschach', 'rorschach-split', 'rorschach-hollow'):

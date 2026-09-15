@@ -10,11 +10,12 @@ SPECTRUM = [(position, parse_hex(color)) for position, color in (
     (.45, '#26A5AC'), (.56, '#62B84E'), (.64, '#D9C742'), (.72, '#F26427'),
     (.80, '#FF303A'), (.91, '#FF65AB'), (1., '#E6D8DD'))]
 
-LOOK_PRESETS = {'hottropic': {
-    'thermal': 'cinematic', 'palette': 'thermal-spectrum', 'thermal_levels': 12,
+LOOK_PRESETS = {'yautja': {
+    'thermal': 'cinematic', 'palette': 'yautja', 'thermal_levels': 12,
     'thermal_band_softness': .65, 'thermal_black_point': .2, 'thermal_white_point': .9,
     'thermal_gamma': 1.1, 'thermal_softness': .8, 'sensor_resolution': 192,
-    'hud': False, 'neon': False, 'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
+    'hud': True, 'hud_theme': 'standard', 'verbose': True,
+    'neon': False, 'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': True,
     'vhs': False, 'seed': 42, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
     'crt_vertical_lines': False, 'crt_grid': False, 'crt_crosshatch': False,
 }, 'netrunner': {
@@ -46,14 +47,8 @@ LOOK_PRESETS = {'hottropic': {
     'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
 }}
-FOCUS_COLORS = {
-    'waveform': '#8FA8F0', 'waveform-axis': '#2E3A66', 'waveform-ticks': '#3A4878',
-    'waveform-glyphs': '#8FA8F0', 'readout': '#A9BCF5', 'timecode': '#C4D2FF',
-    'callouts': '#9FB4FF', 'leaders': '#9FB4FF', 'markers': '#9FB4FF',
-    'target': '#DCE9FF', 'target-flash': '#FFFFFF', 'subject-outline': '#CFE4FF',
-    'subject-code': '#A9C4FF', 'subject-labels': '#C9D8FF', 'subject-carets': '#E4ECFF',
-    'geo-grid': '#9D8CF5', 'target-motif': '#B9A8FF', 'target-label': '#CFE4FF',
-}
+FOCUS_COLORS = {**dict.fromkeys(HUD_DEFAULTS, '#A24BFF'),
+                'waveform-axis': '#63338F', 'waveform-ticks': '#7940B1'}
 FOCUS_SETTINGS = {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#97A4E0',
     'scene_tint_strength': .55, 'scene_exposure': .95,
@@ -62,10 +57,11 @@ FOCUS_SETTINGS = {
     'subject_outline': True, 'outline_style': 'shimmer', 'outline_coverage': .35,
     'outline_arcs': 5, 'outline_speed': 1., 'subject_code': False, 'subject_labels': False,
     'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
-    'target_mode': 'auto', 'target_shape': 'hexagon', 'target_flash': False,
+    'geo_grid_projection': 'sphere', 'target_mode': 'cycle', 'target_motion': 'persistent',
+    'target_shape': 'hexagon', 'target_flash': False, 'target_fill': 'stroked',
     'target_motif': 'none', 'target_label': None,
-    'neon': True, 'neon_intensity': .45, 'neon_spread': .5, 'neon_core_whiten': .25,
-    'neon_elements': 'geo-grid=0.3,subject-outline=0.7,target=0.5',
+    'neon': True, 'neon_intensity': 1., 'neon_spread': .9, 'neon_core_whiten': 0.,
+    'neon_elements': 'geo-grid=0.8,subject-outline=0.7,target=1',
     'hud_opacity_elements': 'waveform=0.55,waveform-axis=0.3,waveform-ticks=0.35,geo-grid=0.8',
     'verbose': False, 'timecode': False, 'grain': 0., 'pixelation': 0,
     'sensor_texture': False, 'scanlines': False, 'vhs': False, 'heat_glow': 0.,
@@ -80,31 +76,34 @@ LOOK_PRESETS['relic'] = {
     'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.4,target-motif=0.65',
 }
 LOOK_PRESETS['murphy'] = {
-    'thermal': 'classic', 'scene_mode': 'source', 'scene_tint': '#A8B8C4',
-    'scene_tint_strength': .3, 'scene_exposure': .95, 'hud': True, 'hud_glyphs': 'tech',
-    'hud_font': 'michroma', 'hud_theme': 'custom',
+    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#719DD2',
+    'scene_tint_strength': .4, 'scene_exposure': .95, 'hud': True, 'hud_glyphs': 'tech',
+    'hud_font': 'orbitron-medium', 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}={value}' for key, value in {
-        **{key: '#7CE0B0' for key in HUD_DEFAULTS}, 'waveform-axis': '#24523E',
+        **{key: '#38D988' for key in HUD_DEFAULTS}, 'waveform-axis': '#24523E',
         'waveform-ticks': '#2E6B50', 'timecode': '#9DEFC6', 'leaders': '#5FC498',
         'markers': '#5FC498', 'target-flash': '#D9FFEC', 'geo-grid': '#2E6B50'}.items()),
     'subject_outline': False, 'subject_code': False, 'subject_labels': False, 'geo_grid': False,
+    'target_mode': 'cycle', 'target_outline': True, 'target_scale': 1.25,
     'target_shape': 'frame-box', 'target_flash': False, 'target_acquire': 1., 'target_label': 'TARGETING',
-    'neon': False, 'glow': .5, 'timecode': True, 'verbose': False,
+    'target_label_scale': 1.8, 'target_cursor': True,
+    'neon': True, 'neon_intensity': .65, 'neon_spread': 1.2, 'neon_core_whiten': 0.,
+    'glow': .5, 'timecode': False, 'verbose': False,
     'grain': .05, 'scanlines': True, 'crt_strength': .5, 'crt_bleed': .08,
     'pixelation': 0, 'sensor_texture': False, 'vhs': False, 'motion_blur': 0., 'heat_glow': 0.,
-    'hud_opacity_elements': 'waveform=0,waveform-axis=0,waveform-ticks=0,waveform-glyphs=0',
+    'hud_opacity_elements': 'waveform=0,waveform-axis=0,waveform-ticks=0,waveform-glyphs=0,readout=0,timecode=0',
 }
-COMPLETE_PRESETS = {'hottropic', 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}
+COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}
 PRESET_DESCRIPTIONS = {
-    'hottropic': 'Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.',
+    'yautja': 'Eleven colors, 12 soft thermal levels, red HUD, cyan annotations and CRT lines.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
     'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
-    'focus': 'Blue-violet source scene, shimmering triangular grid and edge highlights, automatic thin hexagon targets.',
+    'focus': 'Neon-purple spherical geodesic grid and one detailed hexagon reticle gliding between subjects.',
     'relic': 'Focus with pink triangle ornaments and rising code occluded behind every subject.',
-    'murphy': 'Green Tech HUD, heavy CRT scanlines, frame-spanning box targets and a readable TARGETING caption; catalog targets optional.',
+    'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a medium-weight TARGETING caption with blinking cursor.',
 }
 PRESET_LABELS = {
-    'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
+    'yautja': 'Yautja', 'costa-rica': 'Costa Rica', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
     'redline': 'Redline', 'virtualboy': 'Virtual Boy', 'green-phosphor': 'Green Phosphor',
     'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
     'thermal-spectrum': 'Thermal Spectrum',
@@ -122,6 +121,8 @@ def normalize_preset(name):
     name = name.strip().lower()
     if name == 'ghost-signal':
         name = 'netrunner'
+    if name in ('hottropic', 'hot-tropic'):
+        name = 'yautja'
     if name not in LOOK_PRESETS:
         raise ValueError('Unknown look preset: ' + str(name))
     return name
@@ -129,6 +130,8 @@ def normalize_preset(name):
 
 def merge_look(base, overrides):
     result = dict(base)
+    if overrides.get('thermal') == 'classic' and 'verbose' not in overrides:
+        result.pop('verbose', None)
     if 'palette' in overrides and overrides['palette'] != result.get('palette'):
         result.pop('palette_colors', None)
         result.pop('random_colors', None)

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.10.0
+
+- Rename the original look to Costa Rica and HotTropic to Yautja; the new Yautja includes red HUD, cyan annotations and CRT lines. Refresh the large README hero and four compact style previews.
+- Focus uses neon-purple spherical geodesic geometry and one persistent, smoothly moving hexagon with an inscribed circle, ten small targeting circles and center square.
+- Add shared target movement, dwell, response, fill/stroke, selected-subject outline, caption scale and blinking cursor controls. Preserve schema-1 visual presets and explicit overrides.
+- Murphy adds a blue source tint, stronger green glow, current-mask outlines, a larger center-crossing XY box, and larger Orbitron Medium captions with a thinking cursor; hide the upper-right readout.
+- Remove per-feature runtime-version notes from usage documentation.
+
 ## 2.9.0
 
 - Enable Fremont's persistent translucent circular scan target, with dark ring/crosshair marks, constant size, and smooth motion between analysis subjects. It stays visible during search and track loss, resets on cuts, and never uses the legacy acquisition zoom or flash.

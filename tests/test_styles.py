@@ -98,7 +98,7 @@ class StyleTests(unittest.TestCase):
 
 class IndependentEffectsTests(unittest.TestCase):
     def test_grain_alone_changes_over_time_without_a_pixel_grid_or_scanlines(self):
-        renderer = Renderer(640, 360, grain=.06)
+        renderer = Renderer(640, 360, scanlines=False, grain=.06)
         self.assertEqual(renderer.pixelation, 0)
         self.assertFalse(renderer.scanlines)
         frame = Image.new('RGB', (640, 360), (110, 110, 110))
@@ -107,7 +107,7 @@ class IndependentEffectsTests(unittest.TestCase):
         self.assertGreater(len(np.unique(a[150, 200:230], axis=0)), 4)
 
     def test_chunky_pixels_alone_are_blocky_and_time_invariant(self):
-        renderer = Renderer(640, 360, pixelation=80)
+        renderer = Renderer(640, 360, scanlines=False, pixelation=80)
         self.assertEqual(renderer.grain, 0)
         self.assertFalse(renderer.scanlines)
         pixels = np.random.default_rng(7).integers(0, 255, (360, 640, 3), dtype=np.uint8)

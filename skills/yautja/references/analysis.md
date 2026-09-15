@@ -1,6 +1,6 @@
 # Fremont and readable analysis
 
-This version requires Yautja 2.9.0+ and the segmented runtime. Run:
+This preset uses the segmented runtime. Run:
 
 ```bash
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont

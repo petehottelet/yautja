@@ -1,6 +1,6 @@
 # Cyber glyphs and Netrunner
 
-Requires Yautja 2.6.2+. **Netrunner** is a complete style preset. **Cyber** is a selectable glyph set within that preset. The controls also work independently with other presets.
+**Netrunner** is a complete style preset. **Cyber** is a selectable glyph set within that preset. The controls also work independently with other presets.
 
 ```bash
 yautja "clip.mov" "signal.mp4" --stylepreset netrunner

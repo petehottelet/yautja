@@ -33,7 +33,8 @@ IRONBOW = [(0, (2, 0, 10)), (.18, (12, 15, 70)), (.30, (55, 18, 140)),
 
 PALETTES = {
     'thermal-spectrum': SPECTRUM,
-    'yautja': STOPS,
+    'costa-rica': STOPS,
+    'yautja': SPECTRUM,
     'ironbow': IRONBOW,
     'abyss': [(0, (5, 12, 15)), (.16, (5, 17, 25)), (.32, (4, 34, 61)),
               (.43, (8, 62, 85)), (.51, (25, 106, 93)), (.56, (134, 115, 19)),
@@ -232,18 +233,22 @@ class Renderer:
                  analysis_outline_width=2.4, analysis_target=False, analysis_target_size=.36, analysis_target_response=.6,
                  hud_font='michroma', hud_font_file=None,
                  outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside',
-                 geo_grid=False, geo_grid_scale=160., geo_grid_jitter=.65, geo_grid_speed=1.,
-                 target_mode='selected', target_motif='none', target_motif_count=7, target_motif_scale=1., target_label=None):
+                 geo_grid=False, geo_grid_scale=160., geo_grid_jitter=.65, geo_grid_speed=1., geo_grid_projection='flat',
+                 target_mode='selected', target_motif='none', target_motif_count=7, target_motif_scale=1., target_label=None,
+                 target_motion='acquire', target_hold=3., target_response=.6, target_fill='auto', target_outline=False,
+                 target_label_scale=1., target_cursor=False):
         self.width, self.height = width, height
         if hud_glyphs not in ('yautja', 'cyber', 'tech'):
             raise ValueError('--HUDglyphs must be yautja, cyber, or tech')
         self.hud_glyphs = hud_glyphs
         self.typography = HUDTypography(hud_font, hud_font_file)
         self.geometry = GeometryStyle(geo_grid=geo_grid, geo_grid_scale=geo_grid_scale,
-                                      geo_grid_jitter=geo_grid_jitter, geo_grid_speed=geo_grid_speed,
+                                      geo_grid_jitter=geo_grid_jitter, geo_grid_speed=geo_grid_speed, geo_grid_projection=geo_grid_projection,
                                       target_mode=target_mode, target_motif=target_motif,
                                       target_motif_count=target_motif_count, target_motif_scale=target_motif_scale,
-                                      target_label=target_label)
+                                      target_label=target_label, target_motion=target_motion, target_hold=target_hold,
+                                      target_response=target_response, target_fill=target_fill, target_outline=target_outline,
+                                      target_label_scale=target_label_scale, target_cursor=target_cursor)
         self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
                                     analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin,
                                     analysis_outline_width=analysis_outline_width, analysis_target=analysis_target,
@@ -260,7 +265,7 @@ class Renderer:
         self.seed, self.glow = seed, glow
         self.grain = (.035 if sensor_texture else 0.) if grain is None else grain
         self.pixelation = (sensor_resolution if sensor_texture else 0) if pixelation is None else pixelation
-        self.scanlines = sensor_texture if scanlines is None else scanlines
+        self.scanlines = (sensor_texture or (palette in ('auto', 'yautja') and scene_mode == 'thermal')) if scanlines is None else scanlines
         self.vhs = vhs
         self.hud = bool(hud)
         self.show_timecode, self.timecode_start = bool(hud and show_timecode), timecode_start
@@ -286,7 +291,7 @@ class Renderer:
                                             stroke=target_stroke, stroke_colors=target_stroke_colors,
                                             blur=self.hud_blurs['target'], opacity=self.hud_opacities['target'],
                                             flash_opacity=self.hud_opacities['target-flash'], shape=target_shape,
-                                            neon=self.neon_style if self.neon else None)
+                                            neon=self.neon_style if self.neon else None, fill=target_fill)
         self.target_flash = target_flash
         self.display = DisplayEffects(motion_blur, crt_bleed)
         self.previous_source = None
@@ -315,7 +320,7 @@ class Renderer:
         # Alpha keeps gray ink gray over highlights and makes black ink visible.
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
-        self.overlay_mode = 'RGBA' if self.neon or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or target_outline or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -659,8 +664,8 @@ class Renderer:
         return self.display_effects(image, time, shot_id)
 
     def draw_targets(self, image, time, subjects, targets, colors, *, shot=None, static=False, neon_gain=1.):
-        if targets is None:
-            targets = self.geometry.targets(subjects) if self.geometry.target_mode == 'auto' else ()
+        targets = self.geometry.prepare_targets(subjects, targets, time, shot, image.size, static)
+        self.geometry.draw_outline(self, image, subjects)
         image = self.target_overlay.draw(image, time, targets, colors, shot=shot, static=static, neon_gain=neon_gain)
         self.geometry.draw_targets(self, image, time, static)
         return image
@@ -706,7 +711,7 @@ class Renderer:
         graded = self.transfer.quantize(u)
         positions = [s[0] for s in self.colors.stops]
         rgb = np.stack([np.interp(graded, positions, [s[1][c] for s in self.colors.stops]) for c in range(3)], axis=-1)
-        if self.palette_name in ('yautja', 'ironbow'):
+        if self.palette_name in ('costa-rica', 'ironbow'):
             rgb *= 1 - (1 - graded[..., None]) ** 4 * .7
         image = Image.fromarray(np.uint8(np.floor(np.clip(rgb, 0, 255) + .5)))
         image = highlight_glow(image, u * 255, self.heat_glow, time, self.heat_glow_speed, self.seed,

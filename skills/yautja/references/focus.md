@@ -1,25 +1,19 @@
 # Focus, Relic, Murphy, and readable fonts
 
-Requires Yautja 2.8.0+. A style preset is a recipe of ordinary visual settings. All controls below save in schema-version-1 presets except the local `--hud-font-file` path. Explicit options override a preset in either argument order. A supplied element map replaces the preset's map; omitted keys inherit that control's global value.
+A style preset is a recipe of ordinary visual settings. All controls below save in schema-version-1 presets except the local `--hud-font-file` path. Explicit options override a preset in either argument order. A supplied element map replaces the preset's map; omitted keys inherit that control's global value.
 
 ## Complete styles
 
-**Focus** preserves the source scene under a pale blue-violet tint, with a shimmering triangular grid, moving partial silhouette highlights, and thin hexagon reticles. **Relic** uses the same settings with pink hollow-triangle ornaments and rising pink code behind subjects. Both require the segmented setup. They select detected subjects automatically; a catalog is optional.
+**Focus** uses a blue-violet source scene and neon-purple HUD. A curved, triangulated geodesic sphere wraps around the viewpoint. A single persistent hexagon glides between subjects, without acquisition zoom. Its central circle is inscribed in the hexagon, with six small circles inside, four outside, and a small central square. **Relic** adds pink triangle ornaments and rising code behind all silhouettes. **Murphy** uses a blue cast, glowing green targeting and current-mask outlines, a 25% larger box with center-crossing XY axes, and large Orbitron Medium text with a blinking underscore. Its waveform and upper-right readout are hidden.
+
+All three use the segmented runtime and automatically cycle through subjects. A catalog is optional and limits the candidate pool. Focus and Relic use persistent motion; Murphy retains acquisition animation. For Murphy's source grade alone without models, use `--thermal classic --target-mode selected --no-target-outline`.
 
 ```bash
 yautja "clip.mov" "focus.mp4" --stylepreset focus
 yautja "clip.mov" "relic.mp4" --stylepreset relic
-yautja "clip.mov" "selected-relic.mp4" --stylepreset relic --figures "figures.json" --target S001-F002
+yautja "clip.mov" "murphy.mp4" --stylepreset murphy
+yautja "clip.mov" "selected.mp4" --stylepreset focus --figures "figures.json" --target S001-F002
 ```
-
-**Murphy** retains source detail, adds heavy CRT scanlines, green readable Tech text, and an axis-aligned frame-box target with a steady TARGETING caption. Its waveform is hidden. Conversion runs with the lightweight install. To display its target and caption, provide a previously generated figure catalog; creating that catalog needs the segmented setup.
-
-```bash
-yautja "clip.mov" "murphy.mp4" --stylepreset murphy --figures "figures.json" --target S001-F002
-yautja "clip.mov" "murphy-bold.mp4" --stylepreset murphy --hud-font orbitron-bold --figures "figures.json" --target S001-F002
-```
-
-Without a catalog, Murphy still applies its source grade, CRT texture, and readable readout. To use automatic targets instead, add `--thermal low-detail --target-mode auto` and install the segmented runtime.
 
 ## Subject edges and code
 
@@ -43,16 +37,25 @@ The final behind-code glow and blur are occluded by the union of current visible
 | `--geo-grid-scale` | `160` | Spacing, 40–480 reference pixels at a 1080px short edge |
 | `--geo-grid-jitter` | `0.65` | Seeded vertex irregularity, 0–1 |
 | `--geo-grid-speed` | `1` | Brightness animation, 0–5; 0 freezes it |
-| `--target-mode selected\|auto` | `selected` | Catalog selections or all visible segmented subjects; explicit catalog selections always win |
-| `--target-shape hexagon` | — | Thin closed hexagon using ordinary acquisition, flash, and target controls |
-| `--target-shape frame-box` | — | Open-interior box with horizontal and vertical axes extending to frame edges; stays axis-aligned |
+| `--target-mode selected\|auto\|cycle` | `selected` | Catalog selections, all automatic subjects, or one cycling subject; catalogs supply the candidate pool |
+| `--target-shape hexagon` | — | Hexagon, inscribed circle, ten small circles and center square |
+| `--target-shape frame-box` | — | Box with center-crossing XY axes extending to frame edges; stays axis-aligned |
 | `--target-motif none\|triangles` | `none` | Seeded hollow triangle ornaments around each visible target |
 | `--target-motif-count` | `7` | Triangles per target, integer 0–24 |
 | `--target-motif-scale` | `1` | Ornament size and spread, 0.25–3 |
 | `--target-label` | Unset | One readable lower-left caption, 1–24 printable ASCII characters; preserves case |
 | `--no-target-label` | — | Clear a caption inherited from a style preset |
+| `--geo-grid-projection flat\|sphere` | `flat` | Flat lattice or great-circle arcs on a subdivided icosahedron, projected from the sphere center |
+| `--target-motion acquire\|persistent` | `acquire` | Assembly animation or one constant-size reticle with smooth motion; persistent mode also sweeps empty automatic scenes |
+| `--target-hold` | `3` | Seconds per subject before cycling, 0.5–30 |
+| `--target-response` | `0.6` | Seconds to cover 95% of a stationary focus change, 0–3; 0 follows immediately |
+| `--target-fill auto\|filled\|stroked` | `auto` | Original styling, translucent filled interiors, or stroked contours; open paths remain lines |
+| `--target-outline` / `--no-target-outline` | Off | Outline only selected subjects using their current masks; needs segmentation |
+| `--target-label-scale` | `1` | Caption size multiplier, 0.5–4; Murphy uses 1.8 |
+| `--target-cursor` / `--no-target-cursor` | Off | Blink an underscore after the caption; on for Murphy |
 
-The new HUD elements are `geo-grid`, `target-motif`, and `target-label`. Each supports `--hud-colors`, `--hud-opacity-elements`, `--hud-blur-elements`, and `--neon-elements`. Motifs and captions follow target acquisition and tracking visibility, independently of target opacity or flashing. They disappear without a visible target. Captions scale to fit inside the frame; stills show them fully acquired. `--no-hud` hides all of them.
+
+The new HUD elements are `geo-grid`, `target-motif`, `target-label`, and `target-outline`. Each supports `--hud-colors`, `--hud-opacity-elements`, `--hud-blur-elements`, and `--neon-elements`. Motifs and captions follow target acquisition and tracking visibility, independently of target opacity or flashing. They disappear without a visible target. Captions scale to fit inside the frame, reserving cursor space throughout its blink cycle. Stills show a fully acquired target and visible cursor. Persistent motion resets on cuts and backward seeks, holds continuity at repeated timestamps, and never smooths subject masks. `--no-hud` hides all of them.
 
 ```bash
 yautja "clip.mov" "custom.mp4" --stylepreset focus --geo-grid-scale 220 --target-motif triangles --target-label "LOCK"
@@ -69,7 +72,7 @@ An editable [Wide Focus example](../assets/presets/focus.json) demonstrates a co
 | --- | --- |
 | `michroma` | Michroma Regular; default |
 | `orbitron` | Orbitron Light |
-| `orbitron-medium` | Orbitron Medium |
+| `orbitron-medium` | Orbitron Medium; Murphy default |
 | `orbitron-bold` | Orbitron Bold; Fremont default |
 
 The font also controls readable analysis and target captions, even when the glyph set is Yautja or Cyber. `--hud-font-file "C:\Fonts\MyFont.otf"` overrides the bundled choice for that conversion. TTF/OTF files must cover printable ASCII and load successfully before media opens. The machine-specific path cannot be saved in a portable preset or loaded from JSON. Reports identify the font family, weight, and resolved custom path when used.
