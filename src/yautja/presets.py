@@ -19,11 +19,11 @@ VISUAL_OPTIONS = (
     'seed', 'grain', 'glow', 'sensor_texture', 'sensor_resolution', 'pixelation',
     'scanlines', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'crt_bleed', 'vhs', 'motion_blur',
     'heat_glow', 'heat_glow_speed', 'verbose', 'timecode', 'timecode_start',
-    'waveform', 'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_window', 'wave_gain',
+    'waveform', 'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_display', 'wave_backlight', 'wave_window', 'wave_gain',
     'target_colors', 'target_shape', 'target_acquire', 'target_flash', 'target_flash_rate',
     'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS,
 )
-NULLABLE = {'outline_width', 'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
+NULLABLE = {'wave_display', 'outline_width', 'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
             'grain', 'pixelation', 'scanlines', 'wave_width', 'wave_height', 'target_colors',
             'target_stroke_colors', 'thermal_levels', 'thermal_band_softness'}
 MAX_BYTES = 65536

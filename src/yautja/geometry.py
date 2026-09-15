@@ -1,5 +1,7 @@
 """Seeded lattice artwork and independent target ornaments and captions."""
 import math
+from .masks import subject_binary
+from functools import lru_cache
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
@@ -9,7 +11,7 @@ from .aim import Aim
 from .hologram import weak_spot_ink
 
 GEO_OPTIONS = ('geo_grid', 'geo_grid_scale', 'geo_grid_jitter', 'geo_grid_speed', 'geo_grid_projection',
-               'geo_grid_center_fade', 'geo_grid_width', 'geo_grid_breaks', 'geo_grid_details')
+               'geo_grid_center_fade', 'geo_grid_width', 'geo_grid_breaks', 'geo_grid_details', 'geo_grid_rotation')
 TARGET_OPTIONS = ('target_mode', 'target_motif', 'target_motif_count', 'target_motif_scale', 'target_label',
                   'target_motion', 'target_hold', 'target_response', 'target_fill', 'target_outline',
                   'target_label_scale', 'target_cursor', 'target_motif_speed', 'target_motif_breaks', 'target_weak_spots')
@@ -29,15 +31,11 @@ def smoothstep(value):
     return value * value * (3 - 2 * value)
 
 
-def broken_path(points, seed, amount):
-    """Stable, unequal gaps measured along a straight or curved polyline."""
-    points = np.asarray(points, float)
+@lru_cache(maxsize=8192)
+def break_intervals(seed, amount):
+    """Time-invariant gaps in edge parameter space, shared by rotating paths."""
     if not amount:
-        return [points]
-    distance = np.r_[0., np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))]
-    if distance[-1] < 1e-8:
-        return []
-    distance /= distance[-1]
+        return ((0., 1.),)
     rng = np.random.default_rng(seed)
     gaps = sorted((center, rng.uniform(.035, .13) * amount)
                   for center in rng.uniform(.10, .90, int(rng.integers(2, 5))))
@@ -49,8 +47,22 @@ def broken_path(points, seed, amount):
         start = max(start, right)
     if start < 1:
         intervals.append((start, 1.))
+    return tuple(intervals)
+
+
+def broken_path(points, seed, amount, *, parameterized=False):
+    """Stable unequal gaps, optionally attached to a reprojected 3D edge."""
+    points = np.asarray(points, float)
+    if not np.isfinite(points).all():
+        return []
+    if not amount:
+        return [points]
+    distance = np.r_[0., np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))]
+    if distance[-1] < 1e-8:
+        return []
+    distance = np.linspace(0, 1, len(points)) if parameterized else distance / distance[-1]
     return [np.column_stack([np.interp(np.r_[a, distance[(distance>a)&(distance<b)], b], distance, points[:,axis])
-                             for axis in (0,1)]) for a,b in intervals]
+                             for axis in (0,1)]) for a,b in break_intervals(seed, amount)]
 
 
 class GeometryStyle:
@@ -59,7 +71,8 @@ class GeometryStyle:
                  target_motif_scale=1., target_label=None, target_motion='acquire', target_hold=3.,
                  target_response=.6, target_fill='auto', target_outline=False, target_label_scale=1., target_cursor=False,
                  geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
-                 target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False, target_weak_spots=False):
+                 target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False, target_weak_spots=False,
+                 geo_grid_rotation=0.):
         for key, value, choices in (
                 ('target-mode', target_mode, ('selected', 'auto', 'cycle')),
                 ('target-motion', target_motion, ('acquire', 'persistent')),
@@ -76,6 +89,7 @@ class GeometryStyle:
             raise ValueError('--target-label must contain 1-24 printable ASCII characters')
         for key, value, low, high in (('geo-grid-scale', geo_grid_scale, 40, 480),
                                     ('geo-grid-jitter', geo_grid_jitter, 0, 1), ('geo-grid-speed', geo_grid_speed, 0, 5),
+                                    ('geo-grid-rotation', geo_grid_rotation, -10, 10),
                                     ('target-motif-scale', target_motif_scale, .25, 3),
                                     ('target-hold', target_hold, .5, 30), ('target-response', target_response, 0, 3),
                                     ('target-label-scale', target_label_scale, .5, 4),
@@ -88,6 +102,7 @@ class GeometryStyle:
         for key in (*GEO_OPTIONS, *TARGET_OPTIONS):
             setattr(self, key, locals()[key])
         self.geometry = None
+        self.sphere_cache = self.flat_cache = None
         self.curves = None
         self.grid_paths = self.grid_paths_key = None
         self.grid_fade = self.grid_fade_key = None
@@ -95,26 +110,41 @@ class GeometryStyle:
         self.label_box = None
         self.aim = Aim(target_hold, target_response)
         self.selected = []
+        self.automatic = False
+        self.motif_anchors = {}
+        self.motif_time = self.motif_shot = None
 
     def report(self, hud=True):
         return {**{key: getattr(self, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)},
                 'geo_grid': bool(hud and self.geo_grid), 'target_outline': bool(hud and self.target_outline),
                 'target_weak_spots': bool(hud and self.target_weak_spots)}
 
-    def lattice(self, size, seed):
-        signature = (size, seed, self.geo_grid_projection, self.geo_grid_scale, self.geo_grid_jitter)
+    def lattice(self, size, seed, time=0., static=False):
+        rotating = bool(self.geo_grid_rotation and not static)
+        angle = math.radians(self.geo_grid_rotation * time % 360) if rotating else 0.
+        base = (size, seed, self.geo_grid_projection, self.geo_grid_scale, self.geo_grid_jitter, rotating)
+        signature = (*base, angle)
         if self.geometry and self.geometry[0] == signature:
             return self.geometry[1:]
         if self.geo_grid_projection == 'sphere':
-            return self.sphere_lattice(size, seed, signature)
+            return self.sphere_lattice(size, seed, signature, angle, rotating)
         self.curves = None
+        if self.flat_cache is not None and self.flat_cache[0] == base:
+            _, original, edges, nodes = self.flat_cache
+            matrix = np.array([[math.cos(angle), -math.sin(angle)], [math.sin(angle), math.cos(angle)]])
+            vertices = (original-np.array(size)/2) @ matrix + np.array(size)/2 if rotating else original
+            self.geometry = (signature, vertices, edges, nodes)
+            return vertices, edges, nodes
         width, height = size
         spacing = self.geo_grid_scale * min(size) / 1080
         dy = spacing * math.sqrt(3) / 2
         rng = np.random.default_rng(stable_number(seed, 'geo-grid'))
         vertices, indices = [], {}
-        for row in range(-2, math.ceil(height / dy) + 2):
-            for col in range(-2, math.ceil(width / spacing) + 2):
+        radius = np.linalg.norm(size)/2 + spacing
+        row_start, row_end = (math.floor((height/2-radius)/dy), math.ceil((height/2+radius)/dy)) if rotating else (-2, math.ceil(height/dy)+2)
+        col_start, col_end = (math.floor((width/2-radius)/spacing), math.ceil((width/2+radius)/spacing)) if rotating else (-2, math.ceil(width/spacing)+2)
+        for row in range(row_start, row_end):
+            for col in range(col_start, col_end):
                 angle, length = rng.uniform(0, math.tau), math.sqrt(rng.random()) * .32 * spacing * self.geo_grid_jitter
                 indices[row, col] = len(vertices)
                 vertices.append((col * spacing + (row % 2) * spacing / 2 + math.cos(angle) * length,
@@ -125,10 +155,16 @@ class GeometryStyle:
                 if neighbor in indices:
                     edges.append((i, indices[neighbor]))
         nodes = [i for i in range(len(vertices)) if rng.random() < .3]
-        self.geometry = (signature, vertices, edges, nodes)
-        return vertices, edges, nodes
+        self.flat_cache = (base, np.asarray(vertices), edges, nodes)
+        return self.lattice(size, seed, time, static)
 
-    def sphere_lattice(self, size, seed, signature):
+    def sphere_lattice(self, size, seed, signature, angle=0., rotating=False):
+        key = (seed, self.geo_grid_scale, self.geo_grid_jitter)
+        if self.sphere_cache is not None and self.sphere_cache[0] == key:
+            _, vectors, faces, depth, state = self.sphere_cache
+            rng = np.random.default_rng()
+            rng.bit_generator.state = state
+            return self.project_sphere(size, signature, vectors, faces, depth, rng, angle, rotating)
         # Subdivide an icosahedron on the unit sphere. Stereographic projection
         # from its center makes great-circle edges bow across a wide field of view.
         phi = (1 + math.sqrt(5)) / 2
@@ -158,6 +194,17 @@ class GeometryStyle:
         rng = np.random.default_rng(stable_number(seed, 'sphere-grid'))
         vectors += rng.normal(0, .16 / 2**depth * self.geo_grid_jitter, vectors.shape)
         vectors /= np.linalg.norm(vectors, axis=1)[:, None]
+        self.sphere_cache = (key, vectors, faces, depth, rng.bit_generator.state)
+        return self.project_sphere(size, signature, vectors, faces, depth, rng, angle, rotating)
+
+    def project_sphere(self, size, signature, vectors, faces, depth, rng, angle, rotating):
+        if angle:
+            axis = np.array([.18, 1., .12])
+            axis /= np.linalg.norm(axis)
+            x, y, z = axis
+            cross = np.array([[0,-z,y],[z,0,-x],[-y,x,0]])
+            matrix = np.eye(3)*math.cos(angle) + (1-math.cos(angle))*np.outer(axis,axis) + math.sin(angle)*cross
+            vectors = vectors @ matrix
         # Tilt avoids a pole or a conspicuous horizontal seam in the viewport.
         ax, ay = .31, .47
         vectors = vectors @ np.array([[math.cos(ay),0,math.sin(ay)],[0,1,0],[-math.sin(ay),0,math.cos(ay)]])
@@ -168,26 +215,27 @@ class GeometryStyle:
         corner_radius = np.linalg.norm(size) / 2 + min(size) * .1
         near_limit = min(-.65, max(-.99, (focal**2 - corner_radius**2) / (focal**2 + corner_radius**2) - .1))
         edges = sorted({tuple(sorted((a,b))) for face in faces for a,b in zip(face, (*face[1:],face[0]))
-                        if min(vectors[a,2], vectors[b,2]) > near_limit})
+                        if rotating or min(vectors[a,2], vectors[b,2]) > near_limit})
         self.curves = []
         for a, b in edges:
             t = np.linspace(0, 1, 9)[:, None]
             arc = vectors[a] * (1-t) + vectors[b] * t
             arc /= np.linalg.norm(arc, axis=1)[:, None]
-            self.curves.append(project(arc))
+            self.curves.append(project(arc) if np.min(arc[:,2]) > near_limit or not rotating else np.full((9,2), np.nan))
         vertices = project(vectors)
-        nodes = [i for i in range(len(vertices)) if vectors[i,2] > near_limit and rng.random() < .45]
+        nodes = [i for i in range(len(vertices)) if (rotating or vectors[i,2] > near_limit) and rng.random() < .45]
+        if rotating:
+            vertices[vectors[:,2] <= near_limit] = np.nan
         self.geometry = (signature, vertices, edges, nodes)
         return vertices, edges, nodes
 
     def grid_accents(self, size, seed, time, static=False):
         """Seeded node rings and satellites breathing along incident sphere arcs."""
-        vertices, edges, nodes = self.lattice(size, seed)
-        if self.accents_key != self.geometry[0]:
+        vertices, edges, nodes = self.lattice(size, seed, time, static)
+        if self.accents_key != self.geometry[0][:-1]:
             neighbors = {i: [] for i in nodes}
             for index, (a, b) in enumerate(edges):
-                path = self.curves[index] if self.curves is not None else np.array([vertices[a], vertices[b]])
-                for node, curve in ((a, path), (b, path[::-1])):
+                for node, curve in ((a, (index, False)), (b, (index, True))):
                     if node in neighbors:
                         neighbors[node].append(curve)
             self.accents = []
@@ -195,7 +243,7 @@ class GeometryStyle:
                 rng = np.random.default_rng(stable_number(seed, 'grid-accents', node))
                 self.accents.append((node, curves, rng.random() < .28, rng.uniform(0, math.tau),
                                      rng.uniform(2.4, 4.8), rng.uniform(8, 14)))
-            self.accents_key = self.geometry[0]
+            self.accents_key = self.geometry[0][:-1]
         t = 0 if static else time * self.geo_grid_speed
         scale = min(size) / 1080
         for node, curves, ring, phase, period, radius in self.accents:
@@ -206,7 +254,13 @@ class GeometryStyle:
             points = [center + max(2., radius * scale) * np.array([math.cos(a), math.sin(a)])
                       for a in np.arange(7) * math.tau / 7 + phase] if ring else []
             dots = []
-            for curve in curves:
+            for index, reverse in curves:
+                a, b = edges[index]
+                curve = self.curves[index] if self.curves is not None else np.array([vertices[a], vertices[b]])
+                if reverse:
+                    curve = curve[::-1]
+                if not np.isfinite(curve).all():
+                    continue
                 distance = np.r_[0., np.cumsum(np.linalg.norm(np.diff(curve, axis=0), axis=1))]
                 length = distance[-1]
                 if length < 1:
@@ -220,7 +274,7 @@ class GeometryStyle:
     def draw_grid(self, renderer, image, time, static=False):
         if not self.geo_grid:
             return
-        vertices, edges, nodes = self.lattice(image.size, renderer.seed)
+        vertices, edges, nodes = self.lattice(image.size, renderer.seed, time, static)
         ss, scale = 3, min(image.size) / 1080
         ink = Image.new('RGBA', (image.width * ss, image.height * ss))
         draw = ImageDraw.Draw(ink)
@@ -229,7 +283,8 @@ class GeometryStyle:
         key = (self.geometry[0], self.geo_grid_breaks)
         if self.grid_paths_key != key:
             self.grid_paths = [broken_path(self.curves[index] if self.curves is not None else (vertices[a],vertices[b]),
-                                           stable_number(renderer.seed, 'grid-gaps', index), self.geo_grid_breaks)
+                                           stable_number(renderer.seed, 'grid-gaps', index), self.geo_grid_breaks,
+                                           parameterized=bool(self.geo_grid_rotation and not static))
                                for index,(a,b) in enumerate(edges)]
             self.grid_paths_key = key
         for index, paths in enumerate(self.grid_paths):
@@ -239,6 +294,8 @@ class GeometryStyle:
                           fill=(*color, alpha), width=max(1, round(self.geo_grid_width * scale * ss)))
         radius = max(.8, 2.2 * scale) * ss
         for i in nodes:
+            if not np.isfinite(vertices[i]).all():
+                continue
             x, y = (v * ss for v in vertices[i])
             draw.ellipse((x-radius, y-radius, x+radius, y+radius), fill=(*color, 230))
         if self.geo_grid_details:
@@ -286,7 +343,7 @@ class GeometryStyle:
     def targets(self, subjects):
         result = []
         for subject in subjects:
-            yy, xx = np.nonzero(subject.mask >= .5)
+            yy, xx = np.nonzero(np.asarray(subject_binary(subject)))
             if subject.opacity <= 0 or not len(xx):
                 continue
             h, w = subject.mask.shape
@@ -295,7 +352,23 @@ class GeometryStyle:
         return result
 
     def prepare_targets(self, subjects, targets, time, shot, size, static=False):
+        if shot != self.motif_shot or self.motif_time is None or not 0 < time-self.motif_time <= .5:
+            self.motif_anchors.clear()
+        dt = time-self.motif_time if self.motif_time is not None else 0
+        self.motif_time, self.motif_shot = time, shot
+        anchors = {}
+        for subject in subjects if self.target_motif != 'none' else ():
+            yy, xx = np.nonzero(np.asarray(subject_binary(subject, size)))
+            if not len(xx) or subject.opacity <= 0:
+                continue
+            current = np.array([xx.mean(), yy.mean()])
+            previous = self.motif_anchors.get(subject.track_id)
+            if previous is not None and np.linalg.norm(current-previous) < min(size)*.15:
+                current = previous + (current-previous) * (1-math.exp(-dt/.09))
+            anchors[subject.track_id] = current
+        self.motif_anchors = anchors
         automatic = targets is None and self.target_mode != 'selected'
+        self.automatic = automatic
         candidates = self.targets(subjects) if automatic else list(targets or ())
         threshold = .25 if self.target_mode == 'cycle' or self.target_motion == 'persistent' else 0
         candidates = [item for item in candidates if item.get('opacity', 1) > threshold]
@@ -331,12 +404,12 @@ class GeometryStyle:
             return
         panel = renderer.hud_panel(image.size, 'target-weak-spots')
         for subject in self.selected_subjects(subjects):
-            mask = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
+            mask = subject_binary(subject, image.size)
             bounds = mask.getbbox()
             if bounds is None:
                 continue
             ink = weak_spot_ink(mask.crop(bounds), renderer.hud_colors['target-weak-spots'],
-                                0 if static else time, stable_number(renderer.seed, 'weak-spots', shot, subject.track_id))
+                                0 if static else time, stable_number(renderer.seed, 'weak-spots', shot, subject.track_id), shine=renderer.signal.outline_shine)
             ink.putalpha(ink.getchannel('A').point(lambda v: round(v * min(1., subject.opacity))))
             panel.layer('target-weak-spots').alpha_composite(ink, bounds[:2])
         renderer.composite_panel(image, panel, 0, 0)
@@ -346,7 +419,7 @@ class GeometryStyle:
             return
         panel = renderer.hud_panel(image.size, 'target-outline')
         for subject in self.selected_subjects(subjects):
-            mask = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
+            mask = subject_binary(subject, image.size)
             width = max(1, round(3 * min(image.size) / 1080))
             inner = mask.filter(ImageFilter.MinFilter(width * 2 + 1))
             edge = np.maximum(0, np.asarray(mask, dtype=np.int16) - np.asarray(inner, dtype=np.int16))
@@ -355,7 +428,7 @@ class GeometryStyle:
             panel.layer('target-outline').alpha_composite(ink)
         renderer.composite_panel(image, panel, 0, 0)
 
-    def draw_targets(self, renderer, image, time, static=False):
+    def draw_targets(self, renderer, image, time, static=False, subjects=()):
         states = renderer.target_overlay.placements
         self.label_box = None
         if not states or (self.target_motif == 'none' and self.target_label is None):
@@ -367,9 +440,29 @@ class GeometryStyle:
             ink = Image.new('RGBA', (image.width * ss, image.height * ss))
             draw = ImageDraw.Draw(ink)
             color = renderer.hud_colors['target-motif']
-            for identity, cx, cy, radius, opacity in states:
+            attached = []
+            for subject in self.selected_subjects(subjects):
+                yy, xx = np.nonzero(np.asarray(subject_binary(subject, image.size)))
+                if len(xx):
+                    attached.append((subject, xx, yy))
+            # Searching in automatic mode has no selected figure to ornament.
+            # Explicit maskless targets retain the original reticle fallback.
+            motif_states = [] if attached or self.automatic else list(states)
+            for subject, xx, yy in attached:
+                center = self.motif_anchors[subject.track_id]
+                motif_states.append((f'subject-{subject.track_id}', *center, (xx.max()-xx.min()+1)*.28, subject.opacity))
+            figures = {f'subject-{s.track_id}': (s, xx, yy) for s, xx, yy in attached}
+            for identity, cx, cy, radius, opacity in motif_states:
                 for part in self.motif_particles(renderer.seed, identity, time, static):
                     x, y = cx + radius * part['x'], cy + radius * part['y']
+                    if identity in figures:
+                        subject, xx, yy = figures[identity]
+                        bw, bh = xx.max()-xx.min()+1, yy.max()-yy.min()+1
+                        rng = np.random.default_rng(stable_number(renderer.seed, 'motif-spawn', identity, part['index']))
+                        px, py = xx.min()+rng.uniform(.1,.9)*bw, yy.min()+rng.uniform(.03,.55)*bh
+                        nearest = np.argmin((xx-px)**2 + (yy-py)**2)
+                        x = xx[nearest] + cx-xx.mean()
+                        y = yy[nearest] + cy-yy.mean() - part['phase'] * bh * .25
                     r = radius * part['radius']
                     alpha = round(255 * opacity * part['alpha'])
                     if r < .25 or not alpha:

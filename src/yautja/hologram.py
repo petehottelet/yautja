@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 
-def holographic_ink(mask, color, time, seed, *, vertical=False):
+def holographic_ink(mask, color, time, seed, *, vertical=False, shine=.55):
     """Tinted emission with pale cores, fine raster texture and moving light bands."""
     alpha = np.asarray(mask, np.float32) / 255
     h, w = alpha.shape
@@ -14,7 +14,7 @@ def holographic_ink(mask, color, time, seed, *, vertical=False):
     axis = x if vertical else y
     scan = .5 + .5 * np.sin(axis * 1.7 + time * 5 + phase)
     band = (.5 + .5 * np.sin(axis / max(8, (w if vertical else h) * .17) - time * 2 + phase)) ** 8
-    white = np.broadcast_to(.15 + .55 * band + .18 * scan, alpha.shape)
+    white = np.broadcast_to(.15 + shine * band + .18 * scan, alpha.shape)
     base = np.array(color, np.float32)
     rgb = base + white[..., None] * (255-base) if max(color) else np.zeros((*alpha.shape, 3))
     texture = (.76 + .24 * scan) * (.90 + .10 * np.cos(x * 2.1 + phase) ** 2)
@@ -24,7 +24,7 @@ def holographic_ink(mask, color, time, seed, *, vertical=False):
     return Image.fromarray(pixels)
 
 
-def weak_spot_ink(mask, color, time, seed):
+def weak_spot_ink(mask, color, time, seed, *, shine=.55):
     """Two fictional scan patches, anchored in normalized current-mask space."""
     visible = np.asarray(mask) >= 128
     h, w = visible.shape
@@ -54,4 +54,4 @@ def weak_spot_ink(mask, color, time, seed):
         # Faint upward projection streaks remain inside the same silhouette.
         rays = bars * np.clip(1-np.abs(dx), 0, 1) * np.clip((dy+2.8)/1.8, 0, 1) * (dy < -.7) * .20
         ink = np.maximum(ink, np.clip((patch+rays)*pulse, 0, 1))
-    return holographic_ink(Image.fromarray(np.uint8(ink * visible * 255)), color, time, seed, vertical=True)
+    return holographic_ink(Image.fromarray(np.uint8(ink * visible * 255)), color, time, seed, vertical=True, shine=shine)

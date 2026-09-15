@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0
+
+- Stabilize flow-aligned overlay masks with temporal blending, hysteresis, seam closing and small-island removal. New runtime controls: [`--mask-stability`](skills/yautja/references/options.md#mask-stability) and [`--mask-min-region`](skills/yautja/references/options.md#mask-min-region). Set both to zero to restore the previous contour behavior.
+- Attach Relic's broken triangles to the selected figure and pack its existing code streams into the figure's width. Keep code off in Focus.
+- Cool and darken Focus/Relic's source grade, grid and waveform; make their holographic outlines 20% thinner and faster. Disable decorative yellow patches in these recipes while retaining the general capability.
+- Add [`--wave-display`](skills/yautja/references/options.md#wave-display) and [`--wave-backlight`](skills/yautja/references/options.md#wave-backlight): all seven waveform shapes can use segmented LED cells, with non-emissive idle ink controlled separately from glow/neon. The default digital-circuit device is unchanged.
+- Add [`--outline-shine`](skills/yautja/references/options.md#outline-shine) for holographic band brightness and [`--geo-grid-rotation`](skills/yautja/references/options.md#geo-grid-rotation) for independent flat/spherical grid drift. Both remain general, portable visual settings.
+- Refresh the affected segmented preset previews at normal source speed, 24 fps. Stabilized silhouettes intentionally change their former visual baselines.
+
 ## 2.11.0
 
 - Make filled/stroked treatment distinct for all 11 target types, including hollow curved bands, crosshairs, brackets and dot rings. Reduce the triangle lock dots by 12% without changing their positions or timing.

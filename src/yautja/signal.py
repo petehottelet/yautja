@@ -5,6 +5,7 @@ from importlib.resources import files
 import io
 import json
 import math
+from .masks import subject_binary
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
@@ -15,7 +16,7 @@ from .hologram import holographic_ink
 SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure', 'scene_highlights',
                   'subject_outline', 'subject_code', 'subject_labels',
                   'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale',
-                  'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'outline_width', 'code_layer')
+                  'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'outline_width', 'outline_shine', 'code_layer')
 SUBJECT_ELEMENTS = ('subject-outline', 'subject-code', 'subject-labels', 'subject-carets')
 
 
@@ -76,12 +77,12 @@ class SignalStyle:
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
                  subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
                  outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside',
-                 outline_width=None):
+                 outline_width=None, outline_shine=.55):
         if outline_style not in ('solid', 'shimmer', 'holographic'):
             raise ValueError('--outline-style must be solid, shimmer or holographic')
         if outline_width is not None and (not math.isfinite(outline_width) or not .5 <= outline_width <= 20):
             raise ValueError('--outline-width must be between 0.5 and 20')
-        self.outline_width = outline_width
+        self.outline_width, self.outline_shine = outline_width, outline_shine
         if code_layer not in ('inside', 'behind'):
             raise ValueError('--code-layer must be inside or behind')
         if type(outline_arcs) is not int or not 1 <= outline_arcs <= 12:
@@ -94,7 +95,7 @@ class SignalStyle:
         for key, value, low, high in (
             ('scene-tint-strength', scene_tint_strength, 0, 1), ('scene-exposure', scene_exposure, .1, 2),
             ('scene-highlights', scene_highlights, 0, 1),
-            ('outline-coverage', outline_coverage, 0, 1), ('outline-speed', outline_speed, 0, 5),
+            ('outline-shine', outline_shine, 0, 1), ('outline-coverage', outline_coverage, 0, 1), ('outline-speed', outline_speed, 0, 5),
             ('code-size', code_size, 8, 80), ('code-speed', code_speed, 0, 5), ('code-density', code_density, 0, 3),
             ('subject-head-gap', subject_head_gap, 0, 120), ('subject-title-gap', subject_title_gap, 0, 80),
             ('subject-caret-scale', subject_caret_scale, .25, 3)):
@@ -125,7 +126,7 @@ class SignalStyle:
         out = (rgb * (1 - self.scene_tint_strength) + tinted * self.scene_tint_strength) * self.scene_exposure
         return Image.fromarray(np.uint8(np.clip(out * 255, 0, 255)))
 
-    def streams(self, size, bounds, anchor, time, seed, track_id, glyph=code_glyph):
+    def streams(self, size, bounds, anchor, time, seed, track_id, glyph=code_glyph, *, fit_columns=False):
         """Fixed glyph cells, upward bright cursors, fading tails and slow cycling."""
         width, height = size
         cell = max(5, round(self.code_size * min(size) / 1080))
@@ -139,7 +140,13 @@ class SignalStyle:
         mask = Image.new('L', size)
         if not self.code_density:
             return mask
-        for col in range(math.floor((x0 - cx) / pitch_x), math.ceil((x1 - cx) / pitch_x) + 1):
+        first, last = math.floor((x0 - cx) / pitch_x), math.ceil((x1 - cx) / pitch_x)
+        if fit_columns:
+            # Preserve the former widened span's stream count, packing the same
+            # glyphs into the figure width with more overlap and an inward fade.
+            bw = x1 - x0
+            first, last = math.floor((max(0, x0-bw*.12)-cx)/pitch_x), math.ceil((min(width, x1+bw*.12)-cx)/pitch_x)
+        for col in range(first, last + 1):
             number = stable_number(seed, track_id, col)
             if (number % 10000) / 10000 >= self.code_density:
                 continue
@@ -159,7 +166,8 @@ class SignalStyle:
                 age = math.floor(time * self.code_speed * (.5 + identity % 19 / 25) + identity % 101 / 101)
                 tile = glyph(stable_number(seed, track_id, col, row, age) % 192, cell)
                 tile = tile.point(lambda v: round(v * alpha / 255))
-                x, y = round(col * pitch_x), round(row * pitch_y)
+                x = round(x0 + (col-first) * (x1-x0) / (last-first+1)) if fit_columns else round(col * pitch_x)
+                y = round(row * pitch_y)
                 mask.paste(255, (x, y, x+tile.width, y+tile.height), tile)
         return mask
 
@@ -200,7 +208,7 @@ class SignalStyle:
             if subject.opacity <= 0:
                 continue
             mask = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(image.size, Image.Resampling.BILINEAR)
-            binary = mask.point(lambda v: 255 if v >= 128 else 0)
+            binary = subject_binary(subject, image.size, resample=Image.Resampling.BILINEAR)
             if behind:
                 union = ImageChops.lighter(union, binary)
             bounds = binary.getbbox()
@@ -226,8 +234,8 @@ class SignalStyle:
             if self.subject_code:
                 if behind:
                     bw, bh = x1 - x0, y1 - y0
-                    expanded = (max(0, x0 - bw * .12), max(0, y0 - bh * .35), min(image.width, x1 + bw * .12), y1)
-                    code = self.streams(image.size, expanded, current[:2], 0 if static else time, renderer.seed, subject.track_id, renderer.code_mask)
+                    expanded = (x0, max(0, y0 - bh * .35), x1, y1)
+                    code = self.streams(image.size, expanded, current[:2], 0 if static else time, renderer.seed, subject.track_id, renderer.code_mask, fit_columns=True)
                     x = np.arange(image.width)
                     y = np.arange(image.height)
                     fx = np.clip(np.minimum(x - expanded[0], expanded[2] - x) / max(1, bw * .08), 0, 1)
@@ -263,7 +271,7 @@ class SignalStyle:
                 if self.outline_style == 'holographic':
                     layer = holographic_ink(edge.crop(bounds), renderer.hud_colors['subject-outline'],
                                              0 if static else time * self.outline_speed,
-                                             stable_number(renderer.seed, 'holographic-edge', subject.track_id))
+                                             stable_number(renderer.seed, 'holographic-edge', subject.track_id), shine=self.outline_shine)
                     layer.putalpha(layer.getchannel('A').point(lambda v: round(v * opacity)))
                     panel.layer('subject-outline').alpha_composite(layer, bounds[:2])
                 else:

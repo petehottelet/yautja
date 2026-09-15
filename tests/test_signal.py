@@ -156,7 +156,7 @@ class SignalTests(unittest.TestCase):
                 return [initial]
             def refine(self, frame, tracks):
                 tracks[0].mask = moved_mask.copy()
-        tracker = SemanticTracker(Detector(), interval=.5, refine_masks=True)
+        tracker = SemanticTracker(Detector(), interval=.5, refine_masks=True, mask_stability=0, mask_min_region=0)
         source = Image.new('RGB', self.size, (70, 80, 75))
         track_id = tracker.update(source, 0)[0].track_id
         zero_flow = np.zeros((180, 320, 2), np.float32)

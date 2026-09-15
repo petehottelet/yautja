@@ -9,6 +9,40 @@ DIGITAL_STYLES = ('digital-blocks', 'digital-shards', 'digital-circuit')
 WAVE_STYLES = ('trace', *RORSCHACH_STYLES, *DIGITAL_STYLES)
 
 
+def resolve_display(style, display):
+    if display is not None and display not in ('plain', 'led'):
+        raise ValueError('--wave-display must be plain or led')
+    return display or ('led' if style == 'digital-circuit' else 'plain')
+
+
+def led_device(lit_mask, *, detail=.6):
+    """Max-pool any waveform into lit cells, a rounded plate and idle cells."""
+    width, height = lit_mask.size
+    ss = 3
+    layers = [Image.new('L', (width*ss, height*ss)) for _ in range(3)]
+    lit, plate, idle = map(ImageDraw.Draw, layers)
+    pitch = max(2, round(width / (14 + detail * 18)))
+    pixels = np.asarray(lit_mask)
+    plate.rounded_rectangle((0, 0, width*ss-1, height*ss-1), radius=max(2, width*.12*ss), fill=255)
+    for y in range(0, height, pitch):
+        for x in range(0, width, pitch):
+            box = (x*ss+1, y*ss+1, min(width*ss-1,(x+pitch)*ss-2), min(height*ss-1,(y+pitch)*ss-2))
+            if box[2] < box[0] or box[3] < box[1]:
+                continue
+            idle.rectangle(box, fill=180)
+            lit.rectangle(box, fill=int(pixels[y:y+pitch, x:x+pitch].max()))
+    return tuple(ImageChops.multiply(layer, layers[1]).resize((width,height), Image.Resampling.BOX) for layer in layers)
+
+
+def waveform_masks(width, height, signal, time, *, style, detail=.6, seed=42, display=None):
+    """Shape providers share the same display contract; trace supplies its own ink."""
+    display = resolve_display(style, display)
+    if style == 'digital-circuit' and display == 'led':
+        return vocoder_masks(width, height, signal, detail=detail)
+    lit = inkblot_mask(width, height, signal, time, style=style, detail=detail, seed=seed)
+    return led_device(lit, detail=detail) if display == 'led' else (lit, None, None)
+
+
 def inkblot_mask(width, height, signal, time, *, style='rorschach', detail=.6, seed=42):
     """Return an inkblot or digital L mask; zero input produces zero ink."""
     if style in DIGITAL_STYLES:

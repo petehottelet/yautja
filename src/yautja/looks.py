@@ -48,23 +48,24 @@ LOOK_PRESETS = {'yautja': {
     'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
 }}
 FOCUS_COLORS = {**dict.fromkeys(HUD_DEFAULTS, '#A24BFF'),
-                'waveform-axis': '#63338F', 'waveform-ticks': '#7940B1',
-                'subject-outline': '#A6B4FF', 'target-weak-spots': '#FFD34D'}
+                'geo-grid': '#7D5AFF', 'waveform': '#6F7BFF', 'waveform-glyphs': '#6F7BFF',
+                'waveform-axis': '#383F8A', 'waveform-ticks': '#454F9E',
+                'subject-outline': '#8FA6FF'}
 FOCUS_SETTINGS = {
-    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#97A4E0',
-    'scene_tint_strength': .55, 'scene_exposure': .95,
+    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#8395E6',
+    'scene_tint_strength': .28, 'scene_exposure': .82,
     'hud': True, 'hud_glyphs': 'cyber', 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}={value}' for key, value in FOCUS_COLORS.items()),
-    'subject_outline': True, 'outline_style': 'holographic', 'outline_coverage': .35, 'outline_width': 8.,
-    'outline_arcs': 5, 'outline_speed': 1., 'subject_code': False, 'subject_labels': False,
+    'subject_outline': True, 'outline_style': 'holographic', 'outline_coverage': .35, 'outline_width': 6.4, 'outline_shine': .75,
+    'outline_arcs': 5, 'outline_speed': 1.35, 'subject_code': False, 'subject_labels': False,
     'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
     'geo_grid_projection': 'sphere', 'target_mode': 'cycle', 'target_motion': 'persistent',
     'geo_grid_center_fade': .96, 'geo_grid_width': 2.2, 'geo_grid_breaks': .7,
-    'geo_grid_details': True, 'target_weak_spots': True,
+    'geo_grid_details': True, 'geo_grid_rotation': .6, 'target_weak_spots': False,
     'target_shape': 'hexagon', 'target_flash': False, 'target_fill': 'stroked',
     'target_motif': 'none', 'target_label': None,
     'neon': True, 'neon_intensity': 1., 'neon_spread': .9, 'neon_core_whiten': 0.,
-    'neon_elements': 'geo-grid=0.8,subject-outline=0.7,target=1,target-weak-spots=0.65',
+    'neon_elements': 'geo-grid=0.8,subject-outline=0.7,target=1',
     'hud_opacity_elements': 'waveform=0.55,waveform-axis=0.3,waveform-ticks=0.35,geo-grid=0.8',
     'verbose': False, 'timecode': False, 'grain': 0., 'pixelation': 0,
     'sensor_texture': False, 'scanlines': False, 'vhs': False, 'heat_glow': 0.,
@@ -72,8 +73,7 @@ FOCUS_SETTINGS = {
 LOOK_PRESETS['focus'] = FOCUS_SETTINGS
 LOOK_PRESETS['relic'] = {
     **FOCUS_SETTINGS,
-    'hud_colors': ','.join(f'{key}={value}' for key, value in {
-        **FOCUS_COLORS, 'subject-code': '#FF6FDE', 'target-motif': '#FF5BD8'}.items()),
+    'hud_colors': FOCUS_SETTINGS['hud_colors'],
     'subject_code': True, 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
     'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
     'target_motif_speed': 1., 'target_motif_breaks': .7,

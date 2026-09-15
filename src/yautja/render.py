@@ -15,7 +15,7 @@ from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .neon import NeonStyle
-from .waveform import WAVE_STYLES, inkblot_mask, vocoder_masks
+from .waveform import WAVE_STYLES, waveform_masks, led_device, resolve_display
 from .hud import HudPanel, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
 from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
@@ -239,7 +239,7 @@ class Renderer:
                  target_label_scale=1., target_cursor=False,
                  geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
                  target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False,
-                 outline_width=None, target_weak_spots=False):
+                 outline_width=None, target_weak_spots=False, outline_shine=.55, geo_grid_rotation=0., wave_display=None, wave_backlight=.2):
         self.width, self.height = width, height
         if hud_glyphs not in ('yautja', 'cyber', 'tech'):
             raise ValueError('--HUDglyphs must be yautja, cyber, or tech')
@@ -255,7 +255,7 @@ class Renderer:
                                       geo_grid_center_fade=geo_grid_center_fade, geo_grid_width=geo_grid_width,
                                       geo_grid_breaks=geo_grid_breaks, target_motif_speed=target_motif_speed,
                                       target_motif_breaks=target_motif_breaks, geo_grid_details=geo_grid_details,
-                                      target_weak_spots=target_weak_spots)
+                                      target_weak_spots=target_weak_spots, geo_grid_rotation=geo_grid_rotation)
         self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
                                     analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin,
                                     analysis_outline_width=analysis_outline_width, analysis_target=analysis_target,
@@ -267,7 +267,7 @@ class Renderer:
                                   subject_head_gap=subject_head_gap, subject_title_gap=subject_title_gap, subject_caret_scale=subject_caret_scale,
                                   outline_style=outline_style, outline_coverage=outline_coverage,
                                   outline_arcs=outline_arcs, outline_speed=outline_speed, code_layer=code_layer,
-                                  outline_width=outline_width)
+                                  outline_width=outline_width, outline_shine=outline_shine)
         self.transfer = ThermalTransfer(thermal_levels, thermal_band_softness, thermal_black_point,
                                         thermal_white_point, thermal_gamma, thermal_softness)
         self.seed, self.glow = seed, glow
@@ -315,11 +315,13 @@ class Renderer:
         if wave_style not in WAVE_STYLES:
             raise ValueError('Unknown waveform style: ' + wave_style)
         self.wave_style = wave_style
+        self.wave_display = resolve_display(wave_style, wave_display)
+        self.wave_backlight = wave_backlight
         self.wave_width = .12 if wave_width is None else wave_width
         self.wave_height = .96 if wave_height is None else wave_height
         self.wave_detail = wave_detail
         for value, lo, hi, flag in ((self.wave_width, .02, .3, 'wave-width'), (self.wave_height, .1, 1, 'wave-height'),
-                                   (wave_detail, 0, 1, 'wave-detail')):
+                                   (wave_detail, 0, 1, 'wave-detail'), (wave_backlight, 0, 1, 'wave-backlight')):
             if not math.isfinite(value) or not lo <= value <= hi:
                 raise ValueError(f'--{flag} must be between {lo} and {hi}')
         for value, high, flag in ((crt_strength, 1, 'crt-strength'), (heat_glow, 1, 'heat-glow'), (heat_glow_speed, 5, 'heat-glow-speed')):
@@ -643,7 +645,7 @@ class Renderer:
         if (luma.shape != (self.height, self.width) or
             (luma.dtype != np.uint8 and (self.transfer.levels is None or luma.dtype.kind != 'f')) or
             not np.isfinite(luma).all() or luma.min() < 0 or luma.max() > 255):
-            raise ValueError('Heat field must match the renderer dimensions and contain finite 0–255 values; legacy mode requires uint8')
+            raise ValueError('Heat field must match the renderer dimensions and contain finite 0â€“255 values; legacy mode requires uint8')
         # Texture is a display treatment; it must not change the HUD readouts.
         readout_luma = luma
         if self.transfer.levels is not None:
@@ -676,7 +678,7 @@ class Renderer:
         self.geometry.draw_weak_spots(self, image, subjects, time, shot, static)
         self.geometry.draw_outline(self, image, subjects)
         image = self.target_overlay.draw(image, time, targets, colors, shot=shot, static=static, neon_gain=neon_gain)
-        self.geometry.draw_targets(self, image, time, static)
+        self.geometry.draw_targets(self, image, time, static, subjects)
         return image
 
     def render_source(self, frame, time, wave, subjects, *, targets=None, shot_id=None, target_static=False):
@@ -731,6 +733,20 @@ class Renderer:
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
 
+    def draw_wave_backing(self, image, x, y, housing, inactive):
+        # Device materials follow waveform ink/opacity/blur, but never emit neon.
+        backing = Image.new('RGBA', housing.size)
+        backing.putalpha(housing.point(lambda a: round(a * .96 * min(1., self.wave_backlight / .2))))
+        color = self.hud_colors['waveform']
+        standby = Image.new('RGBA', housing.size, (*[round(c * self.wave_backlight) for c in color], 0))
+        standby.putalpha(inactive)
+        backing = Image.alpha_composite(backing, standby)
+        holder = HudPanel('RGBA', housing.size, self.hud_blur_pixels, ('waveform',), self.hud_opacities, separate=True)
+        holder.replace('waveform', backing)
+        backing, pad = holder.finish()
+        region = image.crop((x-pad, y-pad, x-pad+backing.width, y-pad+backing.height)).convert('RGBA')
+        image.paste(Image.alpha_composite(region, backing).convert(image.mode), (x-pad, y-pad))
+
     def draw_waveform(self, image, readout_luma, time, wave):
         s = self.scale
         if self.wave_style != 'trace':
@@ -739,22 +755,10 @@ class Renderer:
             signal = np.abs(procedural_wave(time, self.seed)) if wave is None else np.maximum(np.abs(wave[0]), np.abs(wave[1]))
             x, y = max(1, round(self.width * .012)), (self.height - height) // 2
             color = self.hud_colors['waveform']
-            if self.wave_style == 'digital-circuit':
-                mask, housing, inactive = vocoder_masks(width, height, signal, detail=self.wave_detail)
-                # Idle segments share waveform ink, opacity and blur, but emit
-                # no light. Red ink produces a burgundy-to-black idle state.
-                backing = Image.new('RGBA', mask.size)
-                backing.putalpha(housing.point(lambda a: round(a * .96)))
-                standby = Image.new('RGBA', mask.size, (*[round(c * .2) for c in color], 0))
-                standby.putalpha(inactive)
-                backing = Image.alpha_composite(backing, standby)
-                holder = HudPanel('RGBA', mask.size, self.hud_blur_pixels, ('waveform',), self.hud_opacities, separate=True)
-                holder.replace('waveform', backing)
-                backing, pad = holder.finish()
-                region = image.crop((x - pad, y - pad, x - pad + backing.width, y - pad + backing.height)).convert('RGBA')
-                image.paste(Image.alpha_composite(region, backing).convert('RGB'), (x - pad, y - pad))
-            else:
-                mask = inkblot_mask(width, height, signal, time, style=self.wave_style, detail=self.wave_detail, seed=self.seed)
+            mask, housing, inactive = waveform_masks(width, height, signal, time, style=self.wave_style,
+                                                       detail=self.wave_detail, seed=self.seed, display=self.wave_display)
+            if housing is not None:
+                self.draw_wave_backing(image, x, y, housing, inactive)
             if self.overlay_mode == 'RGBA':
                 panel = Image.new('RGBA', mask.size, (*color, 0))
                 panel.putalpha(mask)
@@ -767,6 +771,8 @@ class Renderer:
             return max(10, round(25 * s)), stats
         panel_w = min(self.width, round(110 * s))
         panel = self.hud_panel((panel_w, self.height), 'waveform-glyphs', 'waveform-axis', 'waveform-ticks', 'waveform')
+        if self.wave_display == 'led':
+            panel.separate = True
         glyphs = panel.layer('waveform-glyphs')
         size = max(10, round(25 * s))
         gy = max(round(24 * s), round(self.height * .12))
@@ -806,7 +812,21 @@ class Renderer:
             for i, (lo, hi) in enumerate(zip(low, high)):
                 y = top + (bottom - top) * i / max(1, len(low) - 1)
                 points.extend([(center + amp * lo, y), (center + amp * hi, y)])
-        ImageDraw.Draw(panel.layer('waveform')).line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
+        if self.wave_display == 'led':
+            trace = Image.new('L', panel.size)
+            ImageDraw.Draw(trace).line(points, fill=255, width=max(1, round(1.25*s)))
+            cell = max(2, round(amp * 2 / (14 + self.wave_detail * 18)))
+            box = (max(0, math.floor(center-amp-cell)), max(0, math.floor(top)),
+                   min(panel_w, math.ceil(center+amp+cell)), min(self.height, math.ceil(bottom)+1))
+            lit, housing, inactive = led_device(trace.crop(box), detail=self.wave_detail)
+            self.draw_wave_backing(image, box[0], box[1], housing, inactive)
+            ink = Image.new('RGBA', lit.size, (*self.hud_colors['waveform'], 0))
+            ink.putalpha(lit)
+            if self.overlay_mode == 'RGB':
+                ink = ImageChops.multiply(Image.merge('RGB', (lit,)*3), Image.new('RGB',lit.size,self.hud_colors['waveform']))
+            panel.layer('waveform').paste(ink, box[:2])
+        else:
+            ImageDraw.Draw(panel.layer('waveform')).line(points, fill=self.hud_ink('waveform'), width=max(1, round(1.25 * s)))
         self.composite_panel(image, panel, 0, 0)
         return size, stats
 

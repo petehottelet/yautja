@@ -3,6 +3,7 @@ from functools import lru_cache
 from importlib.resources import files
 import io
 import math
+from .masks import subject_binary
 import re
 
 import numpy as np
@@ -138,7 +139,7 @@ class AnalysisHUD:
             if subject is None:
                 aim = (.5 + .36 * math.sin(elapsed * .72), .5 + .3 * math.sin(elapsed * .53))
             else:
-                yy, xx = np.nonzero(subject.mask >= .5)
+                yy, xx = np.nonzero(np.asarray(subject_binary(subject)))
                 # Upper center of the current silhouette, independent of its size.
                 aim = ((xx.min() + xx.max()) / (2 * subject.mask.shape[1]),
                        (yy.min() + .35 * (yy.max() - yy.min())) / subject.mask.shape[0])
@@ -171,7 +172,7 @@ class AnalysisHUD:
             px = .5 + .46 * math.sin(elapsed * 2.3 + .3)
             py = .5 + .46 * math.sin(elapsed * 1.7 + 1.8)
         else:
-            yy, xx = np.nonzero(subject.mask >= .5)
+            yy, xx = np.nonzero(np.asarray(subject_binary(subject)))
             px, py = xx.mean() / subject.mask.shape[1], yy.mean() / subject.mask.shape[0]
         cx, cy = gx + round(grid_size * px), gy + round(grid_size * py)
         d.line((cx, gy, cx, gy + grid_size), fill=grid_ink, width=stroke)
@@ -194,14 +195,14 @@ class AnalysisHUD:
         self.text_block(text, right, (width - margin - column, right_y, column,
                                      min(height * .38, height - margin - right_y)), font_size, text_ink)
         if subject is not None:
-            binary = Image.fromarray(np.uint8(subject.mask >= .5) * 255).resize(image.size, Image.Resampling.NEAREST)
+            binary = subject_binary(subject, image.size)
             bounds = binary.getbbox()
             # Never smooth the contour position: draw the current tracked mask.
             blink = static or self.phase != 'ANALYSIS' or not self.analysis_blink_rate or (
                 (phase - 1.4) / max(self.analysis_speed, .001) * self.analysis_blink_rate) % 1 < .55
             if blink:
                 ss = 2
-                fine = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(
+                fine = (subject_binary(subject) if subject.binary_mask is not None else Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255))).resize(
                     (width * ss, height * ss), Image.Resampling.BILINEAR).point(lambda v: 255 if v >= 128 else 0)
                 outline_width = max(2, math.ceil(self.analysis_outline_width * min(width, height) / 1080 * ss))
                 edge = ImageChops.subtract(fine, fine.filter(ImageFilter.MinFilter(2 * outline_width + 1)))

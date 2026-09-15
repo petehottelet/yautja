@@ -35,7 +35,7 @@ from .analysis import ANALYSIS_OPTIONS, AnalysisHUD
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
-                  'wave_style', 'wave_width', 'wave_height', 'wave_detail',
+                  'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_display', 'wave_backlight',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
                   'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, 'hud_font', 'hud_font_file')
@@ -84,6 +84,7 @@ def extra_report(renderer, selection, *, static=False):
             'crt_grid': renderer.crt_grid, 'crt_crosshatch': renderer.crt_crosshatch,
             'crt_strength': renderer.crt_strength, 'heat_glow': renderer.heat_glow, 'heat_glow_speed': renderer.heat_glow_speed,
             'wave_style': renderer.wave_style if renderer.hud else 'off',
+            'wave_display': renderer.wave_display if renderer.hud else 'off', 'wave_backlight': renderer.wave_backlight,
             'wave_width': renderer.wave_width if renderer.hud and renderer.wave_style != 'trace' else None,
             'wave_height': renderer.wave_height if renderer.hud and renderer.wave_style != 'trace' else None,
             'wave_detail': renderer.wave_detail if renderer.hud and renderer.wave_style != 'trace' else None}
@@ -247,7 +248,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.target_weak_spots or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
+                              args.detect_interval, mask_stability=args.mask_stability, mask_min_region=args.mask_min_region, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.target_weak_spots or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -491,7 +492,7 @@ def convert_video(args):
                           processing_fps=round(frames / max(timings['processing_seconds'], .001), 3),
                           settings={key: getattr(args, key) for key in (
                               'start', 'duration', 'max_size', 'fps', 'crf', 'preset', 'seed', 'grain', 'glow',
-                              'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval',
+                              'device', 'precision', 'warm_objects', 'hot_objects', 'confidence', 'detect_interval', 'mask_stability', 'mask_min_region',
                               'sensor_resolution', 'waveform', 'wave_window', 'wave_gain', 'audio_stream', 'mute',
                               'timecode_start', 'sensor_texture', 'palette', 'pixelation', 'scanlines', 'vhs',
                               'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')})
@@ -579,12 +580,14 @@ def parser():
     p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
     p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
     p.add_argument('--outline-style', choices=['solid', 'shimmer', 'holographic'], default='solid', help='Continuous edge, partial shimmer, or textured partial holographic glow; enable with --subject-outline')
+    p.add_argument('--outline-shine', type=float, default=.55, help='Moving holographic band brightness, 0-1; affects holographic outlines and optional weak-spot textures')
     p.add_argument('--outline-width', type=float, default=None, help='Subject edge thickness at 1080p, 0.5-20; automatic: solid 2, shimmer 3, holographic 8')
     p.add_argument('--outline-coverage', type=float, default=.35, help='Shimmer edge coverage, 0-1')
     p.add_argument('--outline-arcs', type=int, default=5, help='Shimmer highlight count, 1-12')
     p.add_argument('--outline-speed', type=float, default=1., help='Shimmer speed, 0-5; 0 freezes travel and twinkle')
     p.add_argument('--code-layer', choices=['inside', 'behind'], default='inside', help='Place subject code inside silhouettes or behind all current subjects')
     p.add_argument('--geo-grid', action=argparse.BooleanOptionalAction, default=False, help='Shimmering triangular grid over the frame')
+    p.add_argument('--geo-grid-rotation', type=float, default=0., help='Grid rotation in degrees per second, -10 to 10; independent of brightness speed, 0 is stationary')
     p.add_argument('--geo-grid-scale', type=float, default=160., help='Grid spacing, 40-480 pixels at a 1080px short edge')
     p.add_argument('--geo-grid-jitter', type=float, default=.65, help='Seeded grid irregularity, 0-1')
     p.add_argument('--geo-grid-speed', type=float, default=1., help='Grid brightness animation speed, 0-5; 0 freezes it')
@@ -661,12 +664,16 @@ def parser():
     p.add_argument('--warm-objects', default='person,bird,cat,dog,horse,sheep,cow,elephant,bear,zebra,giraffe', help='Comma-separated object categories to simulate as warm')
     p.add_argument('--hot-objects', default='', help='Explicit comma-separated hot categories, e.g. fire; these are artistic overrides')
     p.add_argument('--confidence', type=float, default=.30, help='Object detection threshold, 0.05-0.95')
+    p.add_argument('--mask-stability', type=float, default=.18, help='Flow-aligned mask smoothing in seconds, 0-1; 0 disables smoothing and hysteresis')
+    p.add_argument('--mask-min-region', type=float, default=.02, help='Minimum overlay island area relative to the largest component, 0-0.2; 0 disables closing and island removal')
     p.add_argument('--detect-interval', type=float, default=.5, help='Seconds between model detections; masks follow optical flow between them')
     p.add_argument('--sensor-resolution', type=int, default=256, help='Heat-field and optional texture grid longest edge, 64-640; smaller is more abstract')
     p.add_argument('--verbose', action='store_true', help='Attach stable glyph callouts to subjects (requires a segmented thermal mode)')
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
+    p.add_argument('--wave-display', choices=['plain', 'led'], default=None, help='Waveform device: plain ink or segmented LED cells; default led for digital-circuit, plain for other styles')
+    p.add_argument('--wave-backlight', type=float, default=.2, help='Unlit LED cell brightness relative to waveform ink, 0-1; independent of glow/neon')
     p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Trace, Rorschach filled/split/hollow, or digital distortion: blocks, shards, stacked segmented vocoder bars (digital-circuit)')
     p.add_argument('--wave-width', type=float, help='Styled waveform maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
     p.add_argument('--wave-height', type=float, help='Styled waveform height as a fraction of the frame, 0.1-1; default 0.96')
@@ -772,7 +779,7 @@ def main(argv=None):
         checks += [(getattr(args, key), 0, 1, '--' + key.replace('_', '-')) for key in ('motion_blur', 'crt_bleed', 'crt_strength', 'heat_glow')]
         checks += [(args.heat_glow_speed, 0, 5, '--heat-glow-speed'), (args.target_acquire, .1, 5, '--target-acquire'),
                    (args.target_flash_rate, 0, 3, '--target-flash-rate'), (args.target_scale, .25, 3, '--target-scale'),
-                   (args.wave_detail, 0, 1, '--wave-detail'), (args.target_stroke, 0, 12, '--target-stroke')]
+                   (args.wave_detail, 0, 1, '--wave-detail'), (args.wave_backlight, 0, 1, '--wave-backlight'), (args.target_stroke, 0, 12, '--target-stroke')]
         if args.wave_width is not None:
             checks.append((args.wave_width, .02, .3, '--wave-width'))
         if args.wave_height is not None:
@@ -782,6 +789,7 @@ def main(argv=None):
         if args.pixelation is not None and args.pixelation != 0:
             checks.append((args.pixelation, 32, 640, '--pixelation'))
         checks += [(args.sensor_resolution, 64, 640, '--sensor-resolution'),
+                   (args.mask_stability, 0, 1, '--mask-stability'), (args.mask_min_region, 0, .2, '--mask-min-region'),
                    (args.detect_interval, .05, 2, '--detect-interval'), (args.confidence, .05, .95, '--confidence')]
         if args.fps is not None:
             checks.append((args.fps, 1, 120, '--fps'))

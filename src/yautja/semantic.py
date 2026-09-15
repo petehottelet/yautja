@@ -14,6 +14,7 @@ import numpy as np
 from PIL import Image
 
 from .thermal import SURFACE_RULES, sensor_size
+from .masks import stabilize_binary
 from .runtime import MODELS, select_device, validate_execution, execution_error
 DEFAULT_WARM = 'person,bird,cat,dog,horse,sheep,cow,elephant,bear,zebra,giraffe'
 
@@ -37,6 +38,7 @@ class Subject:
     # COCO's 17 joint coordinates and confidence, in mask pixel coordinates.
     keypoints: np.ndarray | None = None
     parts: list[SurfacePart] = field(default_factory=list)
+    binary_mask: np.ndarray | None = None
 
 
 def labels(text):
@@ -215,7 +217,7 @@ class GroundedSegmenter:
                 current *= support
                 area = float(current.sum())
                 # Reject empty masks and masks that jump to a different figure.
-                if area >= 8 and area <= max(16, float(track.mask.sum()) * 2) and mask_iou(track.mask, current) >= .1:
+                if area >= 8 and area <= max(16, float(track.mask.sum()) * 2) and mask_iou(track.mask, current) >= getattr(self, 'refine_iou', .1):
                     track.mask = current
             if self.device == 'cuda':
                 self.torch.cuda.synchronize()
@@ -314,12 +316,17 @@ class SemanticTracker:
     This is optical-flow tracking between SAM image masks, not SAM's video-memory
     predictor. IDs are temporary within a shot, not persistent identities.
     """
-    def __init__(self, detector, interval=.5, *, refine_masks=False):
+    def __init__(self, detector, interval=.5, *, refine_masks=False, mask_stability=.18, mask_min_region=.02):
         try:
             import cv2
         except ImportError as exc:
             raise ValueError('Semantic tracking requires opencv-python-headless; install yautja[semantic]>=2,<3.') from exc
         self.cv2, self.detector, self.interval = cv2, detector, interval
+        for name, value, high in (('mask-stability', mask_stability, 1), ('mask-min-region', mask_min_region, .2)):
+            if not math.isfinite(value) or not 0 <= value <= high:
+                raise ValueError(f'--{name} must be between 0 and {high}')
+        self.mask_stability, self.mask_min_region = mask_stability, mask_min_region
+        self.detector.refine_iou = .3 if mask_stability or mask_min_region else .1
         self.refine_masks = refine_masks
         self.refinement_frames = 0
         self.previous = None
@@ -367,6 +374,9 @@ class SemanticTracker:
                     track.keypoints[~valid, 2] = 0
                 track.mask = cv2.remap(track.mask, xx + flow[..., 0], yy + flow[..., 1], cv2.INTER_LINEAR,
                                        borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+                if track.binary_mask is not None:
+                    track.binary_mask = cv2.remap(np.uint8(track.binary_mask), xx + flow[..., 0], yy + flow[..., 1],
+                                                  cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT).astype(bool)
                 for part in track.parts:
                     part.mask = cv2.remap(part.mask, xx + flow[..., 0], yy + flow[..., 1], cv2.INTER_LINEAR,
                                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
@@ -388,7 +398,10 @@ class SemanticTracker:
                     new.keypoints[reliable, :2] = (.8 * new.keypoints[reliable, :2] +
                                                   .2 * old.keypoints[reliable, :2])
                 # Blend only aligned masks; no screen-space trails behind motion.
-                new.mask = new.mask * .85 + old.mask * .15
+                alpha = (1 - math.exp(-(time - self.last_time) / self.mask_stability)
+                         if self.mask_stability and self.refine_masks else .85)
+                new.mask = new.mask * alpha + old.mask * (1-alpha)
+                new.binary_mask = old.binary_mask
                 used_parts = set()
                 for part in new.parts:
                     matches = [(mask_iou(part.mask, previous.mask), k, previous)
@@ -413,7 +426,12 @@ class SemanticTracker:
         elif self.refine_masks and self.tracks:
             # Optical flow predicts prompt positions; current-frame SAM masks
             # supply the visible contour, avoiding accumulated boundary drift.
+            advected = [track.mask.copy() for track in self.tracks] if self.mask_stability else []
             self.detector.refine(frame, self.tracks)
+            if self.mask_stability:
+                alpha = 1 - math.exp(-(time - self.last_time) / self.mask_stability)
+                for track, previous in zip(self.tracks, advected):
+                    track.mask = previous * (1-alpha) + track.mask * alpha
             self.refinement_frames += 1
         # Allow one missed detection, then fade over .5s. Expire old masks so
         # undetected subjects cannot leave permanent hot ghosts in a new scene.
@@ -421,6 +439,9 @@ class SemanticTracker:
         self.tracks = [t for t in self.tracks if time - t.last_seen < expiry and np.any(t.mask > .5)]
         for track in self.tracks:
             track.opacity = min(1., max(0., (expiry - (time - track.last_seen)) / .5))
+            track.binary_mask = (stabilize_binary(track.mask, track.binary_mask, self.mask_stability,
+                                                  self.mask_min_region, min(gray.shape) / 1080)
+                                 if self.mask_stability or self.mask_min_region else None)
         self.previous, self.last_time = gray, time
         self.max_subjects = max(self.max_subjects, len(self.tracks))
         return self.tracks
@@ -430,6 +451,7 @@ class SemanticTracker:
                 'device': self.detector.device, 'detection_frames': self.detection_frames,
                 'mask_refresh': 'frame' if self.refine_masks else 'flow',
                 'mask_refinement_frames': self.refinement_frames,
+                'mask_stability': self.mask_stability, 'mask_min_region': self.mask_min_region,
                 'scene_cuts': self.scene_cuts, 'max_subjects': self.max_subjects,
                 'backend': 'optical-flow',
                 'heat_model': ('segmented skin, clothing, and gear with pose-guided fallback'
