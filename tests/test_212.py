@@ -137,7 +137,7 @@ class Release212Tests(unittest.TestCase):
                 self.assertEqual(r.hud_colors[role],(80,124,255))
             self.assertEqual(r.hud_colors['subject-outline'],(96,153,255))
             for role in ('subject-code','target-motif'):
-                self.assertEqual(r.hud_colors[role],(255,32,184) if name=='relic' else (136,51,255))
+                self.assertEqual(r.hud_colors[role],(247,69,255) if name=='relic' else (136,51,255))
             self.assertEqual(r.signal.subject_code,name=='relic')
             if name=='relic':
                 self.assertEqual(r.signal.code_style,'light')

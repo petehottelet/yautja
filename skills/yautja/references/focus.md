@@ -17,7 +17,7 @@ Focus and Relic use these independently configurable [HUD color roles](hud-eleme
 | HUD, glyphs and reticle | Neon purple `#8833FF` |
 | `geo-grid`, `waveform` | Blue `#507CFF` |
 | `subject-outline` | Holographic blue `#6099FF` |
-| Relic's `subject-code`, `target-motif` | Neon hot pink `#FF20B8` |
+| Relic's `subject-code`, `target-motif` | Violet-leaning neon pink `#F745FF` |
 
 ```bash
 yautja "clip.mov" "focus.mp4" --stylepreset focus

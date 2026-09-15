@@ -153,7 +153,7 @@ Relic adds neon hot-pink triangles that spawn on the selected figure, rise, cont
 
 | Relic |
 | --- |
-| [![Relic: hot-pink ornaments and rising body-centered light streams with a purple HUD and blue grid](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.1-neon)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.1-neon) |
+| [![Relic: hot-pink ornaments and rising body-centered light streams with a purple HUD and blue grid](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.1-pink)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.1-pink) |
 
 <!-- example: {"id": "readme-focus", "tier": "models", "checks": {}} -->
 ```bash

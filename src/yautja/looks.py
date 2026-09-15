@@ -74,7 +74,7 @@ LOOK_PRESETS['focus'] = FOCUS_SETTINGS
 LOOK_PRESETS['relic'] = {
     **FOCUS_SETTINGS,
     'hud_colors': ','.join(f'{key}={value}' for key, value in {
-        **FOCUS_COLORS, 'subject-code': '#FF20B8', 'target-motif': '#FF20B8'}.items()),
+        **FOCUS_COLORS, 'subject-code': '#F745FF', 'target-motif': '#F745FF'}.items()),
     'subject_code': True, 'code_style': 'light', 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
     'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
     'target_motif_speed': 1., 'target_motif_breaks': .7,
