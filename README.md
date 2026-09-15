@@ -26,7 +26,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 
 | Fremont | Murphy |
 | --- | --- |
-| [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.9.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.9.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.10.0) |
+| [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.9.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.9.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.11.0-realtime)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.11.0-realtime) |
 | Netrunner | Focus |
 | [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.11.0-hologram)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.11.0-hologram) |
 
@@ -284,13 +284,13 @@ Choose `--target-fill filled` for translucent enclosed shapes or `--target-fill 
 
 **Murphy** adds a slight blue cast, a glowing green subject outline, and a larger frame-box whose XY axes cross at its center. Its lower-left **TARGETING_** caption uses larger Orbitron Medium lettering with a blinking cursor. The upper-right readout is hidden.
 
-[![Murphy: green frame-box targeting, readable text and CRT scanlines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.10.0)
+[![Murphy: green frame-box targeting, readable text and CRT scanlines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.11.0-realtime)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.11.0-realtime)
 
 ```bash
 yautja "clip.mov" "murphy.mp4" --stylepreset murphy --figures "figures.json" --target S001-F002
 ```
 
-Murphy uses the segmented setup and automatically cycles through subjects. An optional figure catalog restricts the selection. For a lightweight background-only treatment, add `--thermal classic --target-mode selected --no-target-outline`. `--HUDglyphs tech` selects readable letters and numbers; `--hud-font` chooses Michroma, Orbitron Light, Medium, or Bold. `--target-label "LOCK"` changes the caption. [Typography and targeting options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+The four-second Murphy previews run at normal source speed and 24 fps. Murphy uses the segmented setup and automatically cycles through subjects. An optional figure catalog restricts the selection. For a lightweight background-only treatment, add `--thermal classic --target-mode selected --no-target-outline`. `--HUDglyphs tech` selects readable letters and numbers; `--hud-font` chooses Michroma, Orbitron Light, Medium, or Bold. `--target-label "LOCK"` changes the caption. [Typography and targeting options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
 
 ### Fremont style preset
 

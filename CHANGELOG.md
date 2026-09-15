@@ -9,7 +9,7 @@
 - Fade the geodesic grid toward the center, with thicker purple lines and seeded irregular breaks. Add independent center-fade, line-width and break controls.
 - Animate Relic's broken-edge triangles upward, then contract, spin and fade them away. Add ornament speed and break controls, including a frozen state.
 - Triple Relic's code stream density without shrinking its glyphs; extend `--code-density` to 0–3 while preserving sparse values. Focus keeps code off and dense Relic code remains behind every subject.
-- Refresh Focus and Relic GIFs at normal source speed and 24 fps, with matching small and large previews. Keep all controls in portable schema-1 presets.
+- Refresh Focus, Relic and Murphy GIFs at normal source speed and 24 fps, with matching small and large previews. Keep all controls in portable schema-1 presets.
 
 ## 2.10.0
 
