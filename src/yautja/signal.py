@@ -90,7 +90,7 @@ class SignalStyle:
             ('scene-tint-strength', scene_tint_strength, 0, 1), ('scene-exposure', scene_exposure, .1, 2),
             ('scene-highlights', scene_highlights, 0, 1),
             ('outline-coverage', outline_coverage, 0, 1), ('outline-speed', outline_speed, 0, 5),
-            ('code-size', code_size, 8, 80), ('code-speed', code_speed, 0, 5), ('code-density', code_density, 0, 1),
+            ('code-size', code_size, 8, 80), ('code-speed', code_speed, 0, 5), ('code-density', code_density, 0, 3),
             ('subject-head-gap', subject_head_gap, 0, 120), ('subject-title-gap', subject_title_gap, 0, 80),
             ('subject-caret-scale', subject_caret_scale, .25, 3)):
             if not math.isfinite(value) or not low <= value <= high:
@@ -124,7 +124,9 @@ class SignalStyle:
         """Fixed glyph cells, upward bright cursors, fading tails and slow cycling."""
         width, height = size
         cell = max(5, round(self.code_size * min(size) / 1080))
-        pitch_x, pitch_y = cell * 1.15, cell * 1.45
+        # Values above one pack additional streams into the same area while
+        # retaining glyph size. Lower values preserve sparse-column behavior.
+        pitch_x, pitch_y = cell * 1.15 / max(1., self.code_density), cell * 1.45
         x0, y0, x1, y1 = bounds
         # A screen-aligned lattice prevents body motion from dragging the code
         # sideways. Masks reveal the lattice; bright heads travel upward in it.
@@ -152,7 +154,8 @@ class SignalStyle:
                 age = math.floor(time * self.code_speed * (.5 + identity % 19 / 25) + identity % 101 / 101)
                 tile = glyph(stable_number(seed, track_id, col, row, age) % 192, cell)
                 tile = tile.point(lambda v: round(v * alpha / 255))
-                mask.paste(tile, (round(col * pitch_x), round(row * pitch_y)))
+                x, y = round(col * pitch_x), round(row * pitch_y)
+                mask.paste(255, (x, y, x+tile.width, y+tile.height), tile)
         return mask
 
     def shimmer(self, edge, center, time, seed, track_id):

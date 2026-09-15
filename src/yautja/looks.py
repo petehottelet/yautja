@@ -58,6 +58,7 @@ FOCUS_SETTINGS = {
     'outline_arcs': 5, 'outline_speed': 1., 'subject_code': False, 'subject_labels': False,
     'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
     'geo_grid_projection': 'sphere', 'target_mode': 'cycle', 'target_motion': 'persistent',
+    'geo_grid_center_fade': .96, 'geo_grid_width': 2.2, 'geo_grid_breaks': .7,
     'target_shape': 'hexagon', 'target_flash': False, 'target_fill': 'stroked',
     'target_motif': 'none', 'target_label': None,
     'neon': True, 'neon_intensity': 1., 'neon_spread': .9, 'neon_core_whiten': 0.,
@@ -71,8 +72,9 @@ LOOK_PRESETS['relic'] = {
     **FOCUS_SETTINGS,
     'hud_colors': ','.join(f'{key}={value}' for key, value in {
         **FOCUS_COLORS, 'subject-code': '#FF6FDE', 'target-motif': '#FF5BD8'}.items()),
-    'subject_code': True, 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': .55,
+    'subject_code': True, 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
     'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
+    'target_motif_speed': 1., 'target_motif_breaks': .7,
     'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.4,target-motif=0.65',
 }
 LOOK_PRESETS['murphy'] = {

@@ -53,12 +53,12 @@ class PresetRefreshTests(unittest.TestCase):
         d = g.prepare_targets([one], None, 0, 2, self.size)[0]['center']
         self.assertEqual(d, p)
 
-    def test_hexagon_inscribed_ring_ten_satellites_and_center_square(self):
+    def test_hexagon_inset_ring_ten_satellites_and_center_square(self):
         paths, dots = detail_shapes('hexagon', 100, True)
         self.assertEqual(len(paths), 13)
         self.assertFalse(dots)
         self.assertEqual([len(paths[i][0]) for i in (0,1,12)], [6,64,4])
-        self.assertAlmostEqual(np.linalg.norm(paths[1][0][0]), .74*np.cos(np.pi/6))
+        self.assertAlmostEqual(np.linalg.norm(paths[1][0][0]), .9*.74*np.cos(np.pi/6))
         centers = [np.mean(path, axis=0) for path, _ in paths[2:12]]
         self.assertEqual(sum(np.linalg.norm(c) > .74 for c in centers), 4)
         self.assertEqual(sum(np.linalg.norm(c) < .64 for c in centers), 6)

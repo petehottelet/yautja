@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.11.0
+
+- Inset the large circle inside the Focus/Relic hexagon by 10%, keeping the smaller circles and center square unchanged.
+- Fade the geodesic grid toward the center, with thicker purple lines and seeded irregular breaks. Add independent center-fade, line-width and break controls.
+- Animate Relic's broken-edge triangles upward, then contract, spin and fade them away. Add ornament speed and break controls, including a frozen state.
+- Triple Relic's code stream density without shrinking its glyphs; extend `--code-density` to 0–3 while preserving sparse values. Focus keeps code off and dense Relic code remains behind every subject.
+- Refresh Focus and Relic GIFs at normal source speed and 24 fps, with matching small and large previews. Keep all controls in portable schema-1 presets.
+
 ## 2.10.0
 
 - Rename the original look to Costa Rica and HotTropic to Yautja; the new Yautja includes red HUD, cyan annotations and CRT lines. Refresh the large README hero and four compact style previews.

@@ -27,7 +27,7 @@ def detail_shapes(shape, radius, locked):
         def ring(x, y, r):
             paths.append(([(x + r * math.cos(a), y + r * math.sin(a))
                            for a in np.linspace(0, math.tau, 65)[:-1]], True))
-        ring(0, 0, .74 * math.cos(math.pi / 6))
+        ring(0, 0, .9 * .74 * math.cos(math.pi / 6))
         for x in (-1.03, -.84, .84, 1.03):
             ring(x, 0, .038)
         for x, y in ((-.4,0),(-.22,0),(.22,0),(.4,0),(0,-.24),(0,.24)):

@@ -4,7 +4,7 @@ A style preset is a recipe of ordinary visual settings. All controls below save 
 
 ## Complete styles
 
-**Focus** uses a blue-violet source scene and neon-purple HUD. A curved, triangulated geodesic sphere wraps around the viewpoint. A single persistent hexagon glides between subjects, without acquisition zoom. Its central circle is inscribed in the hexagon, with six small circles inside, four outside, and a small central square. **Relic** adds pink triangle ornaments and rising code behind all silhouettes. **Murphy** uses a blue cast, glowing green targeting and current-mask outlines, a 25% larger box with center-crossing XY axes, and large Orbitron Medium text with a blinking underscore. Its waveform and upper-right readout are hidden.
+**Focus** uses a blue-violet source scene and neon-purple HUD. A curved, triangulated geodesic sphere wraps around the viewpoint; thicker broken lines fade toward the center. A single persistent hexagon glides between subjects, without acquisition zoom. Its central circle is 90% of the inscribed radius, with six small circles inside, four outside, and a small central square. **Relic** adds pink broken-edge triangles that rise, contract, spin and fade away, plus dense rising code behind all silhouettes. Focus keeps code off. **Murphy** uses a blue cast, glowing green targeting and current-mask outlines, a 25% larger box with center-crossing XY axes, and large Orbitron Medium text with a blinking underscore. Its waveform and upper-right readout are hidden.
 
 All three use the segmented runtime and automatically cycle through subjects. A catalog is optional and limits the candidate pool. Focus and Relic use persistent motion; Murphy retains acquisition animation. For Murphy's source grade alone without models, use `--thermal classic --target-mode selected --no-target-outline`.
 
@@ -24,6 +24,7 @@ yautja "clip.mov" "selected.mp4" --stylepreset focus --figures "figures.json" --
 | `--outline-arcs` | `5` | Number of highlights, integer 1–12 |
 | `--outline-speed` | `1` | Travel and twinkle speed, 0–5; 0 freezes both |
 | `--code-layer inside\|behind` | `inside` | Placement of `--subject-code`; behind-code extends above and beside subjects |
+| `--code-density` | `0.65` | Stream density, 0–3; below 1 selects a fraction of columns, above 1 packs more streams into the same area without shrinking glyphs. Relic uses 1.65, three times its former 0.55 density |
 
 The final behind-code glow and blur are occluded by the union of current visible subject masks, including overlapping subjects. Other HUD elements remain visible over figures. Current masks drive the outline position; shimmer brightness moves around edge regions, using an angular approximation rather than exact contour distance. Seed and track IDs keep the motion reproducible. Stills freeze shimmer and behind-code at time zero.
 
@@ -37,12 +38,17 @@ The final behind-code glow and blur are occluded by the union of current visible
 | `--geo-grid-scale` | `160` | Spacing, 40–480 reference pixels at a 1080px short edge |
 | `--geo-grid-jitter` | `0.65` | Seeded vertex irregularity, 0–1 |
 | `--geo-grid-speed` | `1` | Brightness animation, 0–5; 0 freezes it |
+| `--geo-grid-center-fade` | `0` | Center attenuation, 0–1; 0 is uniform, 1 clears the center. Focus/Relic use 0.96; outer edges retain their brightness |
+| `--geo-grid-width` | `1.3` | Line thickness, 0.5–6 reference pixels at a 1080px short edge; Focus/Relic use 2.2 |
+| `--geo-grid-breaks` | `0` | Seeded irregular gaps, 0–1; 0 keeps continuous lines. Focus/Relic use 0.7 |
 | `--target-mode selected\|auto\|cycle` | `selected` | Catalog selections, all automatic subjects, or one cycling subject; catalogs supply the candidate pool |
-| `--target-shape hexagon` | — | Hexagon, inscribed circle, ten small circles and center square |
+| `--target-shape hexagon` | — | Hexagon, circle at 90% of its inscribed radius, ten small circles and center square |
 | `--target-shape frame-box` | — | Box with center-crossing XY axes extending to frame edges; stays axis-aligned |
 | `--target-motif none\|triangles` | `none` | Seeded hollow triangle ornaments around each visible target |
 | `--target-motif-count` | `7` | Triangles per target, integer 0–24 |
 | `--target-motif-scale` | `1` | Ornament size and spread, 0.25–3 |
+| `--target-motif-speed` | `1` | Rise, contraction and spin speed, 0–5; 0 freezes the ornaments |
+| `--target-motif-breaks` | `0` | Unequal, seeded gaps in triangle edges, 0–1; Relic uses 0.7 |
 | `--target-label` | Unset | One readable lower-left caption, 1–24 printable ASCII characters; preserves case |
 | `--no-target-label` | — | Clear a caption inherited from a style preset |
 | `--geo-grid-projection flat\|sphere` | `flat` | Flat lattice or great-circle arcs on a subdivided icosahedron, projected from the sphere center |
@@ -60,7 +66,11 @@ The new HUD elements are `geo-grid`, `target-motif`, `target-label`, and `target
 ```bash
 yautja "clip.mov" "custom.mp4" --stylepreset focus --geo-grid-scale 220 --target-motif triangles --target-label "LOCK"
 yautja --stylepreset focus --geo-grid-scale 220 --save-preset "my-focus.json"
+yautja "clip.mov" "broken-grid.mp4" --stylepreset focus --geo-grid-center-fade 1 --geo-grid-width 2.5 --geo-grid-breaks 0.8
+yautja "clip.mov" "relic-motion.mp4" --stylepreset relic --target-motif-speed 1.2 --target-motif-breaks 0.7 --code-density 1.65
 ```
+
+Triangle lifetimes and edge gaps are seeded independently. Each ornament fades in, drifts slightly upward, then shrinks and spins out before its next cycle. Stills freeze the ornaments and code at time zero. Grid gaps stay fixed while brightness shimmers, so they do not flicker randomly between frames. These controls work in both grid projections and save with the preset.
 
 An editable [Wide Focus example](../assets/presets/focus.json) demonstrates a compact preset based on Focus.
 

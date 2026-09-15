@@ -236,7 +236,9 @@ class Renderer:
                  geo_grid=False, geo_grid_scale=160., geo_grid_jitter=.65, geo_grid_speed=1., geo_grid_projection='flat',
                  target_mode='selected', target_motif='none', target_motif_count=7, target_motif_scale=1., target_label=None,
                  target_motion='acquire', target_hold=3., target_response=.6, target_fill='auto', target_outline=False,
-                 target_label_scale=1., target_cursor=False):
+                 target_label_scale=1., target_cursor=False,
+                 geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
+                 target_motif_speed=1., target_motif_breaks=0.):
         self.width, self.height = width, height
         if hud_glyphs not in ('yautja', 'cyber', 'tech'):
             raise ValueError('--HUDglyphs must be yautja, cyber, or tech')
@@ -248,7 +250,10 @@ class Renderer:
                                       target_motif_count=target_motif_count, target_motif_scale=target_motif_scale,
                                       target_label=target_label, target_motion=target_motion, target_hold=target_hold,
                                       target_response=target_response, target_fill=target_fill, target_outline=target_outline,
-                                      target_label_scale=target_label_scale, target_cursor=target_cursor)
+                                      target_label_scale=target_label_scale, target_cursor=target_cursor,
+                                      geo_grid_center_fade=geo_grid_center_fade, geo_grid_width=geo_grid_width,
+                                      geo_grid_breaks=geo_grid_breaks, target_motif_speed=target_motif_speed,
+                                      target_motif_breaks=target_motif_breaks)
         self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
                                     analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin,
                                     analysis_outline_width=analysis_outline_width, analysis_target=analysis_target,

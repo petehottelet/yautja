@@ -41,7 +41,7 @@ Select geometry with `--target-shape`. Every shape uses the same selected figure
 | `square-cross` | Corner brackets with an open-center cross |
 | `square-mil` | Corner brackets with a graduated cross |
 | `square-x` | Corner brackets with four diagonal center marks |
-| `hexagon` | Hexagon, inscribed circle, four outer and six inner targeting circles, central square |
+| `hexagon` | Hexagon, circle at 90% of the inscribed radius, four outer and six inner targeting circles, central square |
 | `frame-box` | Rectangle with horizontal and vertical axes crossing at its center and extending to the frame edges |
 
 `crosshair`, `hollow-cross`, `round-dot`, `square`, `square-cross`, `square-mil`, and `square-x` lock at 85% of their previous size. Their acquisition still starts at the same size and contracts to the smaller final shape; `--target-scale` multiplies this final size.

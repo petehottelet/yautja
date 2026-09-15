@@ -1,5 +1,7 @@
 # Integration contract
 
+Grid center fade, width and irregular breaks (`geo_grid_center_fade`, `geo_grid_width`, `geo_grid_breaks`) and triangle animation speed/breaks (`target_motif_speed`, `target_motif_breaks`) are visual preset settings. `code_density` accepts 0–3: existing 0–1 values retain sparse-column behavior; higher values increase stream count at the same glyph size. These remain flat schema-1 settings; animation phase and cached paths are runtime state.
+
 The supported interface is the `yautja` CLI, equivalently the chosen environment's `python -m yautja`, its exit codes (0 success, 1 conversion/runtime failure, 2 invalid arguments, 130 cancellation), and the versioned JSON conversion report. Inspect `--help` for available controls.
 
 `import yautja` exposes `__version__` without loading image or ML libraries. `yautja.runtime` is also safe to import without those dependencies. Installation metadata comes from the installed distribution; contributors should use an editable install.

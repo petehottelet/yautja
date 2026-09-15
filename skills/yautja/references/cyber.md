@@ -38,7 +38,7 @@ Neon intensity is `0.35`, spread `0.3`, and core whitening `0`, which preserves 
 | `--subject-caret-scale` | 0.25–3; default 1 | Caret size; Netrunner uses 1.35 |
 | `--code-size` | 8–80; default 22 | Glyph size in reference pixels at a 1080px short edge |
 | `--code-speed` | 0–5; default 1 | Upward speed; 0 freezes the code |
-| `--code-density` | 0–1; default 0.65, Netrunner 0.95 | Fraction of active columns; 0 hides code |
+| `--code-density` | 0–3; default 0.65, Netrunner 0.95, Relic 1.65 | Below 1 selects a fraction of columns; above 1 adds streams without shrinking glyphs. 0 hides code |
 | `--neon-core-whiten` | 0–1; default 1 | 0 keeps colored cores; 1 uses the standard pale core |
 
 Outside Netrunner, the three subject overlays default off. Each requires a segmented thermal mode in the CLI. `--scene-mode source` changes the scene renderer: palettes, thermal detail/levels, and heat glow do not recolor that source scene. Grain, pixelation, CRT, VHS, and motion blur remain usable. Switch back with `--scene-mode thermal` to use thermal colors again.

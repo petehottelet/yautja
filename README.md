@@ -28,7 +28,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 | --- | --- |
 | [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.9.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.9.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.10.0) |
 | Netrunner | Focus |
-| [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.10.0) |
+| [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.11.0) |
 
 The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The smaller previews show four alternative styles. The waveform follows the original source audio. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png?v=2.10.0).
 
@@ -260,14 +260,16 @@ Outlines use freshly segmented contours on each frame, while optical flow predic
 
 ### Focus and Relic style presets
 
-**Focus** keeps source detail under a blue-violet tint, with a glowing purple geodesic sphere surrounding the viewpoint. One persistent hexagon glides between subjects. It contains an inscribed circle, six small inner circles, four outer circles, and a central square. **Relic** adds pink triangle ornaments and upward code behind the figures; their silhouettes block the code and its glow.
+**Focus** keeps source detail under a blue-violet tint, with a glowing purple geodesic sphere surrounding the viewpoint. Thicker, irregularly broken grid lines fade toward the screen center. One persistent hexagon glides between subjects; its large circle sits 10% inside the inscribed boundary, with six small inner circles, four outer circles, and a central square. **Relic** adds pink triangles with broken edges that drift upward, contract, spin and disappear. Its upward code is three times denser, at the same glyph size, and stays behind the figures; their silhouettes block both code and glow. Focus keeps code off by default.
 
 | Focus | Relic |
 | --- | --- |
-| [![Focus: purple spherical geodesic grid, edge highlights and one persistent hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.10.0) | [![Relic: pink target ornaments and rising code behind figures](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.10.0) |
+| [![Focus: purple spherical geodesic grid, edge highlights and one persistent hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.11.0) | [![Relic: pink target ornaments and rising code behind figures](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.11.0) |
 | `--stylepreset focus` | `--stylepreset relic` |
 
-Both use the segmented setup. They cycle through detected subjects one at a time, with smooth motion and no acquisition zoom. Add `--figures "figures.json" --target S001-F002` to select a particular figure instead. The previews slow one continuous shot to show the animation. Each ingredient is independently configurable: `--geo-grid`, `--outline-style shimmer`, `--target-shape hexagon`, `--target-motif triangles`, and `--code-layer behind`. [Recipes, controls, and an editable preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+Both use the segmented setup. They cycle through detected subjects one at a time, with smooth motion and no acquisition zoom. Add `--figures "figures.json" --target S001-F002` to select a particular figure instead. The four-second previews run at normal source speed and 24 fps. Each ingredient is independently configurable: `--geo-grid`, `--outline-style shimmer`, `--target-shape hexagon`, `--target-motif triangles`, and `--code-layer behind`. [Recipes, controls, and an editable preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+
+Use `--geo-grid-center-fade 1` for a clear center, `--geo-grid-width 2.2` for thicker lines, and `--geo-grid-breaks 0.7` for irregular gaps. Relic uses `--code-density 1.65`, three times its former 0.55 stream density; the supported range is 0–3. `--target-motif-speed 0` freezes the triangle animation, and `--target-motif-breaks 0` restores continuous edges.
 
 Choose `--target-fill filled` for translucent enclosed shapes or `--target-fill stroked` for outlines. `auto` preserves each shape’s original styling. Movement is separate: `--target-motion persistent` keeps one reticle moving continuously; `--target-motion acquire` uses the assembly animation.
 
@@ -370,7 +372,7 @@ python -m yautja "clip.mov" "outputs/clip-vhs.mp4" --thermal cinematic --palette
 python -m yautja "clip.mov" "outputs/clip-virtualboy.mp4" --thermal silhouette --palette virtualboy
 ```
 
-All comparison GIFs use the same three-second slice at 12 fps, with the original audio driving the waveform. Embedded previews are 480×270; click one to open its **960×540 large version**, rendered with HUD and textures at that size. The hero uses 640×360. They compare styling choices, not model accuracy. The source footage stays local.
+Comparison GIFs use the same source footage, with ranges chosen for each effect; Focus and Relic show four seconds at normal speed and 24 fps. Embedded previews are 480×270; click one to open its **960×540 large version**, rendered with HUD and textures at that size. The hero is also 960×540. They compare styling choices, not model accuracy. The source footage stays local.
 
 ### Heat glow, vertical CRT lines, and adjustable trails
 
@@ -452,7 +454,7 @@ Click any preview for its large animated GIF. [Selection, target colors, and eff
 
 | Thin hexagon | Frame-box with screen axes |
 | --- | --- |
-| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.10.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.10.0) |
+| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.11.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.11.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.10.0) |
 | `--target-shape hexagon` | `--target-shape frame-box` |
 
 `--target-mode auto` uses segmented subjects automatically. The default `selected` mode uses the catalog below. Explicit catalog selections take precedence over automatic mode, including frames where a selected figure is absent. `--target-motif triangles` and `--target-label "TARGETING"` add independent ornaments and a readable caption; both follow target visibility.

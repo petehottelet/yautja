@@ -200,7 +200,7 @@ class SignalTests(unittest.TestCase):
             self.assertEqual(renderer.signal.scene_mode, 'source')
 
     def test_invalid_values_rejected_before_media_or_models(self):
-        for flags in (['--code-speed', '-1'], ['--scene-exposure', 'nan'], ['--code-density', '2'],
+        for flags in (['--code-speed', '-1'], ['--scene-exposure', 'nan'], ['--code-density', '3.1'],
                       ['--scene-tint', 'badcolor'], ['--neon-core-whiten', '2'], ['--subject-code']):
             with self.subTest(flags=flags), patch('sys.stderr', new_callable=io.StringIO), \
                     patch('yautja.cli.convert') as convert:
