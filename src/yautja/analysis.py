@@ -178,7 +178,7 @@ class AnalysisHUD:
                 ss = 2
                 fine = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(
                     (width * ss, height * ss), Image.Resampling.BILINEAR).point(lambda v: 255 if v >= 128 else 0)
-                outline_width = max(1, round(self.analysis_outline_width * min(width, height) / 1080 * ss))
+                outline_width = max(2, math.ceil(self.analysis_outline_width * min(width, height) / 1080 * ss))
                 edge = ImageChops.subtract(fine, fine.filter(ImageFilter.MinFilter(2 * outline_width + 1)))
                 edge = edge.resize(image.size, Image.Resampling.LANCZOS)
                 edge = edge.point(lambda v: round(v * min(1., subject.opacity)))

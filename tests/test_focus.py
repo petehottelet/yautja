@@ -90,6 +90,20 @@ class FocusTests(unittest.TestCase):
         face = HUDTypography(hud_font_file=path)
         self.assertEqual(face.report()['hud_font_file'], str(path.resolve()))
 
+    def test_fremont_outline_is_thicker_at_readme_preview_size(self):
+        size = (480, 270)
+        mask = np.zeros((270, 480), np.float32)
+        mask[60:245, 210:285] = 1
+        subject = Subject(mask, 'person', .95, track_id=1)
+        counts = []
+        for width in (2.4, 5.):
+            r = Renderer(*size, look_preset='fremont', analysis_outline_width=width,
+                         hud_opacity=0, hud_opacity_elements='analysis-outline=1', glow=0)
+            image = Image.new('RGB', size)
+            r.analysis.draw(r, image, [subject], 0, 1, static=True)
+            counts.append(np.count_nonzero(np.asarray(image).max(axis=2) > 100))
+        self.assertGreater(counts[1], counts[0] * 1.25)
+
     def test_tech_routes_every_text_consumer_through_readable_faces(self):
         r = Renderer(*self.size, hud_glyphs='tech', hud_font='orbitron-bold',
                      subject_code=True, subject_labels=True, verbose=True, show_timecode=True)
