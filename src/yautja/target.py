@@ -39,8 +39,10 @@ def detail_shapes(shape, radius, locked):
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * .40, y * .72), (x * .72, y * .72), (x * .72, y * .40)], False))
     if shape == 'triangle-dots' and locked:
-        # Reduce the three lock dots by 12%, preserving their centers.
-        circles = [(0, -.23, .0924), (-.25, .16, .0924), (.25, .16, .0924)]
+        # Contract center spacing by 15% around the cluster's centroid; retain
+        # the existing dot radii (12% smaller than the original artwork).
+        circles = [(x * .85, .03 + (y - .03) * .85, .0924)
+                   for x, y in ((0, -.23), (-.25, .16), (.25, .16))]
     elif shape in ('crosshair', 'square-cross', 'square-mil'):
         outer = .9 if shape == 'crosshair' else .46
         for axis in (0, 1):

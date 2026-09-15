@@ -48,19 +48,23 @@ class TargetShapeTests(unittest.TestCase):
         np.testing.assert_array_equal(np.asarray(base.draw(background, 1.1, self.targets, self.colors)),
                                       np.asarray(dots.draw(background, 1.1, self.targets, self.colors)))
 
-    def test_triangle_dot_diameters_shrink_twelve_percent_without_moving_centers(self):
+    def test_triangle_dot_spacing_contracts_fifteen_percent_without_resizing_dots(self):
         _, dots = detail_shapes('triangle-dots', 100, True)
-        self.assertEqual([(x,y) for x,y,_ in dots], [(0,-.23),(-.25,.16),(.25,.16)])
+        original = np.array([(0,-.23),(-.25,.16),(.25,.16)])
+        centers = np.array([(x,y) for x,y,_ in dots])
+        np.testing.assert_allclose(centers.mean(axis=0), original.mean(axis=0), atol=1e-15)
+        for a, b in ((0,1), (1,2), (2,0)):
+            self.assertAlmostEqual(np.linalg.norm(centers[a]-centers[b]) / np.linalg.norm(original[a]-original[b]), .85)
         for _, _, radius in dots:
             self.assertAlmostEqual(radius / .105, .88)
         self.assertEqual(detail_shapes('triangle-dots', 100, False)[1], [])
-        self.assertEqual([r for _,_,r in detail_shapes('round-dot', 100, True)[1]], [.1]*3)
+        self.assertEqual(detail_shapes('round-dot', 100, True)[1], [(0,-.23,.1),(-.25,.16,.1),(.25,.16,.1)])
 
     def test_stroked_bands_and_dots_keep_hollow_interiors(self):
         size = (960,540)
         probes = {'crosshair':(.3,0), 'square':(.72,.55), 'square-cross':(.72,.55),
                   'square-mil':(.72,.55), 'square-x':(.72,.55), 'hollow-cross':(.3,.65),
-                  'round-dot':(0,-.23), 'triangle-dots':(0,-.23)}
+                  'round-dot':(0,-.23), 'triangle-dots':(0,-.191)}
         for shape, (x,y) in probes.items():
             frames=[]
             for fill in ('filled','stroked'):
