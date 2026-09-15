@@ -18,6 +18,14 @@ with Image.open('photo.jpg') as source:
 
 This low-level example does not perform the CLI's orientation, metadata, input/output protection or atomic-write checks. Prefer the CLI for end-user conversion. Other helpers, classes and module internals are not a promised stable API merely because tests or repository tools import them.
 
+## 2.8 geometry and typography
+
+`--stylepreset focus`, `relic`, and `murphy` add shared grid, shimmer, code-layer, target ornament/caption, and readable-font controls. [Options and ranges](../skills/yautja/references/focus.md). The preset schema remains version 1 with additive flat visual keys; local `hud_font_file` paths are excluded. `hud_font` selects a portable bundled font and `hud_glyphs` now accepts `tech`.
+
+The experimental renderer uses `targets=None` to permit automatic segmented targets when `target_mode="auto"`; supplying a list, including an empty list, overrides automatic selection. `target_mode="selected"` remains the default. Maps add `geo-grid`, `target-motif`, and `target-label`. Reports include geometry controls, font family/weight and the runtime custom path when used. Automatic track IDs in `targets_seen` use `auto-<track_id>`; `targets` remains the list of requested catalog IDs.
+
+Fremont now selects `hud_font="orbitron-bold"` and `analysis_outline_width=5` (0.5–12 reference pixels, default 2.4). These are ordinary saved visual settings. Readable font selection also applies to analysis and captions when the glyph set remains Yautja or Cyber. `--no-target-label` clears an inherited caption.
+
 ## 2.7 Fremont analysis
 
 `--stylepreset fremont` combines a detailed red/burgundy source scene with white readable analysis text, a moving XY grid and blinking subject outlines. It requires segmented setup, automatically selects visible subjects, and needs no figure catalog. The JSON/experimental Python keys are `analysis` (bool), `analysis_speed` (0–5), `analysis_blink_rate` (0–4), `analysis_margin` (0.01–0.15), and `scene_highlights` (0–1). All are visual preset settings. The HUD maps add `analysis-grid`, `analysis-text`, and `analysis-outline`.

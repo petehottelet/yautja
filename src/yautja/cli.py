@@ -29,6 +29,8 @@ from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, COMPLETE_PRESETS
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES, resolve_target_shape
 from .signal import SIGNAL_OPTIONS, SignalStyle
+from .geometry import GEO_OPTIONS, TARGET_OPTIONS, GeometryStyle
+from .typography import FONT_FILES, HUDTypography
 from .analysis import ANALYSIS_OPTIONS, AnalysisHUD
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
@@ -36,7 +38,7 @@ EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_fla
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
-                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS)
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, 'hud_font', 'hud_font_file')
 
 
 def target_selection(args, source):
@@ -53,14 +55,15 @@ def extra_report(renderer, selection, *, static=False):
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
     outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
                                                             for key in ('target', 'target-flash'))
-    return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), 'hud_glyphs': renderer.hud_glyphs,
+    return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), **renderer.geometry.report(renderer.hud),
+            **renderer.typography.report(), 'hud_glyphs': renderer.hud_glyphs,
             'look_preset': renderer.look_preset,
             'target_shape': renderer.target_overlay.shape,
             'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
             'targets_unseen': unseen, 'target_frames': renderer.target_overlay.frames,
             'target_colors': [renderer.colors.report()['hud_colors'][k] for k in ('target', 'target-flash')],
             'target_acquire': renderer.target_overlay.acquire,
-            'target_flash': bool(selected and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
+            'target_flash': bool(renderer.hud and (selected or renderer.geometry.target_mode == 'auto') and renderer.target_overlay.flash_rate and not static), 'target_flash_rate': renderer.target_overlay.flash_rate,
             'target_scale': renderer.target_overlay.scale, 'motion_blur': renderer.display.motion_blur,
             'target_stroke': renderer.target_overlay.stroke if renderer.hud else 0.,
             'target_stroke_colors': [hex_color(color) for color in outline],
@@ -244,7 +247,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis) and not args.list_figures)
+                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis or args.subject_code or args.target_mode == 'auto') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -300,8 +303,8 @@ def convert_image(args):
                         pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                         palette_colors=args.palette_colors, hud_theme=args.hud_theme,
                         hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud,
-                        **{key: getattr(args, key) for key in EFFECT_OPTIONS})
-    targets, shot = selection.at(0.) if selection else ([], None)
+                        **{key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
+    targets, shot = selection.at(0.) if selection else (None, None)
     rendered = renderer.render(frame, 0., subjects=subjects, targets=targets, shot_id=shot, target_static=True)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
@@ -333,7 +336,7 @@ def convert_image(args):
     report.update(renderer.colors.report())
     report.update(extra_report(renderer, selection, static=True))
     report.update(preset_report(args))
-    report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
+    report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
     report['settings']['target'] = args.target
     if tracker:
         report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
@@ -410,7 +413,7 @@ def convert_video(args):
                                 pixelation=args.pixelation, scanlines=args.scanlines, vhs=args.vhs,
                                 palette_colors=args.palette_colors, hud_theme=args.hud_theme,
                                 hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud,
-                                **{key: getattr(args, key) for key in EFFECT_OPTIONS})
+                                **{key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
             intermediate = temp / 'picture.mp4'
             decode_cmd = [ffmpeg, '-v', 'error', '-nostdin', *time_options, '-i', str(source), '-map', f"0:{video['index']}",
                           *length_options, '-an', '-sn', '-dn', '-vf', ','.join(filters), '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1']
@@ -430,7 +433,7 @@ def convert_video(args):
                         wave = analysis.waveform(args.start + t, args.wave_window, args.wave_gain) if mode == 'audio' else None
                         frame = Image.frombytes('RGB', (width, height), raw)
                         subjects = tracker.update(frame, t) if tracker else ()
-                        targets, shot = selection.at(args.start + t) if selection else ([], getattr(tracker, 'scene_cuts', None))
+                        targets, shot = selection.at(args.start + t) if selection else (None, getattr(tracker, 'scene_cuts', None))
                         encoded = renderer.render(frame, t, wave, subjects, targets=targets, shot_id=shot)
                         encoder.stdin.write(encoded.tobytes())
                         frames += 1
@@ -495,7 +498,7 @@ def convert_video(args):
             report.update(renderer.colors.report())
             report.update(extra_report(renderer, selection))
             report.update(preset_report(args))
-            report['settings'].update({key: getattr(args, key) for key in EFFECT_OPTIONS})
+            report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
             report['settings']['target'] = args.target
             if tracker:
                 report['semantic'] = tracker.report()
@@ -547,7 +550,7 @@ def parser():
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
-    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Netrunner, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
     source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
     management = p.add_mutually_exclusive_group()
     management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
@@ -560,7 +563,7 @@ def parser():
     p.add_argument('--thermal-gamma', type=float, default=1., help='Thermal response exponent, 0.25–4; above 1 darkens intermediate warmth')
     p.add_argument('--thermal-softness', type=float, default=0., help='Scalar Gaussian softness, 0–8 pixels at a 1920px longest edge; separate from band transitions and glow')
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (white for White Hot, black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
-    p.add_argument('--HUDglyphs', dest='hud_glyphs', choices=['yautja', 'cyber'], default='yautja', help='Glyph set for all alien HUD text, subject titles, and silhouette code: Yautja or Cyber (192 generated glyphs). Human-readable timecode stays numeric')
+    p.add_argument('--HUDglyphs', dest='hud_glyphs', choices=['yautja', 'cyber', 'tech'], default='yautja', help='HUD glyph set: Yautja, Cyber (192 generated glyphs), or readable Tech letters and numbers. Tech uses --hud-font; timecode stays numeric')
     p.add_argument('--scene-mode', choices=['thermal', 'source'], default='thermal', help='Color a thermal field (default) or retain the RGB source scene with configurable tint and exposure')
     p.add_argument('--scene-tint', default='#548568', help='RGB hex tint for source scene mode; default muted green #548568')
     p.add_argument('--scene-tint-strength', type=float, default=.8, help='Source tint blend, 0-1; 0 preserves source colors')
@@ -570,6 +573,24 @@ def parser():
     p.add_argument('--analysis-speed', type=float, default=1., help='Search/acquire/analysis/hold cycle speed, 0-5; 1 takes six seconds, 0 freezes the search')
     p.add_argument('--analysis-blink-rate', type=float, default=2., help='Outline blinks per second during analysis, 0-4; 0 keeps it steady')
     p.add_argument('--analysis-margin', type=float, default=.035, help='Safe margin for readable analysis text as a fraction of the short frame edge, 0.01-0.15')
+    p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
+    p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
+    p.add_argument('--outline-style', choices=['solid', 'shimmer'], default='solid', help='Subject outline rendering style; enable with --subject-outline')
+    p.add_argument('--outline-coverage', type=float, default=.35, help='Shimmer edge coverage, 0-1')
+    p.add_argument('--outline-arcs', type=int, default=5, help='Shimmer highlight count, 1-12')
+    p.add_argument('--outline-speed', type=float, default=1., help='Shimmer speed, 0-5; 0 freezes travel and twinkle')
+    p.add_argument('--code-layer', choices=['inside', 'behind'], default='inside', help='Place subject code inside silhouettes or behind all current subjects')
+    p.add_argument('--geo-grid', action=argparse.BooleanOptionalAction, default=False, help='Shimmering triangular grid over the frame')
+    p.add_argument('--geo-grid-scale', type=float, default=160., help='Grid spacing, 40-480 pixels at a 1080px short edge')
+    p.add_argument('--geo-grid-jitter', type=float, default=.65, help='Seeded grid irregularity, 0-1')
+    p.add_argument('--geo-grid-speed', type=float, default=1., help='Grid brightness animation speed, 0-5; 0 freezes it')
+    p.add_argument('--target-mode', choices=['selected', 'auto'], default='selected', help='Selected catalog targets or automatic segmented subjects; explicit --target selections take precedence')
+    p.add_argument('--target-motif', choices=['none', 'triangles'], default='none', help='Independent hollow-triangle target ornaments')
+    p.add_argument('--target-motif-count', type=int, default=7, help='Triangles per visible target, 0-24')
+    p.add_argument('--target-motif-scale', type=float, default=1., help='Triangle ornament scale, 0.25-3')
+    p.add_argument('--target-label', help='Readable target caption, 1-24 printable ASCII characters; only shown with a visible target')
+    p.add_argument('--no-target-label', dest='target_label', action='store_const', const=None, help='Clear an inherited target caption')
+    p.add_argument('--analysis-outline-width', type=float, default=2.4, help='Analysis outline thickness, 0.5-12 pixels at a 1080px short edge; Fremont uses 5')
     p.add_argument('--subject-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline detected subject silhouettes; requires a segmented mode')
     p.add_argument('--subject-code', action=argparse.BooleanOptionalAction, default=False, help='Flow glyph code upward inside detected silhouettes; requires a segmented mode')
     p.add_argument('--subject-labels', action=argparse.BooleanOptionalAction, default=False, help='Stable overhead glyph titles and downward carets for detected subjects; requires a segmented mode')
@@ -682,8 +703,10 @@ def main(argv=None):
         NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed, args.neon_core_whiten)
         SignalStyle(**{key: getattr(args, key) for key in SIGNAL_OPTIONS})
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis):
-            p.error('Subject outlines, code, titles, and --analysis require --thermal low-detail, cinematic, detailed, or very-detailed')
+        GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
+        HUDTypography(args.hud_font, args.hud_font_file)
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis or (args.target_mode == 'auto' and not args.target)):
+            p.error('Subject outlines, code, titles, analysis, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.8.0
+
+- Add Focus and Relic source-scene presets with shimmering triangular grids, partial moving edge highlights, automatic hexagon targets, and pink ornaments/code behind figures.
+- Add Murphy with a readable green Tech HUD, CRT scanlines, frame-spanning box reticles and target captions. Catalog-based conversion uses the lightweight runtime.
+- Add independent grid, shimmer, code-layer, automatic targeting, ornament and caption options. All new HUD elements support color, opacity, blur, and neon; behind-code clips final glow against all visible silhouettes.
+- Add bundled Orbitron Light, Medium and Bold fonts, selectable readable typography and validated local font overrides. Fremont now uses Orbitron Bold and thicker adjustable analysis outlines.
+- Keep visual presets flat and portable in schema version 1; custom font paths remain per-conversion. Update recipes, controls, GIF examples and packaged-font checks.
+
 ## 2.7.0 — 2026-09-14
 
 - Add Fremont: detailed red/burgundy source grading with pale highlights, white readable analysis text, moving XY search grid, automatic subject selection, and blinking white outlines. Text stays within safe margins; cuts and lost tracks restart search. Decorative telemetry is seeded, while category labels come from detections.

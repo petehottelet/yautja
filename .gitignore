@@ -33,6 +33,9 @@ NOTES.md
 !assets/wordmark.svg
 *.ttf
 !src/yautja/assets/fonts/Michroma-Regular.ttf
+!src/yautja/assets/fonts/Orbitron-Light.ttf
+!src/yautja/assets/fonts/Orbitron-Medium.ttf
+!src/yautja/assets/fonts/Orbitron-Bold.ttf
 *.otf
 *.woff
 *.woff2

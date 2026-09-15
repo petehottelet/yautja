@@ -13,7 +13,8 @@ from .colors import parse_hex
 
 SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure', 'scene_highlights',
                   'subject_outline', 'subject_code', 'subject_labels',
-                  'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale')
+                  'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale',
+                  'outline_style', 'outline_coverage', 'outline_arcs', 'outline_speed', 'code_layer')
 SUBJECT_ELEMENTS = ('subject-outline', 'subject-code', 'subject-labels', 'subject-carets')
 
 
@@ -72,13 +73,23 @@ class SignalStyle:
     def __init__(self, *, scene_mode='thermal', scene_tint='#548568', scene_tint_strength=.8,
                  scene_exposure=.65, subject_outline=False, subject_code=False, subject_labels=False,
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
-                 subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.):
+                 subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
+                 outline_style='solid', outline_coverage=.35, outline_arcs=5, outline_speed=1., code_layer='inside'):
+        if outline_style not in ('solid', 'shimmer'):
+            raise ValueError('--outline-style must be solid or shimmer')
+        if code_layer not in ('inside', 'behind'):
+            raise ValueError('--code-layer must be inside or behind')
+        if type(outline_arcs) is not int or not 1 <= outline_arcs <= 12:
+            raise ValueError('--outline-arcs must be an integer between 1 and 12')
+        self.outline_style, self.outline_coverage = outline_style, outline_coverage
+        self.outline_arcs, self.outline_speed, self.code_layer = outline_arcs, outline_speed, code_layer
         if scene_mode not in ('thermal', 'source'):
             raise ValueError('--scene-mode must be thermal or source')
         self.tint = parse_hex(scene_tint)
         for key, value, low, high in (
             ('scene-tint-strength', scene_tint_strength, 0, 1), ('scene-exposure', scene_exposure, .1, 2),
             ('scene-highlights', scene_highlights, 0, 1),
+            ('outline-coverage', outline_coverage, 0, 1), ('outline-speed', outline_speed, 0, 5),
             ('code-size', code_size, 8, 80), ('code-speed', code_speed, 0, 5), ('code-density', code_density, 0, 1),
             ('subject-head-gap', subject_head_gap, 0, 120), ('subject-title-gap', subject_title_gap, 0, 80),
             ('subject-caret-scale', subject_caret_scale, .25, 3)):
@@ -144,7 +155,27 @@ class SignalStyle:
                 mask.paste(tile, (round(col * pitch_x), round(row * pitch_y)))
         return mask
 
-    def draw(self, renderer, image, subjects, time, shot_id):
+    def shimmer(self, edge, center, time, seed, track_id):
+        from .geometry import noise
+        yy, xx = np.nonzero(np.asarray(edge))
+        ink = np.zeros((edge.height, edge.width), np.uint8)
+        if not len(xx) or not self.outline_coverage:
+            return Image.fromarray(ink)
+        phase = np.arctan2(yy - center[1], xx - center[0]) / math.tau % 1
+        brightness = np.zeros(len(xx))
+        for j in range(self.outline_arcs):
+            rng = np.random.default_rng(stable_number(seed, 'shimmer', track_id, j))
+            start, width, speed, gain = rng.random(4)
+            half = self.outline_coverage / self.outline_arcs * (.55 + .9 * width)
+            position = start + time * self.outline_speed * (.04 + .10 * speed) * (1 if j % 2 else -1)
+            distance = np.abs((phase - position + .5) % 1 - .5)
+            blend = np.clip((half - distance) / max(.0001, half * .35), 0, 1)
+            brightness += blend * blend * (3 - 2 * blend) * (.75 + .25 * gain) * (
+                .7 + .3 * noise(stable_number(seed, 'shimmer-twinkle', track_id, j), time * 5 * self.outline_speed))
+        ink[yy, xx] = np.uint8(np.clip(brightness, 0, 1) * 255)
+        return Image.fromarray(ink)
+
+    def draw(self, renderer, image, subjects, time, shot_id, static=False):
         if not (self.subject_outline or self.subject_code or self.subject_labels):
             return
         dt = None if self.time is None else time - self.time
@@ -154,12 +185,16 @@ class SignalStyle:
         self.time, self.shot = time, shot_id
         active = {}
         panel = renderer.hud_panel(image.size, *SUBJECT_ELEMENTS)
+        behind = renderer.hud_panel(image.size, 'subject-code') if self.subject_code and self.code_layer == 'behind' else None
+        union = Image.new('L', image.size) if behind else None
         scale = min(image.size) / 1080
         for subject in sorted(subjects, key=lambda s: s.track_id):
             if subject.opacity <= 0:
                 continue
             mask = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(image.size, Image.Resampling.BILINEAR)
             binary = mask.point(lambda v: 255 if v >= 128 else 0)
+            if behind:
+                union = ImageChops.lighter(union, binary)
             bounds = binary.getbbox()
             if bounds is None:
                 continue
@@ -178,23 +213,43 @@ class SignalStyle:
             def paste(element, ink):
                 layer = Image.new('RGBA', image.size, (*renderer.hud_colors[element], 0))
                 layer.putalpha(ink.point(lambda v: round(v * opacity)))
-                panel.layer(element).alpha_composite(layer)
+                (behind if behind and element == 'subject-code' else panel).layer(element).alpha_composite(layer)
 
             if self.subject_code:
-                code = self.streams(image.size, bounds, current[:2], time, renderer.seed, subject.track_id, renderer.code_mask)
-                paste('subject-code', ImageChops.multiply(code, mask))
+                if behind:
+                    bw, bh = x1 - x0, y1 - y0
+                    expanded = (max(0, x0 - bw * .12), max(0, y0 - bh * .35), min(image.width, x1 + bw * .12), y1)
+                    code = self.streams(image.size, expanded, current[:2], 0 if static else time, renderer.seed, subject.track_id, renderer.code_mask)
+                    x = np.arange(image.width)
+                    y = np.arange(image.height)
+                    fx = np.clip(np.minimum(x - expanded[0], expanded[2] - x) / max(1, bw * .08), 0, 1)
+                    fy = np.clip((y - expanded[1]) / max(1, y0 - expanded[1]), 0, 1) * (y < y1)
+                    feather = Image.fromarray(np.uint8(fy[:, None] * fx[None, :] * 255))
+                    paste('subject-code', ImageChops.multiply(code, feather))
+                else:
+                    code = self.streams(image.size, bounds, current[:2], time, renderer.seed, subject.track_id, renderer.code_mask)
+                    paste('subject-code', ImageChops.multiply(code, mask))
             if self.subject_outline:
                 # Outline the visible silhouette, without tracing segmentation
                 # pinholes in clothing and equipment as extra interior contours.
-                exterior = Image.new('L', (image.width + 2, image.height + 2))
-                exterior.paste(binary, (1, 1))
+                # Shimmer can process only occupied bounds: the padded empty
+                # border preserves connectivity without walking the whole frame.
+                region = binary.crop(bounds) if self.outline_style == 'shimmer' else binary
+                exterior = Image.new('L', (region.width + 2, region.height + 2))
+                exterior.paste(region, (1, 1))
                 ImageDraw.floodfill(exterior, (0, 0), 255)
-                holes = ImageChops.invert(exterior.crop((1, 1, image.width + 1, image.height + 1)))
+                holes = ImageChops.invert(exterior.crop((1, 1, region.width + 1, region.height + 1)))
+                if self.outline_style == 'shimmer':
+                    local_holes = holes
+                    holes = Image.new('L', image.size)
+                    holes.paste(local_holes, bounds[:2])
                 silhouette = ImageChops.lighter(binary, holes)
-                radius = max(1, round(2 * scale))
+                radius = max(1, round((3 if self.outline_style == 'shimmer' else 2) * scale))
                 # A single inner edge is half the width of the previous
                 # two-sided gradient and stays inside the current silhouette.
                 edge = ImageChops.subtract(silhouette, silhouette.filter(ImageFilter.MinFilter(radius * 2 + 1)))
+                if self.outline_style == 'shimmer':
+                    edge = self.shimmer(edge, current[:2], 0 if static else time, renderer.seed, subject.track_id)
                 paste('subject-outline', edge)
             if self.subject_labels:
                 cell = max(8, round(30 * scale))
@@ -225,6 +280,12 @@ class SignalStyle:
                                           width=stroke, joint='curve')
                 paste('subject-carets', caret)
         self.anchors = active
+        if behind:
+            # Clip the final emission, including both regular bloom and neon.
+            # Union occlusion protects other subjects as well as this stream's owner.
+            before = image.copy()
+            renderer.composite_panel(image, behind, 0, 0)
+            image.paste(before, (0, 0), union)
         # Layers stay separate so opacity, blur, colors, and neon remain per element.
         if panel.layers:
             renderer.composite_panel(image, panel, 0, 0)

@@ -1,6 +1,7 @@
 include pyproject.toml README.md LICENSE CHANGELOG.md
 recursive-include src/yautja *.py *.json
 include src/yautja/assets/fonts/Michroma-Regular.ttf src/yautja/assets/fonts/Michroma-OFL.txt src/yautja/assets/fonts/README.md
+include src/yautja/assets/fonts/Orbitron-Light.ttf src/yautja/assets/fonts/Orbitron-Medium.ttf src/yautja/assets/fonts/Orbitron-Bold.ttf src/yautja/assets/fonts/Orbitron-OFL.txt
 recursive-include tools *.py
 recursive-include tests *.py
 recursive-include skills/yautja *.md *.yaml *.json LICENSE

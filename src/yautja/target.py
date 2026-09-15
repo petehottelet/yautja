@@ -8,7 +8,7 @@ from .colors import parse_hex
 from .hud import blur_layer
 
 TARGET_SHAPES = ('triangle', 'triangle-dots', 'crosshair', 'hollow-cross',
-                 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')
+                 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')
 
 
 def resolve_target_shape(shape):
@@ -21,6 +21,11 @@ def resolve_target_shape(shape):
 def detail_shapes(shape, radius, locked):
     """Local paths and circles in radius units; hollow-cross contours are filled."""
     paths, circles = [], []
+    if shape == 'hexagon':
+        paths.append(([(.74 * math.cos(a), .74 * math.sin(a))
+                       for a in np.arange(6) * math.tau / 6 - math.pi / 2], True))
+    elif shape == 'frame-box':
+        paths.append(([(-.30, -.44), (.30, -.44), (.30, .44), (-.30, .44)], True))
     if shape.startswith('square'):
         for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
             paths.append(([(x * .40, y * .72), (x * .72, y * .72), (x * .72, y * .40)], False))
@@ -107,8 +112,10 @@ class TargetOverlay:
         self.shot = None
         self.seen = set()
         self.frames = 0
+        self.placements = []
 
     def draw(self, image, time, targets, colors, *, shot=None, static=False, neon_gain=1.):
+        self.placements = []
         if self.shot != shot or (self.last_time is not None and (time <= self.last_time or time - self.last_time > .5)):
             self.active.clear()
         self.shot, self.last_time = shot, time
@@ -143,6 +150,9 @@ class TargetOverlay:
             stroke_radius = lock_radius + (max(width, height) * .75 - lock_radius) * (1 - ease)
             radius = stroke_radius + lock_radius * .30 * ease
             angle = -.17 * (1 - ease)
+            if self.shape == 'frame-box':
+                angle = 0.
+            self.placements.append((item['id'], cx, cy, lock_radius, ease * float(item.get('opacity', 1.))))
             points = np.array([(math.cos(a + angle), math.sin(a + angle))
                                for a in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6)]) * radius
             # Reduce the existing stroke independently of the 30% size increase.
@@ -183,6 +193,18 @@ class TargetOverlay:
             # inward outlines, blur, and transparency with the original triangle.
             paths, circles = detail_shapes(self.shape, radius, progress == 1)
             line_width = max(2, round(radius * .085 * 2))
+            if self.shape == 'hexagon':
+                line_width = max(2, round(radius * .034 * 2))
+            elif self.shape == 'frame-box':
+                line_width = max(3, round(2 * min(width, height) / 1080 * 2))
+                # Frame axes end at the box, keeping its interior empty.
+                for a, b in (((0, cy), (cx - radius * .30, cy)),
+                             ((cx + radius * .30, cy), (width, cy)),
+                             ((cx, 0), (cx, cy - radius * .44)),
+                             ((cx, cy + radius * .44), (cx, height))):
+                    if ((a[0] <= b[0] and 0 <= a[1] <= height and 0 <= b[1] <= height) or
+                        (a[0] == b[0] and a[1] <= b[1] and 0 <= a[0] <= width)):
+                        draw.line([(a[0] * 2, a[1] * 2), (b[0] * 2, b[1] * 2)], fill=(*color, opacity), width=line_width)
             outline_width = round(self.stroke * min(width, height) / 1080 * 2)
             outline = self.stroke_colors[int(flash)] if self.stroke_colors else tuple(round(c * .62) for c in color)
             cosine, sine = math.cos(angle), math.sin(angle)

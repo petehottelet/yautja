@@ -8,10 +8,12 @@ import tempfile
 
 from .looks import LOOK_PRESETS, PRESET_LABELS, PRESET_DESCRIPTIONS, LEVEL_OPTIONS, COMPLETE_PRESETS, normalize_preset
 from .signal import SIGNAL_OPTIONS
+from .geometry import GEO_OPTIONS, TARGET_OPTIONS, GeometryStyle
+from .typography import FONT_FILES, HUDTypography
 from .analysis import ANALYSIS_OPTIONS
 
 VISUAL_OPTIONS = (
-    'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'hud_glyphs', 'random_colors', *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS,
+    'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'hud_glyphs', 'random_colors', *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, 'hud_font',
     'hud', 'hud_blur', 'hud_blur_elements', 'hud_opacity', 'hud_opacity_elements',
     'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten',
     'seed', 'grain', 'glow', 'sensor_texture', 'sensor_resolution', 'pixelation',
@@ -21,7 +23,7 @@ VISUAL_OPTIONS = (
     'target_colors', 'target_shape', 'target_acquire', 'target_flash', 'target_flash_rate',
     'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS,
 )
-NULLABLE = {'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
+NULLABLE = {'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
             'grain', 'pixelation', 'scanlines', 'wave_width', 'wave_height', 'target_colors',
             'target_stroke_colors', 'thermal_levels', 'thermal_band_softness'}
 MAX_BYTES = 65536

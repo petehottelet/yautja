@@ -37,17 +37,69 @@ LOOK_PRESETS = {'hottropic': {
     'hud': True, 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}=#F2F6FA' for key in HUD_DEFAULTS),
     'analysis': True, 'analysis_speed': 1., 'analysis_blink_rate': 2., 'analysis_margin': .035,
+    'hud_font': 'orbitron-bold', 'analysis_outline_width': 5.,
     'hud_opacity_elements': ','.join(f'{key}=0' for key in HUD_DEFAULTS if not key.startswith('analysis-')),
     'subject_outline': False, 'subject_code': False, 'subject_labels': False,
     'neon': False, 'glow': .25, 'verbose': False, 'timecode': False,
     'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
 }}
-COMPLETE_PRESETS = {'hottropic', 'netrunner', 'fremont'}
+FOCUS_COLORS = {
+    'waveform': '#8FA8F0', 'waveform-axis': '#2E3A66', 'waveform-ticks': '#3A4878',
+    'waveform-glyphs': '#8FA8F0', 'readout': '#A9BCF5', 'timecode': '#C4D2FF',
+    'callouts': '#9FB4FF', 'leaders': '#9FB4FF', 'markers': '#9FB4FF',
+    'target': '#DCE9FF', 'target-flash': '#FFFFFF', 'subject-outline': '#CFE4FF',
+    'subject-code': '#A9C4FF', 'subject-labels': '#C9D8FF', 'subject-carets': '#E4ECFF',
+    'geo-grid': '#9D8CF5', 'target-motif': '#B9A8FF', 'target-label': '#CFE4FF',
+}
+FOCUS_SETTINGS = {
+    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#97A4E0',
+    'scene_tint_strength': .55, 'scene_exposure': .95,
+    'hud': True, 'hud_glyphs': 'cyber', 'hud_theme': 'custom',
+    'hud_colors': ','.join(f'{key}={value}' for key, value in FOCUS_COLORS.items()),
+    'subject_outline': True, 'outline_style': 'shimmer', 'outline_coverage': .35,
+    'outline_arcs': 5, 'outline_speed': 1., 'subject_code': False, 'subject_labels': False,
+    'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
+    'target_mode': 'auto', 'target_shape': 'hexagon', 'target_flash': False,
+    'target_motif': 'none', 'target_label': None,
+    'neon': True, 'neon_intensity': .45, 'neon_spread': .5, 'neon_core_whiten': .25,
+    'neon_elements': 'geo-grid=0.3,subject-outline=0.7,target=0.5',
+    'hud_opacity_elements': 'waveform=0.55,waveform-axis=0.3,waveform-ticks=0.35,geo-grid=0.8',
+    'verbose': False, 'timecode': False, 'grain': 0., 'pixelation': 0,
+    'sensor_texture': False, 'scanlines': False, 'vhs': False, 'heat_glow': 0.,
+}
+LOOK_PRESETS['focus'] = FOCUS_SETTINGS
+LOOK_PRESETS['relic'] = {
+    **FOCUS_SETTINGS,
+    'hud_colors': ','.join(f'{key}={value}' for key, value in {
+        **FOCUS_COLORS, 'subject-code': '#FF6FDE', 'target-motif': '#FF5BD8'}.items()),
+    'subject_code': True, 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': .55,
+    'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
+    'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.4,target-motif=0.65',
+}
+LOOK_PRESETS['murphy'] = {
+    'thermal': 'classic', 'scene_mode': 'source', 'scene_tint': '#A8B8C4',
+    'scene_tint_strength': .3, 'scene_exposure': .95, 'hud': True, 'hud_glyphs': 'tech',
+    'hud_font': 'michroma', 'hud_theme': 'custom',
+    'hud_colors': ','.join(f'{key}={value}' for key, value in {
+        **{key: '#7CE0B0' for key in HUD_DEFAULTS}, 'waveform-axis': '#24523E',
+        'waveform-ticks': '#2E6B50', 'timecode': '#9DEFC6', 'leaders': '#5FC498',
+        'markers': '#5FC498', 'target-flash': '#D9FFEC', 'geo-grid': '#2E6B50'}.items()),
+    'subject_outline': False, 'subject_code': False, 'subject_labels': False, 'geo_grid': False,
+    'target_shape': 'frame-box', 'target_flash': False, 'target_acquire': 1., 'target_label': 'TARGETING',
+    'neon': False, 'glow': .5, 'timecode': True, 'verbose': False,
+    'grain': .05, 'scanlines': True, 'crt_strength': .5, 'crt_bleed': .08,
+    'pixelation': 0, 'sensor_texture': False, 'vhs': False, 'motion_blur': 0., 'heat_glow': 0.,
+    'hud_opacity_elements': 'waveform=0,waveform-axis=0,waveform-ticks=0,waveform-glyphs=0',
+}
+COMPLETE_PRESETS = {'hottropic', 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}
 PRESET_DESCRIPTIONS = {
     'hottropic': 'Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
     'fremont': 'Detailed red/burgundy source scene, white readable analysis, moving XY search grid and blinking subject outlines.',
+    'focus': 'Blue-violet source scene, shimmering triangular grid and edge highlights, automatic thin hexagon targets.',
+    'relic': 'Focus with pink triangle ornaments and rising code occluded behind every subject.',
+    'murphy': 'Green Tech HUD, heavy CRT scanlines, frame-spanning box targets and a readable TARGETING caption; catalog targets optional.',
 }
 PRESET_LABELS = {
     'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
@@ -55,6 +107,7 @@ PRESET_LABELS = {
     'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
     'thermal-spectrum': 'Thermal Spectrum',
     'netrunner': 'Netrunner',
+    'focus': 'Focus', 'relic': 'Relic', 'murphy': 'Murphy',
     'fremont': 'Fremont',
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}

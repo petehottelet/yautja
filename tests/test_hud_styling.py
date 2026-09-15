@@ -61,10 +61,13 @@ class HudStylingTests(unittest.TestCase):
         def render(element=None, analysis=False):
             renderer = Renderer(*self.size, show_timecode=True, verbose=True, glow=0,
                                 analysis=analysis,
+                                geo_grid=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_blur_elements=None if element is None else element + '=8')
             image = Image.new('RGB', self.size)
             renderer.draw_hud(image, field, 1, subjects=subjects, static=True)
+            image = renderer.draw_targets(image, 1, subjects, self.targets,
+                                          (renderer.hud_colors['target'], renderer.hud_colors['target-flash']), static=True)
             self.assertTrue(renderer.annotation_positions)
             return np.asarray(image)
         sharp = render()

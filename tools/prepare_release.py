@@ -55,11 +55,12 @@ def main(argv=None):
     if wheel.stat().st_size >= 1_000_000:
         raise ValueError('Application wheel must be smaller than 1 MB')
     with zipfile.ZipFile(wheel) as archive:
+        fonts = {'yautja/assets/fonts/' + name for name in ('Michroma-Regular.ttf', 'Orbitron-Light.ttf', 'Orbitron-Medium.ttf', 'Orbitron-Bold.ttf')}
         font = 'yautja/assets/fonts/Michroma-Regular.ttf'
-        if font not in archive.namelist() or 'yautja/assets/fonts/Michroma-OFL.txt' not in archive.namelist():
+        if not (fonts | {'yautja/assets/fonts/Michroma-OFL.txt', 'yautja/assets/fonts/Orbitron-OFL.txt'}).issubset(archive.namelist()):
             raise ValueError('Application wheel is missing the bundled analysis font or its license')
         if any(not (name.startswith('yautja/') or name.startswith(f"yautja-{meta['version']}.dist-info/"))
-               or (name != font and name.lower().endswith(('.gif', '.mp4', '.ttf', '.otf', '.woff'))) for name in archive.namelist()):
+               or (name not in fonts and name.lower().endswith(('.gif', '.mp4', '.ttf', '.otf', '.woff'))) for name in archive.namelist()):
             raise ValueError('Unexpected content in the application wheel')
     entries = manifest(wheel)
     bundle = dist / 'yautja-skill.zip'

@@ -25,6 +25,8 @@ NumPy uses BSD-3-Clause, Pillow uses HPND, and fonttools uses MIT. Installed dis
 
 Input footage and output media are not licensed by the project's software license. This dependency review records the chosen software/model distribution strategy, not a clearance of arbitrary input media.
 
-## Bundled readable font
+## Bundled readable fonts
 
 Michroma Regular is bundled unmodified under SIL Open Font License 1.1, with its copyright and full license in `yautja/assets/fonts/Michroma-OFL.txt`. It remains OFL rather than MIT. The font source is pinned to [Google Fonts revision 8b0a1d0](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/michroma). It adds no runtime download.
+
+Orbitron Light, Medium and Bold are bundled as unmodified static TTFs under SIL OFL 1.1. The copyright, Reserved Font Name notice and license are in `yautja/assets/fonts/Orbitron-OFL.txt`. Source files are pinned to [The League of Moveable Type revision 13e6a52](https://github.com/theleagueof/orbitron/tree/13e6a5222aa6818d81c9acd27edd701a2d744152); only filenames replace spaces with hyphens. No font conversion or internal renaming is performed.

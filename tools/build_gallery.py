@@ -42,9 +42,12 @@ def variants():
     result.update({
         'look-netrunner': {'look_preset': 'netrunner'},
         'look-fremont': {'look_preset': 'fremont'},
+        'look-focus': {'look_preset': 'focus'},
+        'look-relic': {'look_preset': 'relic'},
+        'look-murphy': {'look_preset': 'murphy'},
         'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
-           for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')},
+           for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
         'colors-matched-green': {'thermal': 'cinematic', 'palette': 'green-phosphor', 'hud_theme': 'palette'},
         'colors-matched-ironbow': {'thermal': 'cinematic', 'palette': 'ironbow', 'hud_theme': 'palette'},
@@ -114,7 +117,7 @@ def main():
     source, destination = args.input.resolve(), args.output_dir.resolve()
     settings = {name: options for name, options in variants().items() if not args.only or name in args.only}
     selected = None
-    if any(name.startswith('target-') for name in settings):
+    if any(name.startswith('target-') or name == 'look-murphy' for name in settings):
         if not args.figures or not args.target:
             parser.error('Target examples require --figures and --target from a saved scan.')
         selected = TargetSelection(args.figures, source, args.target)
@@ -141,7 +144,7 @@ def main():
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
                               surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
-                              refine_masks=any((o.get('subject_outline') or o.get('analysis')) and o.get('hud', True) for o in resolved_settings))
+                              refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('subject_code') or o.get('target_mode') == 'auto') and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
         if 'timecode' in resolved:
@@ -196,7 +199,7 @@ def main():
                         for name, renderer in renderers.items():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
-                            targets, shot = selected.at(args.start + time) if selected and name.removeprefix('large/').startswith('target-') else ([], tracker.scene_cuts + 1)
+                            targets, shot = selected.at(args.start + time) if selected and (name.removeprefix('large/').startswith('target-') or name.removeprefix('large/') == 'look-murphy') else (None, tracker.scene_cuts + 1)
                             if renderer.signal.scene_mode == 'source':
                                 image = renderer.render(frame.resize((renderer.width, renderer.height), Image.Resampling.LANCZOS), time,
                                                         wave, subjects, targets=targets, shot_id=shot)

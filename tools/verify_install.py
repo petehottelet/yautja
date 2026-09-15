@@ -124,7 +124,18 @@ mask[25:150, 130:200] = 1
 renderer = Renderer(*frame.size, look_preset='fremont')
 result = renderer.render(frame, 0, subjects=[Subject(mask, 'person', .9, track_id=1)], target_static=True)
 assert renderer.analysis.phase == 'HOLD' and len(renderer.analysis.text_boxes) == 3
+assert 'Bold' in renderer.typography.font(16).getname()[1]
+assert renderer.analysis.analysis_outline_width == 5
 result.save('fremont.png')
+from yautja.typography import FONT_FILES, HUDTypography
+for face in FONT_FILES:
+    assert HUDTypography(face).mask('TARGETING 0123', 18).getbbox()
+for name in ('focus', 'relic', 'murphy'):
+    renderer = Renderer(*frame.size, look_preset=name)
+    options = {'targets': [{'id': 'one', 'bbox': [.4, .2, .65, .9]}]} if name == 'murphy' else {}
+    result = renderer.render(frame, 0, subjects=[Subject(mask, 'person', .9, track_id=1)], target_static=True, **options)
+    assert renderer.target_overlay.placements
+    result.save(name + '.png')
 '''], cwd, image_env)
     run(['yautja', '--stylepreset', 'hottropic', '--thermal', 'classic',
          '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)

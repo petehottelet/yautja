@@ -10,3 +10,8 @@ LICENSE text eol=lf
 *.in text eol=lf
 src/yautja/assets/fonts/Michroma-Regular.ttf binary
 src/yautja/assets/fonts/Michroma-OFL.txt whitespace=-blank-at-eol
+
+src/yautja/assets/fonts/Orbitron-Light.ttf binary
+src/yautja/assets/fonts/Orbitron-Medium.ttf binary
+src/yautja/assets/fonts/Orbitron-Bold.ttf binary
+src/yautja/assets/fonts/Orbitron-OFL.txt whitespace=-blank-at-eol

@@ -38,7 +38,7 @@ yautja "clip.mov" "less-glow.mp4" --preset-file "tropic-glow.json" --heat-glow 0
 
 The saved file contains the complete resolved visual settings, including defaults, so it can be copied to another machine or given to another agent. `--preset-name` is optional and defaults to the filename stem. Existing files require explicit `--overwrite`. To edit a saved preset, load it, apply changes, and save to a new filename (or explicitly overwrite the existing file).
 
-Preset files store thermal mode, palette/custom colors, levels and tonal controls, HUD colors/visibility/blur/opacity, target shape/colors/timing/outline, waveform settings, texture, glow, display effects, and seed. They exclude media paths, figure catalogs and selected IDs, trims, output resolution/frame rate/encoding, audio-track selection/muting, model configuration, and overwrite permission. Choose those separately per source. Nonvisual flags are rejected when saving, rather than silently dropped. A preset styles targets; select actual figures using `--figures` and `--target` when rendering.
+Preset files store thermal mode, palette/custom colors, levels and tonal controls, HUD colors/visibility/blur/opacity, target shape/colors/timing/outline, waveform settings, texture, glow, display effects, and seed. They exclude media paths, figure catalogs and selected IDs, trims, output resolution/frame rate/encoding, audio-track selection/muting, model configuration, and overwrite permission. Choose those separately per source. Nonvisual flags are rejected when saving, rather than silently dropped. A preset styles targets and can enable `target_mode: "auto"` for segmented subjects. Select specific figures using `--figures` and `--target` when rendering.
 
 Image and video conversions share the same preset loader. The existing media restrictions still apply: custom audio waveform settings such as `waveform: "audio"`, nondefault `wave_window`, or nondefault `wave_gain` require video input.
 
@@ -84,4 +84,8 @@ Conversion reports retain `look_preset` and add `preset_name`, `preset_kind` (`l
 
 ## Fremont
 
-`fremont` is a complete visual preset with source-scene grading and automatic readable analysis. The five visual settings `analysis`, `analysis_speed`, `analysis_blink_rate`, `analysis_margin`, and `scene_highlights` save/load with the preset and accept explicit overrides in either command order. See [analysis.md](analysis.md) for the recipe and new HUD elements. Detection classes such as vehicles remain per-conversion `--warm-objects` choices.
+`fremont` is a complete visual preset with source-scene grading and automatic readable analysis. The visual settings `analysis`, `analysis_speed`, `analysis_blink_rate`, `analysis_margin`, `analysis_outline_width`, `hud_font`, and `scene_highlights` save/load with the preset and accept explicit overrides in either command order. See [analysis.md](analysis.md) for the recipe and new HUD elements. Detection classes such as vehicles remain per-conversion `--warm-objects` choices.
+
+## Focus, Relic, and Murphy
+
+These complete presets and their independent geometry, shimmer, code placement, and readable-font controls require 2.8.0+. See [focus.md](focus.md). Schema version 1 remains appropriate: visual settings are flat, additive options; local custom-font paths and source-specific target IDs are excluded.

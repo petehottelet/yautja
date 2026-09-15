@@ -10,7 +10,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from .signal import stable_number
 
-ANALYSIS_OPTIONS = ('analysis', 'analysis_speed', 'analysis_blink_rate', 'analysis_margin')
+ANALYSIS_OPTIONS = ('analysis', 'analysis_speed', 'analysis_blink_rate', 'analysis_margin', 'analysis_outline_width')
 ANALYSIS_ELEMENTS = ('analysis-grid', 'analysis-text', 'analysis-outline')
 
 
@@ -27,16 +27,19 @@ def category(label):
 
 
 class AnalysisHUD:
-    def __init__(self, *, analysis=False, analysis_speed=1., analysis_blink_rate=2., analysis_margin=.035):
+    def __init__(self, *, analysis=False, analysis_speed=1., analysis_blink_rate=2., analysis_margin=.035,
+                 analysis_outline_width=2.4):
         for name, value, low, high in (
             ('analysis-speed', analysis_speed, 0, 5),
             ('analysis-blink-rate', analysis_blink_rate, 0, 4),
-            ('analysis-margin', analysis_margin, .01, .15)):
+            ('analysis-margin', analysis_margin, .01, .15), ('analysis-outline-width', analysis_outline_width, .5, 12)):
             if not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f'--{name} must be between {low} and {high}')
         self.analysis = bool(analysis)
         self.analysis_speed, self.analysis_blink_rate = analysis_speed, analysis_blink_rate
         self.analysis_margin = analysis_margin
+        self.analysis_outline_width = analysis_outline_width
+        self.font = analysis_font
         self.shot, self.origin, self.last_time = None, None, None
         self.selected, self.previous, self.cycle = None, None, None
         self.phase = 'SEARCH'
@@ -81,7 +84,7 @@ class AnalysisHUD:
         # Supersampling retains readable strokes at README preview sizes.
         ss = 3
         for pixels in range(max(6, round(size * ss)), 2, -1):
-            font = analysis_font(pixels)
+            font = self.font(pixels)
             wrapped = []
             for line in lines:
                 current = ''
@@ -118,6 +121,7 @@ class AnalysisHUD:
     def draw(self, renderer, image, subjects, time, shot, static=False):
         if not self.analysis:
             return
+        self.font = renderer.typography.font
         subject, phase, elapsed = self.state(subjects, time, shot, static)
         width, height = image.size
         margin = max(2, round(min(width, height) * self.analysis_margin))
@@ -174,7 +178,7 @@ class AnalysisHUD:
                 ss = 2
                 fine = Image.fromarray(np.uint8(np.clip(subject.mask, 0, 1) * 255)).resize(
                     (width * ss, height * ss), Image.Resampling.BILINEAR).point(lambda v: 255 if v >= 128 else 0)
-                outline_width = max(2, round(2.4 * min(width, height) / 1080 * ss))
+                outline_width = max(1, round(self.analysis_outline_width * min(width, height) / 1080 * ss))
                 edge = ImageChops.subtract(fine, fine.filter(ImageFilter.MinFilter(2 * outline_width + 1)))
                 edge = edge.resize(image.size, Image.Resampling.LANCZOS)
                 edge = edge.point(lambda v: round(v * min(1., subject.opacity)))

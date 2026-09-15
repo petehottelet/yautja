@@ -51,7 +51,7 @@ python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
 ```
 
-The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Netrunner and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Netrunner, Focus, Relic, and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
 
 ### Video
 
@@ -136,7 +136,7 @@ yautja "clip.mov" "my-tropic.mp4" --stylepreset hottropic --thermal very-detaile
 
 For a JSON preset, the order is **defaults → optional built-in base → saved settings → explicit command-line options**; later values take priority. Overrides affect the current command. Use `--save-preset` to save the resulting visual settings. Group controls still apply: for example, `--no-hud` hides all HUD elements, and neon tuning takes effect when `--neon` is enabled.
 
-Presets store **visual settings only**. Choose input/output files, figure catalogs and selected targets, trims, output size/frame rate, encoding, audio-track selection/muting, and model/device setup separately for each conversion. The encoder's `--preset fast` controls compression and is separate from `--stylepreset`.
+Presets store **visual settings only**. Save bundled font choices and automatic-target mode with the style. Choose custom font-file paths, input/output files, figure catalogs and selected targets, trims, output size/frame rate, encoding, audio-track selection/muting, and model/device setup separately for each conversion. The encoder's `--preset fast` controls compression and is separate from `--stylepreset`.
 
 ### Four thermal detail modes
 
@@ -250,19 +250,44 @@ yautja "clip.mov" "custom-signal.mp4" --stylepreset netrunner --code-speed 1.5 -
 
 Outlines use freshly segmented contours on each frame, while optical flow predicts their positions between detections. This reduces boundary drift during movement, with additional processing time. Titles are decorative labels that stay with a track. A fixed glyph grid lights up in rising streams with bright heads, fading tails, and occasional character changes, clipped within each mask. Glow can extend past the edge. `--code-speed 0` freezes the rain. `--no-subject-code`, `--no-subject-outline`, and `--no-subject-labels` switch those parts off independently; `--no-hud` hides them all. Tracking and occlusion quality depend on the input footage. [Complete controls and preset customization](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/cyber.md).
 
+### Focus and Relic style presets
+
+**Focus** keeps source detail under a pale blue-violet tint, with a shimmering triangular grid, moving edge highlights, and thin hexagon targets. **Relic** adds pink triangle ornaments and upward code behind the figures; their silhouettes block the code and its glow.
+
+| Focus | Relic |
+| --- | --- |
+| [![Focus: blue-violet scene with a shimmering grid, partial edge highlights and hexagon targets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.8.0) | [![Relic: pink target ornaments and rising code behind figures](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.8.0) |
+| `--stylepreset focus` | `--stylepreset relic` |
+
+Both require Yautja 2.8.0+ and the segmented setup. They target detected subjects automatically. Add `--figures "figures.json" --target S001-F002` to select a particular figure instead. The previews slow one continuous shot to show the animation. Each ingredient is independently configurable: `--geo-grid`, `--outline-style shimmer`, `--target-shape hexagon`, `--target-motif triangles`, and `--code-layer behind`. [Recipes, controls, and an editable preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+
+### Murphy style preset
+
+**Murphy** uses green readable Tech text, heavy CRT scanlines, and a frame-box reticle whose horizontal and vertical axes extend to the screen edges. A steady **TARGETING** caption appears while the selected figure is visible.
+
+[![Murphy: green frame-box targeting, readable text and CRT scanlines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.8.0)
+
+```bash
+yautja "clip.mov" "murphy.mp4" --stylepreset murphy --figures "figures.json" --target S001-F002
+```
+
+Requires Yautja 2.8.0+. Conversion works with the lightweight install using an existing figure catalog; creating the catalog needs the segmented setup. Without a catalog, the source grade, CRT texture, and readout still work. `--HUDglyphs tech` selects readable letters and numbers; `--hud-font` chooses Michroma, Orbitron Light, Medium, or Bold. `--target-label "LOCK"` changes the caption. [Typography and targeting options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/focus.md).
+
 ### Fremont style preset
 
-**Fremont** preserves fine source detail under a **red/burgundy grade**, with **white readable text**, a **moving XY search grid**, and **white subject outlines that blink during analysis**. It searches, acquires a detected subject, analyzes it, and holds the result before moving on. Descriptions stay inside the screen, including portrait frames. The numbers are decorative; labels describe detected categories such as person, dog, car, or motorcycle.
+**Fremont** preserves fine source detail under a **red/burgundy grade**, with **white Orbitron Bold text**, a **moving XY search grid**, and **thicker white subject outlines that blink during analysis**. It searches, acquires a detected subject, analyzes it, and holds the result before moving on. Descriptions stay inside the screen, including portrait frames. The numbers are decorative; labels describe detected categories such as person, dog, car, or motorcycle.
 
-[![Fremont: detailed red scene with white scan grid, analysis text and blinking figure outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.7.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.7.0)
+[![Fremont: detailed red scene with white scan grid, analysis text and blinking figure outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.8.0)
 
 ```bash
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont
 ```
 
-Requires Yautja 2.7.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show the complete scan sequence. Stills show the held analysis immediately. Empty scenes remain in search mode, and cuts or lost tracks restart scanning.
+This bold-font and thicker-outline version requires Yautja 2.8.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show the complete scan sequence. Stills show the held analysis immediately. Empty scenes remain in search mode, and cuts or lost tracks restart scanning.
 
 Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. The source highlights are adjustable with `--scene-highlights`. `--no-analysis` hides the scan overlay; `--no-hud` hides all overlays. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
+
+Use `--hud-font orbitron-medium` for medium-weight text and `--analysis-outline-width 5` to set outline thickness in reference pixels at a 1080px short edge. These controls save with the style preset.
 
 ### Turn the HUD off
 
@@ -415,6 +440,13 @@ Choose `--target-shape` independently of colors, lock timing, flash, outline, bl
 
 Click any preview for its large animated GIF. [Selection, target colors, and effects](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#target-animation-and-color).
 
+| Thin hexagon | Frame-box with screen axes |
+| --- | --- |
+| [![Thin hexagon reticle](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-hexagon.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-hexagon.gif?v=2.8.0) | [![Frame-box reticle with horizontal and vertical screen axes](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-shape-frame-box.gif?v=2.8.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/target-shape-frame-box.gif?v=2.8.0) |
+| `--target-shape hexagon` | `--target-shape frame-box` |
+
+`--target-mode auto` uses segmented subjects automatically. The default `selected` mode uses the catalog below. Explicit catalog selections take precedence over automatic mode, including frames where a selected figure is absent. `--target-motif triangles` and `--target-label "TARGETING"` add independent ornaments and a readable caption; both follow target visibility.
+
 ### Choose a figure and add a target
 
 Scan a clip or still to get a **shot-by-shot figure list**, thumbnails, and reusable IDs. Scanning needs the semantic setup below. Open the generated contact sheet, choose an ID, then render:
@@ -512,7 +544,7 @@ Use your environment's Python. Grounding DINO, SAM 2.1, and ViTPose are shared b
 
 `--sensor-resolution 160` increases heat-field abstraction, `--warm-objects "person,dog,bird"` selects warm categories, and `--hot-objects "fire"` explicitly adds an artistic hot category. Reports include the actual device, precision, timings, model revisions, and resolved effects. Full precision is the default; `--precision bf16` is experimental. [Earlier CPU/CUDA validation](https://github.com/petehottelet/yautja/blob/main/docs/performance-validation.md).
 
-Yautja's code is MIT; the separately installed models retain their Apache-2.0 licenses. The bundled Michroma font retains its SIL Open Font License 1.1, included beside the font in the application package. Model weights, runtime binaries, and gallery GIFs are excluded from the portable skill archive. [Dependency licensing details](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/dependencies.md).
+Yautja's code is MIT; the separately installed models retain their Apache-2.0 licenses. The bundled Michroma and Orbitron fonts retain their SIL Open Font Licenses 1.1, included beside the fonts in the application package. Model weights, runtime binaries, and gallery GIFs are excluded from the portable skill archive. [Dependency licensing details](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/dependencies.md).
 
 ## Local skill bundles and updates
 
