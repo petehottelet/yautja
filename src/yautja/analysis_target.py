@@ -49,13 +49,17 @@ class AnalysisTarget:
         cx, cy = (center - (left, top)) * ss
         size = (tile_size[0] * ss, tile_size[1] * ss)
         fill, marks = Image.new('RGBA', size), Image.new('RGBA', size)
+        stroked = renderer.geometry.target_fill == 'stroked'
         # Native translucency is multiplied by the normal per-element opacity.
         ink = (*renderer.hud_colors['analysis-target-fill'], 102)
-        ImageDraw.Draw(fill).ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=ink)
+        if not stroked:
+            ImageDraw.Draw(fill).ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=ink)
         ink = (*renderer.hud_colors['analysis-target'], 230)
         draw = ImageDraw.Draw(marks)
         inner = radius * .65
         stroke = max(ss, round(3 * min(image.size) / 1080 * ss))
+        if stroked:
+            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), outline=ink, width=stroke)
         draw.ellipse((cx-inner, cy-inner, cx+inner, cy+inner), outline=ink, width=stroke)
         draw.line((cx-inner, cy, cx+inner, cy), fill=ink, width=stroke)
         draw.line((cx, cy-radius, cx, cy-inner), fill=ink, width=stroke)

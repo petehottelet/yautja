@@ -623,8 +623,8 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `auto`, `filled`, `stroked`
 - Units: not applicable
 - Default: "auto"
-- Applies: All shapes: original treatment, solid marks with translucent enclosures, or hollow mark outlines
-- Requires: --hud and catalog targets or automatic selection in a segmented mode
+- Applies: All reticles, including the analysis scan disk: original treatment, filled artwork, or hollow outlines
+- Requires: --hud and catalog targets, automatic selection, or --analysis-target in a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#focus)
 

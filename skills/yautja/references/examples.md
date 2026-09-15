@@ -219,6 +219,15 @@ yautja "clip.mov" "murphy.mp4" --stylepreset murphy --duration 4 --target-mode a
 yautja "clip.mov" "fremont.mp4" --stylepreset fremont --duration 4 --warm-objects "person,car,motorcycle,bicycle,bus,truck" --analysis --analysis-speed 1.5 --analysis-blink-rate 2 --analysis-margin 0.05 --analysis-outline-width 5 --analysis-target --analysis-target-size 0.4 --analysis-target-response 0.6
 ```
 
+<a id="fremont-stroked"></a>
+
+For a red outlined scan disk with a clear interior, use the shared fill control and its analysis ink role:
+
+<!-- example: {"id": "fremont-stroked", "tier": "models", "checks": {"analysis_target": true, "target_fill": "stroked"}} -->
+```bash
+yautja "clip.mov" "fremont-stroked.mp4" --stylepreset fremont --duration 4 --target-fill stroked --hud-colors "analysis-target=#FF4038"
+```
+
 ## Netrunner glyphs, code and label spacing
 
 <a id="netrunner"></a>

@@ -29,7 +29,7 @@ The target's optional colored stroke follows its opacity. Filled/stroked geometr
 | `target-label` | yes | yes | yes | Readable target caption and cursor |
 | `target-outline` | yes | yes | yes | Selected-subject contour |
 | `target-weak-spots` | yes | yes | yes | Optional decorative holographic scan patches |
-| `analysis-target-fill` | yes | yes | yes | Translucent persistent analysis disk |
+| `analysis-target-fill` | yes | yes | yes | Translucent persistent analysis disk; inactive with `--target-fill stroked` |
 | `analysis-target` | yes | yes | yes | Analysis disk ring and XY marks |
 
 The `target-flash` neon entry is not separately accepted: configure `target`. LED backplates and idle cells use waveform opacity/blur/color but never emit light. [Color, blur and opacity example](examples.md#hud-ink) · [Neon example](examples.md#neon).

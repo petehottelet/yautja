@@ -62,6 +62,34 @@ class AnalysisTargetTests(unittest.TestCase):
         at_response = target.advance((.8, .5), .6, 0, self.size)
         self.assertAlmostEqual((at_response[0] - .2) / .6, .95, places=3)
 
+    def test_stroked_disk_keeps_outer_circle_and_crosshair_with_clear_interior(self):
+        background = (16, 25, 35)
+        images = {}
+        for treatment in ('auto', 'filled', 'stroked'):
+            renderer = self.renderer(target_fill=treatment, hud_colors='analysis-target=#FF4038')
+            image = Image.new('RGB', self.size, background)
+            target = renderer.analysis.target
+            target.advance((.5, .5), 0, 0, self.size, static=True)
+            target.draw(renderer, image)
+            images[treatment] = np.asarray(image)
+        np.testing.assert_array_equal(images['auto'], images['filled'])
+        pixels = images['stroked']
+        np.testing.assert_array_equal(pixels[97,168], background)
+        self.assertFalse(np.array_equal(images['filled'][97,168], background))
+        self.assertGreater(int(pixels[90,160,0]), 180)  # red center crosshair
+        y, x = np.ogrid[:self.size[1], :self.size[0]]
+        distance = np.hypot(x-160, y-90)
+        # Check the outer circle away from its two pre-existing vertical marks.
+        rim = (distance > target.radius-2) & (distance < target.radius+1) & (abs(x-160)>8)
+        self.assertGreater(np.count_nonzero(pixels[:,:,0][rim] > 140), 60)
+        np.testing.assert_array_equal(pixels[distance > target.radius+4],
+                                      np.tile(background, ((distance > target.radius+4).sum(),1)))
+        hidden = self.renderer(target_fill='stroked', hud_opacity_elements='analysis-target=0,analysis-target-fill=1')
+        image = Image.new('RGB', self.size, background)
+        hidden.analysis.target.advance((.5,.5), 0, 0, self.size, static=True)
+        hidden.analysis.target.draw(hidden, image)
+        np.testing.assert_array_equal(image, np.broadcast_to(background, (*self.size[::-1],3)))
+
     def test_focus_handoff_keeps_position_and_velocity_continuous(self):
         target = AnalysisTarget()
         target.advance((.2, .5), 0, 0, self.size)
@@ -143,16 +171,23 @@ class AnalysisTargetTests(unittest.TestCase):
             path = Path(folder) / 'scan.json'
             with patch('sys.stdout', new_callable=io.StringIO):
                 self.assertEqual(main(['--stylepreset', 'fremont', '--analysis-target-size', '.5',
-                                       '--analysis-target-response', '.9', '--save-preset', str(path)]), 0)
+                                       '--analysis-target-response', '.9', '--target-fill', 'stroked',
+                                       '--hud-colors', 'analysis-target=#FF4038', '--save-preset', str(path)]), 0)
             data = json.loads(path.read_text(encoding='utf-8'))
             self.assertEqual(data['schema_version'], 1)
             self.assertTrue(data['settings']['analysis_target'])
+            self.assertEqual(data['settings']['target_fill'], 'stroked')
+            self.assertEqual(data['settings']['hud_colors'], 'analysis-target=#FF4038')
             for flags in (['--no-analysis-target', '--preset-file', str(path)],
                           ['--preset-file', str(path), '--no-analysis-target']):
                 args = parser().parse_args(flags)
                 self.assertFalse(args.analysis_target)
                 self.assertEqual(args.analysis_target_size, .5)
                 self.assertEqual(args.analysis_target_response, .9)
+                self.assertEqual(args.target_fill, 'stroked')
+            for flags in (['--target-fill','filled','--preset-file',str(path)],
+                          ['--preset-file',str(path),'--target-fill','filled']):
+                self.assertEqual(parser().parse_args(flags).target_fill, 'filled')
             for style in ('focus', 'relic', 'murphy', 'netrunner'):
                 self.assertFalse(parser().parse_args(['--stylepreset', style]).analysis_target)
 
