@@ -128,12 +128,19 @@ class Release212Tests(unittest.TestCase):
             r=Renderer(320,180,look_preset=name)
             report=extra_report(r,None)
             self.assertFalse(report['target_weak_spots'])
-            self.assertEqual(report['outline_width'],6.4)
-            self.assertEqual(report['outline_shine'],.75)
+            self.assertEqual(report['outline_width'],4.8)
+            self.assertEqual(report['outline_shine'],.65)
             self.assertEqual(report['geo_grid_rotation'],.6)
-            self.assertEqual(r.hud_colors['geo-grid'],(125,90,255))
-            self.assertEqual(r.hud_colors['subject-code'],(162,75,255))
+            for role in ('target','readout','waveform-glyphs','callouts','subject-labels','target-label'):
+                self.assertEqual(r.hud_colors[role],(136,51,255))
+            for role in ('geo-grid','waveform'):
+                self.assertEqual(r.hud_colors[role],(80,124,255))
+            self.assertEqual(r.hud_colors['subject-outline'],(96,153,255))
+            for role in ('subject-code','target-motif'):
+                self.assertEqual(r.hud_colors[role],(255,32,184) if name=='relic' else (136,51,255))
             self.assertEqual(r.signal.subject_code,name=='relic')
+            if name=='relic':
+                self.assertEqual(r.signal.code_style,'light')
         self.assertNotIn('mask_stability',VISUAL_OPTIONS)
         self.assertNotIn('mask_min_region',VISUAL_OPTIONS)
         self.assertIn('wave_display',NULLABLE)

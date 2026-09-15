@@ -28,7 +28,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 | --- | --- |
 | [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.12.0) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-murphy.gif?v=2.12.0) |
 | Netrunner | Focus |
-| [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif?v=2.12.0) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.12.0) |
+| [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif?v=2.12.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif?v=2.12.0) | [![Focus: neon-purple HUD, blue geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.12.1-neon)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.12.1-neon) |
 
 The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The smaller previews show four alternative styles. The waveform follows the original source audio. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png?v=2.10.0).
 
@@ -107,8 +107,8 @@ Choose a **complete preset** for a coordinated scene and HUD; a **palette starte
 | `yautja` | Soft thermal bands and dark scenery | Red HUD, cyan callouts, CRT lines |
 | `fremont` | Detailed red/burgundy source | Bold white analysis, persistent translucent scan disk |
 | `murphy` | Source detail with a slight blue cast | Glowing green box and thinking caption |
-| `focus` | Dark, cool source detail | Violet geodesic sphere, partial blue-white edges, one gliding hexagon |
-| `relic` | Focus scene grade | Figure-bound violet triangles and rising light streams behind each body core |
+| `focus` | Dark, cool source detail | Neon-purple HUD, blue grid and waveform, thin holographic edges, one gliding hexagon |
+| `relic` | Focus scene grade | Hot-pink triangles and rising light streams behind each body core |
 | `netrunner` | Dark green source tint | Red edges, upward Cyber code, cyan titles, yellow carets |
 
 All complete presets need [segmented setup](#segmented-looks). Palettes alone also work in Classic. Every preset consists of ordinary options; no effect is reserved for one preset.
@@ -147,13 +147,13 @@ Use `--thermal-levels 6` or `--thermal-levels 20` for fewer or more bands, `--th
 
 ### Focus and Relic style presets
 
-Focus uses a slowly rotating geodesic sphere, with bluish-violet broken lines fading toward the center. Satellite dots pulse away from vertices and return; some vertices carry seven-sided rings. Partial blue/lavender/white outlines shimmer along current subjects. One persistent hexagon glides between targets, containing the inset circle, six inner circles, four outer circles and a center square. The Focus preview is at the top of this page.
+Focus pairs a neon-purple HUD, glyphs and reticle with a blue grid and matching waveform. Its slowly rotating geodesic sphere has broken lines fading toward the center. Satellite dots pulse away from vertices and return; some vertices carry seven-sided rings. Thin, partial blue holographic outlines shimmer along current subjects. One persistent hexagon glides between targets, containing the inset circle, six inner circles, four outer circles and a center square. The Focus preview is at the top of this page.
 
-Relic adds violet triangles that spawn on the selected figure, rise, contract and spin away. Soft violet filaments stream upward behind each body's core, using shoulders and hips for alignment instead of extended arms or held props. When pose information is unavailable, the solid body region supplies the center. Foreground silhouettes hide the trails and their glow. [`--code-style light`](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/options.md#code-style) selects this treatment; `glyphs` selects readable code. Focus keeps this effect off. Decorative yellow scan patches remain available with `--target-weak-spots`; both presets leave them off.
+Relic adds neon hot-pink triangles that spawn on the selected figure, rise, contract and spin away. Soft hot-pink filaments stream upward behind each body's core, using shoulders and hips for alignment instead of extended arms or held props. When pose information is unavailable, the solid body region supplies the center. Foreground silhouettes hide the trails and their glow. [`--code-style light`](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/options.md#code-style) selects this treatment; `glyphs` selects readable code. Focus keeps this effect off. Decorative yellow scan patches remain available with `--target-weak-spots`; both presets leave them off.
 
 | Relic |
 | --- |
-| [![Relic: violet figure-bound ornaments and soft rising light streams centered on each body core](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.1-light)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.1-light) |
+| [![Relic: hot-pink ornaments and rising body-centered light streams with a purple HUD and blue grid](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-relic.gif?v=2.12.1-neon)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-relic.gif?v=2.12.1-neon) |
 
 <!-- example: {"id": "readme-focus", "tier": "models", "checks": {}} -->
 ```bash

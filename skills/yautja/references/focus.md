@@ -4,11 +4,20 @@ All capabilities are shared options; presets only provide saved values. See the 
 
 ## Complete styles
 
-**Focus** preserves scene detail under a dark, restrained blue tint. Its bluish-violet geodesic sphere slowly rotates, with broken lines fading toward the center, pulsing satellite dots and occasional seven-sided rings. Partial blue/lavender/white subject edges shimmer. One persistent hexagon glides between subjects, with a large circle at 90% of the inscribed radius, six small inner circles, four outer circles and a center square.
+**Focus** preserves scene detail under a dark, restrained blue tint. Neon-purple HUD glyphs and targeting contrast with a blue grid and matching waveform. Its geodesic sphere slowly rotates, with broken lines fading toward the center, pulsing satellite dots and occasional seven-sided rings. Thin, partial blue holographic subject edges shimmer with pale highlights. One persistent hexagon glides between subjects, with a large circle at 90% of the inscribed radius, six small inner circles, four outer circles and a center square.
 
-**Relic** inherits Focus's scene and grid. Violet broken triangles spawn on the selected figure, rise gently, then contract, spin and fade. Soft light filaments stream upward behind the body core, aligned to shoulder/hip joints with a solid-body mask fallback. Arms and held props do not widen the light column. All foreground silhouettes occlude the trails and their glow. [`--code-style`](options.md#code-style) selects `light` or `glyphs`; `--code-size`, `--code-density` and `--code-speed` control stream spacing/width, count and upward motion. Focus leaves this effect off. Both presets leave decorative weak-spot patches off; the optional capability remains available.
+**Relic** inherits Focus's scene, purple HUD and blue grid. Neon hot-pink broken triangles spawn on the selected figure, rise gently, then contract, spin and fade. Soft hot-pink light filaments stream upward behind the body core, aligned to shoulder/hip joints with a solid-body mask fallback. Arms and held props do not widen the light column. All foreground silhouettes occlude the trails and their glow. [`--code-style`](options.md#code-style) selects `light` or `glyphs`; `--code-size`, `--code-density` and `--code-speed` control stream spacing/width, count and upward motion. Focus leaves this effect off. Both presets leave decorative weak-spot patches off; the optional capability remains available.
 
 **Murphy** uses a slight blue source cast, glowing green center-crossing XY box, selected-subject outline and a large Orbitron Medium caption with a blinking underscore. Automatic targeting needs no catalog. Its upper-right readout and waveform are hidden by preset opacity.
+
+Focus and Relic use these independently configurable [HUD color roles](hud-elements.md):
+
+| Elements | Ink |
+| --- | --- |
+| HUD, glyphs and reticle | Neon purple `#8833FF` |
+| `geo-grid`, `waveform` | Blue `#507CFF` |
+| `subject-outline` | Holographic blue `#6099FF` |
+| Relic's `subject-code`, `target-motif` | Neon hot pink `#FF20B8` |
 
 ```bash
 yautja "clip.mov" "focus.mp4" --stylepreset focus
@@ -20,7 +29,7 @@ These need [segmented setup](semantic.md). [Runnable presets and customization](
 
 ## Subject edges and code
 
-`--subject-outline` enables all-subject edges; `--outline-style` chooses solid, shimmer or holographic. Width controls thickness, coverage/arcs control partial edge regions, speed controls travel/texture, and shine controls moving-band brightness. Focus/Relic set width 6.4, speed 1.35, shine 0.75 and outline ink `#8FA6FF`. Stills freeze the clock.
+`--subject-outline` enables all-subject edges; `--outline-style` chooses solid, shimmer or holographic. Width controls thickness, coverage/arcs control partial edge regions, speed controls travel/texture, and shine controls moving-band brightness. Focus/Relic set width 4.8, speed 1.35, shine 0.65 and outline ink `#6099FF`. Stills freeze the clock.
 
 The tracker keeps flow-aligned probability and binary masks. Overlay hysteresis reduces accessory flicker; closing and small-island suppression clean the shared silhouette. `--mask-stability` and `--mask-min-region` tune this at runtime. Set both to zero for the previous contour behavior; they are not stored in presets.
 

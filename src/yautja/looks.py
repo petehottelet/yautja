@@ -47,16 +47,16 @@ LOOK_PRESETS = {'yautja': {
     'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
 }}
-FOCUS_COLORS = {**dict.fromkeys(HUD_DEFAULTS, '#A24BFF'),
-                'geo-grid': '#7D5AFF', 'waveform': '#6F7BFF', 'waveform-glyphs': '#6F7BFF',
-                'waveform-axis': '#383F8A', 'waveform-ticks': '#454F9E',
-                'subject-outline': '#8FA6FF'}
+FOCUS_COLORS = {**dict.fromkeys(HUD_DEFAULTS, '#8833FF'),
+                'geo-grid': '#507CFF', 'waveform': '#507CFF',
+                'waveform-axis': '#293F82', 'waveform-ticks': '#344FA3',
+                'subject-outline': '#6099FF'}
 FOCUS_SETTINGS = {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#8395E6',
     'scene_tint_strength': .28, 'scene_exposure': .82,
     'hud': True, 'hud_glyphs': 'cyber', 'hud_theme': 'custom',
     'hud_colors': ','.join(f'{key}={value}' for key, value in FOCUS_COLORS.items()),
-    'subject_outline': True, 'outline_style': 'holographic', 'outline_coverage': .35, 'outline_width': 6.4, 'outline_shine': .75,
+    'subject_outline': True, 'outline_style': 'holographic', 'outline_coverage': .35, 'outline_width': 4.8, 'outline_shine': .65,
     'outline_arcs': 5, 'outline_speed': 1.35, 'subject_code': False, 'subject_labels': False,
     'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
     'geo_grid_projection': 'sphere', 'target_mode': 'cycle', 'target_motion': 'persistent',
@@ -64,8 +64,8 @@ FOCUS_SETTINGS = {
     'geo_grid_details': True, 'geo_grid_rotation': .6, 'target_weak_spots': False,
     'target_shape': 'hexagon', 'target_flash': False, 'target_fill': 'stroked',
     'target_motif': 'none', 'target_label': None,
-    'neon': True, 'neon_intensity': 1., 'neon_spread': .9, 'neon_core_whiten': 0.,
-    'neon_elements': 'geo-grid=0.8,subject-outline=0.7,target=1',
+    'neon': True, 'neon_intensity': 1.15, 'neon_spread': 1.05, 'neon_core_whiten': 0.,
+    'neon_elements': 'geo-grid=0.8,subject-outline=0.55,target=1.2',
     'hud_opacity_elements': 'waveform=0.55,waveform-axis=0.3,waveform-ticks=0.35,geo-grid=0.8',
     'verbose': False, 'timecode': False, 'grain': 0., 'pixelation': 0,
     'sensor_texture': False, 'scanlines': False, 'vhs': False, 'heat_glow': 0.,
@@ -73,11 +73,12 @@ FOCUS_SETTINGS = {
 LOOK_PRESETS['focus'] = FOCUS_SETTINGS
 LOOK_PRESETS['relic'] = {
     **FOCUS_SETTINGS,
-    'hud_colors': FOCUS_SETTINGS['hud_colors'],
+    'hud_colors': ','.join(f'{key}={value}' for key, value in {
+        **FOCUS_COLORS, 'subject-code': '#FF20B8', 'target-motif': '#FF20B8'}.items()),
     'subject_code': True, 'code_style': 'light', 'code_layer': 'behind', 'code_size': 26., 'code_speed': .8, 'code_density': 1.65,
     'target_motif': 'triangles', 'target_motif_count': 7, 'target_motif_scale': 1.,
     'target_motif_speed': 1., 'target_motif_breaks': .7,
-    'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=0.85,target-motif=0.65',
+    'neon_elements': FOCUS_SETTINGS['neon_elements'] + ',subject-code=1,target-motif=1.1',
 }
 LOOK_PRESETS['murphy'] = {
     'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#719DD2',
@@ -102,8 +103,8 @@ PRESET_DESCRIPTIONS = {
     'yautja': 'Eleven colors, 12 soft thermal levels, red HUD, cyan annotations and CRT lines.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
     'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
-    'focus': 'Neon-purple spherical geodesic grid and one detailed hexagon reticle gliding between subjects.',
-    'relic': 'Focus with violet triangle ornaments and soft rising light streams centered behind each body core.',
+    'focus': 'Neon-purple HUD and gliding hexagon, blue spherical grid and waveform, and thin blue holographic outlines.',
+    'relic': 'Focus with hot-pink triangle ornaments and soft rising light streams centered behind each body core.',
     'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a medium-weight TARGETING caption with blinking cursor.',
 }
 PRESET_LABELS = {
