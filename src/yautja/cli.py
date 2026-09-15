@@ -621,7 +621,7 @@ def parser():
     p.add_argument('--timecode', action=argparse.BooleanOptionalAction, default=False, help='Human-readable elapsed HH:MM:SS.mmm at upper right (default: off)')
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
-    p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Trace, Rorschach filled/split/hollow, or digital distortion: blocks, shards, stacked horizontal vocoder bars (digital-circuit)')
+    p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Trace, Rorschach filled/split/hollow, or digital distortion: blocks, shards, stacked segmented vocoder bars (digital-circuit)')
     p.add_argument('--wave-width', type=float, help='Styled waveform maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
     p.add_argument('--wave-height', type=float, help='Styled waveform height as a fraction of the frame, 0.1-1; default 0.96')
     p.add_argument('--wave-detail', type=float, default=.6, help='Detail, 0-1: sharper lobes in Rorschach styles or finer pixel blocks in digital styles')

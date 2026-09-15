@@ -171,7 +171,7 @@ For a wide, mirrored inkblot column in place of the thin trace, select a Rorscha
 | `--wave-style rorschach-hollow` | Mirrored rings and lobes with dark interior pockets |
 | `--wave-style digital-blocks` | Bitcrush Blocks: broad pixel slabs with square cutouts (2.6.0+) |
 | `--wave-style digital-shards` | Packet Shards: detached, unequal pixel packets displaced around the axis (2.6.0+) |
-| `--wave-style digital-circuit` | Vocoder Bars: horizontal LED rows in one vertical stack, with audio-driven width and brightness (2.6.2+) |
+| `--wave-style digital-circuit` | Vocoder Bars: rounded horizontal bars filled with vertical LED segments, brightest at the center with dark ends (2.6.3+) |
 | `--wave-width 0.14` | Maximum styled waveform width as a frame fraction, 0.02–0.3; default 0.12 |
 | `--wave-height 1` | Styled waveform height as a frame fraction, 0.1–1; default 0.96, vertically centered |
 | `--wave-detail 0.6` | Detail, 0–1; 0 is broad/smooth, higher values strengthen audio-driven edge spikes and lobe complexity |
@@ -186,4 +186,4 @@ Blocks and Shards quantize audio energy onto square pixel cells. Lower `--wave-d
 
 Stills show the time-zero procedural shape. `--no-hud` hides it entirely. `--glow` adjusts its HUD bloom; `--crt-bleed` softens it horizontally, and `--motion-blur` leaves video trails. Higher width/detail can occupy more of the scene, so inspect the result at the intended resolution. Width and height overrides require a non-trace style. Reports include effective `wave_style`, `wave_width`, `wave_height`, and `wave_detail`, alongside requested settings.
 
-Vocoder Bars use one vertical stack of horizontal rows. Use `--wave-width 0.07 --wave-height 1` to match the narrow, full-height gallery example. Row positions stay fixed while local audio energy controls each bar’s width and brightness. `--wave-detail` controls row count; silent portions leave dark rows, and complete silence produces no lit bars. Use `--neon --neon-intensity 0 --neon-elements "waveform=1"` for bright cores and halos on the waveform alone.
+Vocoder Bars use one vertical stack of rounded horizontal rows, alternating shorter and longer bars. Each contains small vertical LED segments that fade from a bright center toward dark ends. The dark casing shares waveform opacity and blur, and emits no light. Use `--wave-width 0.07 --wave-height 1` to match the narrow, full-height gallery example. Row positions stay fixed while local audio energy controls each bar’s width and brightness. `--wave-detail` controls row count; silent portions leave dark rows, and complete silence produces no lit bars. The reference preview uses `--hud-theme custom --hud-colors "waveform=#EF5042"` and `--neon --neon-intensity 0 --neon-elements "waveform=0.12" --neon-spread 0.15 --neon-core-whiten 0` for warm-red segments and a restrained halo. All colors and neon controls remain configurable.

@@ -2,7 +2,7 @@
 import math
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 RORSCHACH_STYLES = ('rorschach', 'rorschach-split', 'rorschach-hollow')
 DIGITAL_STYLES = ('digital-blocks', 'digital-shards', 'digital-circuit')
@@ -103,27 +103,52 @@ def digital_mask(width, height, signal, time, *, style, detail=.6, seed=42):
 
 
 def vocoder_mask(width, height, signal, *, detail=.6):
-    """One full-height stack of horizontal LED bars follows local audio energy."""
-    mask = Image.new('L', (width, height))
+    """Light mask for segmented, rounded horizontal vocoder bars."""
+    return vocoder_masks(width, height, signal, detail=detail)[0]
+
+
+def vocoder_masks(width, height, signal, *, detail=.6):
+    """Separate LED emission from the dark rounded housing behind each row."""
+    ss = 3
+    mask = Image.new('L', (width * ss, height * ss))
+    housing = Image.new('L', mask.size)
     values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
     if not len(values) or not values.max():
-        return mask
+        return Image.new('L', (width, height)), Image.new('L', (width, height))
     # Lay the trailing audio window down the entire stack. Each row responds
     # independently; constant audio stays steady and silent bins stay dark.
-    segments = min(max(1, height // 3), 2 * round(16 + detail * 10))
+    segments = min(max(1, height // 3), 2 * round(12 + detail * 10))
     bins = np.linspace(0, len(values), segments + 1)
     pitch = height / segments
-    bar_height = max(1, round(pitch * .6))
+    bar_height = max(1, round(pitch * .56))
     draw = ImageDraw.Draw(mask)
+    casing = ImageDraw.Draw(housing)
+    # The LED grid is anchored to the column center, so changing row widths
+    # reveals or hides end segments without shifting the interior dividers.
+    cell_pitch = max(2, width / 15)
+    cell_width = cell_pitch * .74
+    half_cells = math.ceil(width / cell_pitch / 2)
     for row, (lo, hi) in enumerate(zip(bins, bins[1:])):
         window = values[int(lo):max(int(lo) + 1, math.ceil(hi))]
         energy = .65 * float(np.sqrt(np.mean(window ** 2))) + .35 * float(window.max())
         strength = float(np.clip(energy * 6, 0, 1) ** .3)
         if not strength:
             continue
-        bar_width = max(1, round(width * strength))
-        x = (width - bar_width) // 2
+        bar_width = max(1, round(width * .94 * (.62 + .38 * strength) * (.76 if row % 2 == 0 else 1)))
+        x = (width - bar_width) / 2
         y = round((row + .5) * pitch - bar_height / 2)
-        draw.rectangle((x, y, x + bar_width - 1, y + bar_height - 1),
-                       fill=round(255 * (.6 + .4 * strength)))
-    return mask
+        box = (round(x * ss), y * ss, round((x + bar_width) * ss) - 1, (y + bar_height) * ss - 1)
+        casing.rounded_rectangle(box, radius=bar_height * ss / 2, fill=255)
+        inset = min(bar_height * .18, max(.5, height / 540))
+        for cell in range(-half_cells, half_cells + 1):
+            cx = width / 2 + cell * cell_pitch
+            distance = abs(cx - width / 2) / max(.5, bar_width / 2)
+            if distance >= 1:
+                continue
+            brightness = (.025 + .975 * math.cos(distance * math.pi / 2) ** 2) * (.88 + .12 * strength)
+            draw.rectangle((round((cx - cell_width / 2) * ss), round((y + inset) * ss),
+                            round((cx + cell_width / 2) * ss) - 1, round((y + bar_height - inset) * ss) - 1),
+                           fill=round(255 * brightness))
+    mask = ImageChops.multiply(mask, housing)
+    # Box downsampling keeps the tiny dividers dark at gallery resolution.
+    return tuple(layer.resize((width, height), Image.Resampling.BOX) for layer in (mask, housing))

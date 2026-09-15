@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.3 — 2026-09-14
+
+- Refine Vocoder Bars into rounded dark housings filled with small vertical LED segments. Centers shine brighter and fade toward the ends, with alternating row lengths and audio-driven movement. Housing follows waveform opacity and blur without emitting neon light.
+- Refresh both GIF sizes with warm-red ink and restrained neon that preserves the individual segments; document the matching color and glow settings.
+
 ## 2.6.2 — 2026-09-14
 
 - Arrange Vocoder Bars as horizontal LED rows in one narrow vertical stack spanning the left edge. Local audio controls each row’s width and brightness; silent portions stay dark. Refresh both neon preview sizes.

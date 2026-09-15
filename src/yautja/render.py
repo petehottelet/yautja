@@ -15,7 +15,7 @@ from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .neon import NeonStyle
-from .waveform import WAVE_STYLES, inkblot_mask
+from .waveform import WAVE_STYLES, inkblot_mask, vocoder_masks
 from .hud import HudPanel, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
 from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
@@ -688,7 +688,19 @@ class Renderer:
             width = max(2, round(self.width * self.wave_width))
             height = max(2, round(self.height * self.wave_height))
             signal = np.abs(procedural_wave(time, self.seed)) if wave is None else np.maximum(np.abs(wave[0]), np.abs(wave[1]))
-            mask = inkblot_mask(width, height, signal, time, style=self.wave_style, detail=self.wave_detail, seed=self.seed)
+            x, y = max(1, round(self.width * .012)), (self.height - height) // 2
+            if self.wave_style == 'digital-circuit':
+                mask, housing = vocoder_masks(width, height, signal, detail=self.wave_detail)
+                # The casing shares waveform opacity/blur, but emits no light.
+                backing = Image.new('RGBA', mask.size)
+                backing.putalpha(housing.point(lambda a: round(a * .96)))
+                holder = HudPanel('RGBA', mask.size, self.hud_blur_pixels, ('waveform',), self.hud_opacities, separate=True)
+                holder.replace('waveform', backing)
+                backing, pad = holder.finish()
+                region = image.crop((x - pad, y - pad, x - pad + backing.width, y - pad + backing.height)).convert('RGBA')
+                image.paste(Image.alpha_composite(region, backing).convert('RGB'), (x - pad, y - pad))
+            else:
+                mask = inkblot_mask(width, height, signal, time, style=self.wave_style, detail=self.wave_detail, seed=self.seed)
             color = self.hud_colors['waveform']
             if self.overlay_mode == 'RGBA':
                 panel = Image.new('RGBA', mask.size, (*color, 0))
@@ -697,7 +709,7 @@ class Renderer:
                 panel = ImageChops.multiply(Image.merge('RGB', (mask,) * 3), Image.new('RGB', mask.size, color))
             group = self.hud_panel(panel.size, 'waveform')
             group.replace('waveform', panel)
-            self.composite_panel(image, group, max(1, round(self.width * .012)), (self.height - height) // 2)
+            self.composite_panel(image, group, x, y)
             stats = [float(readout_luma.mean() / 255), float(readout_luma.max() / 255), float(np.abs(np.diff(readout_luma.astype(np.float32), axis=1)).mean() / 255)]
             return max(10, round(25 * s)), stats
         panel_w = min(self.width, round(110 * s))
