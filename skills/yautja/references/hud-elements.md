@@ -18,7 +18,7 @@ The target's optional colored stroke follows its opacity. Filled/stroked geometr
 | `target` | yes | yes | yes | Geometric reticle primary state |
 | `target-flash` | shared target | yes | no | Geometric reticle flash state |
 | `subject-outline` | yes | yes | yes | All-subject silhouette edges |
-| `subject-code` | yes | yes | yes | Upward code streams |
+| `subject-code` | yes | yes | yes | Rising glyph streams or body-centered light trails |
 | `subject-labels` | yes | yes | yes | Overhead glyph titles |
 | `subject-carets` | yes | yes | yes | Headward title pointers |
 | `analysis-grid` | yes | yes | yes | Search grid and moving XY locator |
