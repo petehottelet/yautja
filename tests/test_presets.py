@@ -29,10 +29,10 @@ class PresetTests(unittest.TestCase):
             models.assert_not_called()
             convert.assert_not_called()
         presets = {entry['id']: entry for entry in report['presets']}
-        self.assertEqual(report['presets'][-1]['id'], 'netrunner')
+        self.assertEqual(report['presets'][-1]['id'], 'fremont')
         self.assertEqual(presets['netrunner']['name'], 'Netrunner')
         self.assertEqual(presets['netrunner']['aliases'], ['ghost-signal'])
-        self.assertEqual(set(presets) - {'hottropic', 'netrunner'}, set(PALETTES))
+        self.assertEqual(set(presets) - {'hottropic', 'netrunner', 'fremont'}, set(PALETTES))
         for name in PALETTES:
             args = parser().parse_args(['--stylepreset', name])
             self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'palette'))

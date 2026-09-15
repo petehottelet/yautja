@@ -108,21 +108,23 @@ def vocoder_mask(width, height, signal, *, detail=.6):
 
 
 def vocoder_masks(width, height, signal, *, detail=.6):
-    """Separate LED emission from the dark rounded housing behind each row."""
+    """Separate active light, rounded housings, and unlit LED segments."""
     ss = 3
     mask = Image.new('L', (width * ss, height * ss))
     housing = Image.new('L', mask.size)
+    inactive = Image.new('L', mask.size)
     values = np.clip(np.abs(np.nan_to_num(np.asarray(signal, np.float32))), 0, 1)
-    if not len(values) or not values.max():
-        return Image.new('L', (width, height)), Image.new('L', (width, height))
+    if not len(values):
+        values = np.zeros(1, np.float32)
     # Lay the trailing audio window down the entire stack. Each row responds
-    # independently; constant audio stays steady and silent bins stay dark.
+    # independently; constant audio stays steady and silence shows idle bars.
     segments = min(max(1, height // 3), 2 * round(12 + detail * 10))
     bins = np.linspace(0, len(values), segments + 1)
     pitch = height / segments
     bar_height = max(1, round(pitch * .56))
     draw = ImageDraw.Draw(mask)
     casing = ImageDraw.Draw(housing)
+    idle = ImageDraw.Draw(inactive)
     # The LED grid is anchored to the column center, so changing row widths
     # reveals or hides end segments without shifting the interior dividers.
     cell_pitch = max(2, width / 15)
@@ -131,10 +133,11 @@ def vocoder_masks(width, height, signal, *, detail=.6):
     for row, (lo, hi) in enumerate(zip(bins, bins[1:])):
         window = values[int(lo):max(int(lo) + 1, math.ceil(hi))]
         energy = .65 * float(np.sqrt(np.mean(window ** 2))) + .35 * float(window.max())
-        strength = float(np.clip(energy * 6, 0, 1) ** .3)
-        if not strength:
-            continue
-        bar_width = max(1, round(width * .94 * (.62 + .38 * strength) * (.76 if row % 2 == 0 else 1)))
+        # A steep response makes attacks visibly switch LEDs on. The fixed
+        # casing and idle segments remain visible below the activation floor.
+        strength = float(np.clip((energy - .055) / .08, 0, 1) ** .5)
+        lit_span = .3 + .7 * strength if strength else 0.
+        bar_width = max(1, round(width * .94 * (.76 if row % 2 == 0 else 1)))
         x = (width - bar_width) / 2
         y = round((row + .5) * pitch - bar_height / 2)
         box = (round(x * ss), y * ss, round((x + bar_width) * ss) - 1, (y + bar_height) * ss - 1)
@@ -145,10 +148,14 @@ def vocoder_masks(width, height, signal, *, detail=.6):
             distance = abs(cx - width / 2) / max(.5, bar_width / 2)
             if distance >= 1:
                 continue
-            brightness = (.025 + .975 * math.cos(distance * math.pi / 2) ** 2) * (.88 + .12 * strength)
-            draw.rectangle((round((cx - cell_width / 2) * ss), round((y + inset) * ss),
-                            round((cx + cell_width / 2) * ss) - 1, round((y + bar_height - inset) * ss) - 1),
-                           fill=round(255 * brightness))
+            led = (round((cx - cell_width / 2) * ss), round((y + inset) * ss),
+                   round((cx + cell_width / 2) * ss) - 1, round((y + bar_height - inset) * ss) - 1)
+            idle.rectangle(led, fill=round(255 * (.15 + .85 * math.cos(distance * math.pi / 2) ** 2)))
+            if distance < lit_span:
+                edge = float(np.clip((lit_span - distance) * 8, 0, 1))
+                brightness = (.55 + .45 * math.cos(distance / lit_span * math.pi / 2) ** 2) * (.75 + .25 * strength)
+                draw.rectangle(led, fill=round(255 * edge * brightness))
     mask = ImageChops.multiply(mask, housing)
+    inactive = ImageChops.multiply(inactive, housing)
     # Box downsampling keeps the tiny dividers dark at gallery resolution.
-    return tuple(layer.resize((width, height), Image.Resampling.BOX) for layer in (mask, housing))
+    return tuple(layer.resize((width, height), Image.Resampling.BOX) for layer in (mask, housing, inactive))

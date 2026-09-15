@@ -11,7 +11,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 from .colors import parse_hex
 
-SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure',
+SIGNAL_OPTIONS = ('scene_mode', 'scene_tint', 'scene_tint_strength', 'scene_exposure', 'scene_highlights',
                   'subject_outline', 'subject_code', 'subject_labels',
                   'code_size', 'code_speed', 'code_density', 'subject_head_gap', 'subject_title_gap', 'subject_caret_scale')
 SUBJECT_ELEMENTS = ('subject-outline', 'subject-code', 'subject-labels', 'subject-carets')
@@ -72,12 +72,13 @@ class SignalStyle:
     def __init__(self, *, scene_mode='thermal', scene_tint='#548568', scene_tint_strength=.8,
                  scene_exposure=.65, subject_outline=False, subject_code=False, subject_labels=False,
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
-                 subject_title_gap=18., subject_caret_scale=1.):
+                 subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.):
         if scene_mode not in ('thermal', 'source'):
             raise ValueError('--scene-mode must be thermal or source')
         self.tint = parse_hex(scene_tint)
         for key, value, low, high in (
             ('scene-tint-strength', scene_tint_strength, 0, 1), ('scene-exposure', scene_exposure, .1, 2),
+            ('scene-highlights', scene_highlights, 0, 1),
             ('code-size', code_size, 8, 80), ('code-speed', code_speed, 0, 5), ('code-density', code_density, 0, 1),
             ('subject-head-gap', subject_head_gap, 0, 120), ('subject-title-gap', subject_title_gap, 0, 80),
             ('subject-caret-scale', subject_caret_scale, .25, 3)):
@@ -85,6 +86,7 @@ class SignalStyle:
                 raise ValueError(f'--{key} must be between {low} and {high}')
         self.scene_mode, self.scene_tint = scene_mode, scene_tint
         self.scene_tint_strength, self.scene_exposure = scene_tint_strength, scene_exposure
+        self.scene_highlights = scene_highlights
         self.subject_outline, self.subject_code, self.subject_labels = subject_outline, subject_code, subject_labels
         self.code_size, self.code_speed, self.code_density = code_size, code_speed, code_density
         self.subject_head_gap, self.subject_title_gap = subject_head_gap, subject_title_gap
@@ -100,6 +102,10 @@ class SignalStyle:
         luma = rgb @ np.array([.2126, .7152, .0722], np.float32)
         tint = np.asarray(self.tint, np.float32) / max(1, max(self.tint))
         tinted = luma[..., None] * tint
+        if self.scene_highlights:
+            highlight = np.clip((luma - .68) / .32, 0, 1)
+            highlight = (highlight * highlight * (3 - 2 * highlight)) * self.scene_highlights
+            tinted = tinted * (1 - highlight[..., None]) + luma[..., None] * highlight[..., None]
         out = (rgb * (1 - self.scene_tint_strength) + tinted * self.scene_tint_strength) * self.scene_exposure
         return Image.fromarray(np.uint8(np.clip(out * 255, 0, 255)))
 

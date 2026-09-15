@@ -58,19 +58,21 @@ class HudStylingTests(unittest.TestCase):
         mask = np.zeros(field.shape, np.float32)
         mask[130:470, 400:580] = 1
         subjects = [Subject(mask, 'person', .95, track_id=1)]
-        def render(element=None):
+        def render(element=None, analysis=False):
             renderer = Renderer(*self.size, show_timecode=True, verbose=True, glow=0,
+                                analysis=analysis,
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_blur_elements=None if element is None else element + '=8')
             image = Image.new('RGB', self.size)
-            renderer.draw_hud(image, field, 1, subjects=subjects)
+            renderer.draw_hud(image, field, 1, subjects=subjects, static=True)
             self.assertTrue(renderer.annotation_positions)
             return np.asarray(image)
         sharp = render()
         for key in BLUR_ELEMENTS:
             if key != 'target':
                 with self.subTest(element=key):
-                    self.assertGreater(np.count_nonzero(sharp != render(key)), 10)
+                    active = render(analysis=True) if key.startswith('analysis-') else sharp
+                    self.assertGreater(np.count_nonzero(active != render(key, analysis=key.startswith('analysis-'))), 10)
 
     def test_hud_off_suppresses_stroke_and_blur_without_softening_the_scene(self):
         np.testing.assert_array_equal(self.picture(hud=False), self.picture(hud=False, hud_blur=20,

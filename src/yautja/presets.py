@@ -6,11 +6,12 @@ import os
 from pathlib import Path
 import tempfile
 
-from .looks import LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, COMPLETE_PRESETS, normalize_preset
+from .looks import LOOK_PRESETS, PRESET_LABELS, PRESET_DESCRIPTIONS, LEVEL_OPTIONS, COMPLETE_PRESETS, normalize_preset
 from .signal import SIGNAL_OPTIONS
+from .analysis import ANALYSIS_OPTIONS
 
 VISUAL_OPTIONS = (
-    'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'hud_glyphs', 'random_colors', *SIGNAL_OPTIONS,
+    'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'hud_glyphs', 'random_colors', *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS,
     'hud', 'hud_blur', 'hud_blur_elements', 'hud_opacity', 'hud_opacity_elements',
     'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten',
     'seed', 'grain', 'glow', 'sensor_texture', 'sensor_resolution', 'pixelation',
@@ -29,9 +30,7 @@ MAX_BYTES = 65536
 def catalog():
     return {'schema_version': 1, 'presets': [
         {'id': name, 'name': label, 'kind': 'look' if name in COMPLETE_PRESETS else 'palette',
-         'description': ('Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.'
-                         if name == 'hottropic' else 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.'
-                         if name == 'netrunner' else f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
+         'description': PRESET_DESCRIPTIONS.get(name, f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
          'aliases': ['ghost-signal'] if name == 'netrunner' else [],
          'settings': dict(LOOK_PRESETS[name])} for name, label in PRESET_LABELS.items()]}
 

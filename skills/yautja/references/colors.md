@@ -141,3 +141,7 @@ yautja "clip.mov" "features.mp4" --stylepreset hottropic --thermal very-detailed
 ```
 
 JSON reports include `look_preset`, `thermal_transfer` (`legacy`, `continuous`, or `banded`), all six grading values, scalar softness units, and resolved positioned palette colors. Built-in recipe values remain fixed; save a customized version as a separate JSON preset. See [presets.md](presets.md) for creation, sharing, and file validation.
+
+## Analysis HUD elements
+
+Fremont adds `analysis-grid`, `analysis-text`, and `analysis-outline` to every HUD color, blur, opacity, and neon map. Standard colors are pale white; the palette theme uses its accent for the grid and its light color for text/outlines. `--scene-highlights` restores neutral highlights above source-mode tint independently of thermal palettes. See [analysis.md](analysis.md).

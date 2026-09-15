@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yautja"
-version = "2.6.3"
+version = "2.7.0"
 description = "Sci-fi segmentation, re-skinning, and annotation for thermal-style images and video."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -49,4 +49,4 @@ include = ["yautja*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-yautja = ["assets/glyphs.json", "assets/cyber-glyphs.json"]
+yautja = ["assets/glyphs.json", "assets/cyber-glyphs.json", "assets/fonts/Michroma-Regular.ttf", "assets/fonts/Michroma-OFL.txt", "assets/fonts/README.md"]

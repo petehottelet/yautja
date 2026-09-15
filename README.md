@@ -51,7 +51,7 @@ python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
 ```
 
-The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Netrunner uses segmented outlines and needs the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, and titles require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. A color palette works with Classic. Palette starter presets and HotTropic select Cinematic; Netrunner and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
 
 ### Video
 
@@ -117,7 +117,8 @@ A **style preset** is the broadest visual option: a named bundle of settings for
 | Part of a style preset | Individual controls | What it changes |
 | --- | --- | --- |
 | Thermal detail | `--thermal` | How much subject and scenery detail is preserved |
-| Scene treatment | `--scene-mode`, `--scene-tint`, tint strength and exposure | Thermal recoloring or the original scene with a color grade |
+| Scene treatment | `--scene-mode`, `--scene-tint`, tint strength, exposure, `--scene-highlights` | Thermal recoloring or the original scene with a color grade |
+| Readable analysis | `--analysis`, scan speed, blink rate, safe margin | Moving XY grid, descriptive readouts, and selected-subject outlines |
 | Color palette | `--palette`, `--palette-colors` | The colors assigned from cold to hot |
 | Thermal levels and tone | `--thermal-levels`, `--thermal-band-softness`, black/white points, gamma, softness | Color bands, transitions, contrast, and smoothing |
 | HUD styling | `--hud`, `--HUDglyphs`, `--hud-theme`, colors, blur, opacity, `--neon` | Glyph set, overlay visibility and appearance, including individual element overrides |
@@ -249,6 +250,20 @@ yautja "clip.mov" "custom-signal.mp4" --stylepreset netrunner --code-speed 1.5 -
 
 Outlines use freshly segmented contours on each frame, while optical flow predicts their positions between detections. This reduces boundary drift during movement, with additional processing time. Titles are decorative labels that stay with a track. A fixed glyph grid lights up in rising streams with bright heads, fading tails, and occasional character changes, clipped within each mask. Glow can extend past the edge. `--code-speed 0` freezes the rain. `--no-subject-code`, `--no-subject-outline`, and `--no-subject-labels` switch those parts off independently; `--no-hud` hides them all. Tracking and occlusion quality depend on the input footage. [Complete controls and preset customization](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/cyber.md).
 
+### Fremont style preset
+
+**Fremont** preserves fine source detail under a **red/burgundy grade**, with **white readable text**, a **moving XY search grid**, and **white subject outlines that blink during analysis**. It searches, acquires a detected subject, analyzes it, and holds the result before moving on. Descriptions stay inside the screen, including portrait frames. The numbers are decorative; labels describe detected categories such as person, dog, car, or motorcycle.
+
+[![Fremont: detailed red scene with white scan grid, analysis text and blinking figure outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.7.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-fremont.gif?v=2.7.0)
+
+```bash
+yautja "clip.mov" "fremont.mp4" --stylepreset fremont
+```
+
+Requires Yautja 2.7.0+ and the segmented setup above; no figure catalog is needed. The preview slows one continuous shot to show the complete scan sequence. Stills show the held analysis immediately. Empty scenes remain in search mode, and cuts or lost tracks restart scanning.
+
+Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. The source highlights are adjustable with `--scene-highlights`. `--no-analysis` hides the scan overlay; `--no-hud` hides all overlays. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
+
 ### Turn the HUD off
 
 Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, glyphs, timecode, callouts, connector lines, and target markers—even when `--timecode` or `--verbose` is also supplied. Thermal style, palette, textures, and the video soundtrack stay active. HUD is on by default; `--hud` turns it back on.
@@ -356,23 +371,23 @@ All of these controls are independent of VHS, grain, pixelation, and the sensor-
 
 ### Waveforms
 
-Choose a Rorschach inkblot or one of three **digital distortion** waveforms. These examples use **Redline**, with `--wave-width 0.14 --wave-height 1 --wave-gain 4` (extra audio gain for this quiet clip); the narrower Vocoder Bars example uses `--wave-width 0.07`. The illuminated shape follows the soundtrack; GIFs are silent.
+Choose a Rorschach inkblot or one of three **digital distortion** waveforms. These examples use **Redline**, with `--wave-width 0.14 --wave-height 1 --wave-gain 4` (extra audio gain for this quiet clip); the narrower Vocoder Bars example uses `--wave-width 0.09`. The illuminated shape follows the soundtrack; GIFs are silent.
 
 | Filled · broad connected lobes | Split · separated inkblots | Hollow · dark interior pockets |
 | --- | --- | --- |
 | [![Filled mirrored Rorschach waveform spanning the image height](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach.gif) | [![Separated mirrored inkblots responding to the soundtrack](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-split.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-split.gif) | [![Hollow mirrored waveform lobes with dark pockets](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-rorschach-hollow.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-rorschach-hollow.gif) |
 | `--wave-style rorschach` | `--wave-style rorschach-split` | `--wave-style rorschach-hollow` |
 
-The digital styles use distinct geometries: stacked blocks with square cutouts, scattered data packets, or horizontal vocoder bars in one narrow vertical stack. The vocoder spans the frame height along the left edge; each rounded, dark bar contains small vertical LED segments, brightest at the center and fading toward the ends. Alternating shorter and longer rows widen and brighten with their part of the audio waveform. Its red glow is inspired by KITT’s voice display. Blocks and Shards require Yautja 2.6.0+; this segmented Vocoder Bars styling uses 2.6.3+.
+The digital styles use distinct geometries: stacked blocks with square cutouts, scattered data packets, or horizontal vocoder bars in one narrow vertical stack. The vocoder spans the frame height along the left edge; each rounded, dark bar contains small vertical LED segments, brightest at the center and fading toward the ends. Audio lights up vivid red segments across alternating shorter and longer rows, with an exaggerated response and a strong red halo. Inactive segments remain visible in dark burgundy fading to black, including during silence. Its red glow is inspired by KITT’s voice display. Blocks and Shards require Yautja 2.6.0+; this segmented Vocoder Bars styling uses 2.7.0+.
 
 | Bitcrush Blocks | Packet Shards | Vocoder Bars |
 | --- | --- | --- |
-| [![Chunky stacked waveform blocks with square notches](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-blocks.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-blocks.gif?v=2.6.0) | [![Scattered unequal pixel packets responding to audio](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-shards.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-shards.gif?v=2.6.0) | [![Rounded horizontal vocoder bars containing red LED segments with dark ends and a soft glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-circuit.gif?v=2.6.3)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-circuit.gif?v=2.6.3) |
+| [![Chunky stacked waveform blocks with square notches](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-blocks.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-blocks.gif?v=2.6.0) | [![Scattered unequal pixel packets responding to audio](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-shards.gif?v=2.6.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-shards.gif?v=2.6.0) | [![Bright glowing red active vocoder segments above dark burgundy-to-black inactive bars](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-digital-circuit.gif?v=2.7.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/waveform-digital-circuit.gif?v=2.7.0) |
 | `--wave-style digital-blocks` | `--wave-style digital-shards` | `--wave-style digital-circuit` |
 
 `--wave-width` sets maximum width as a fraction of the frame (0.02–0.3, default 0.12); `--wave-height` sets height (0.1–1, default 0.96). In Rorschach styles, `--wave-detail` goes from broad and smooth at 0 to sharper edge spikes and more intricate lobes at 1 (default 0.6). These shapes keep a thick mirrored core, with pointed, irregular edges driven by short peaks and troughs in the waveform. Quiet ambience is amplified for visibility, and louder audio fills more of the column. Silent pauses within audible tracks stay empty; the existing fallback for an absent or entirely silent soundtrack remains procedural.
 
-In Blocks and Shards, `--wave-detail` controls pixel density: lower values make larger chunks, higher values make finer blocks. In Vocoder Bars it controls the number of horizontal rows. Row positions stay fixed while audio changes their widths and brightness; silent portions leave dark gaps. The vocoder preview uses `--hud-theme custom --hud-colors "waveform=#EF5042"` and `--neon --neon-intensity 0 --neon-elements "waveform=0.12" --neon-spread 0.15 --neon-core-whiten 0` for warm-red segments with a restrained glow. The dark casing shares waveform opacity and blur, and emits no light; color and neon remain configurable. The original `--wave-style trace` stays the default. All six styled waveforms replace the left trace, scale, and flanking glyph rows. They use the existing waveform color, work with all HUD themes, blur, opacity, and neon, and leave timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
+In Blocks and Shards, `--wave-detail` controls pixel density: lower values make larger chunks, higher values make finer blocks. In Vocoder Bars it controls the number of horizontal rows. The casings and idle segments stay fixed while audio expands and brightens the active segments. Silence leaves the dim inactive bars visible. The vocoder preview uses `--hud-theme custom --hud-colors "waveform=#FF302B"` and `--neon --neon-intensity 0 --neon-elements "waveform=1.2" --neon-spread 0.4 --neon-core-whiten 0` for bright red active segments with a strong glow. Inactive segments use a dim version of the chosen waveform color and emit no light. The dark casing shares waveform opacity and blur, and emits no light; color and neon remain configurable. The original `--wave-style trace` stays the default. All six styled waveforms replace the left trace, scale, and flanking glyph rows. They use the existing waveform color, work with all HUD themes, blur, opacity, and neon, and leave timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails. Each preview links to its large animated GIF.
 
 ### Target shapes
 
@@ -497,7 +512,7 @@ Use your environment's Python. Grounding DINO, SAM 2.1, and ViTPose are shared b
 
 `--sensor-resolution 160` increases heat-field abstraction, `--warm-objects "person,dog,bird"` selects warm categories, and `--hot-objects "fire"` explicitly adds an artistic hot category. Reports include the actual device, precision, timings, model revisions, and resolved effects. Full precision is the default; `--precision bf16` is experimental. [Earlier CPU/CUDA validation](https://github.com/petehottelet/yautja/blob/main/docs/performance-validation.md).
 
-Yautja's code is MIT; the separately installed models retain their Apache-2.0 licenses. Model weights, runtime binaries, and gallery GIFs are excluded from the portable skill archive. [Dependency licensing details](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/dependencies.md).
+Yautja's code is MIT; the separately installed models retain their Apache-2.0 licenses. The bundled Michroma font retains its SIL Open Font License 1.1, included beside the font in the application package. Model weights, runtime binaries, and gallery GIFs are excluded from the portable skill archive. [Dependency licensing details](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/dependencies.md).
 
 ## Local skill bundles and updates
 

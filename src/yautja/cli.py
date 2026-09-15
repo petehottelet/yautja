@@ -29,13 +29,14 @@ from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, COMPLETE_PRESETS
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES, resolve_target_shape
 from .signal import SIGNAL_OPTIONS, SignalStyle
+from .analysis import ANALYSIS_OPTIONS, AnalysisHUD
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
-                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS)
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS)
 
 
 def target_selection(args, source):
@@ -52,7 +53,7 @@ def extra_report(renderer, selection, *, static=False):
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
     outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
                                                             for key in ('target', 'target-flash'))
-    return {**renderer.transfer.report(), **renderer.signal.report(), 'hud_glyphs': renderer.hud_glyphs,
+    return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), 'hud_glyphs': renderer.hud_glyphs,
             'look_preset': renderer.look_preset,
             'target_shape': renderer.target_overlay.shape,
             'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
@@ -243,7 +244,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, refine_masks=args.hud and args.subject_outline and not args.list_figures)
+                              args.detect_interval, refine_masks=args.hud and (args.subject_outline or args.analysis) and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -546,7 +547,7 @@ def parser():
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Original Yautja by default; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
-    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Netrunner, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including HotTropic, Netrunner, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
     source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
     management = p.add_mutually_exclusive_group()
     management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
@@ -564,6 +565,11 @@ def parser():
     p.add_argument('--scene-tint', default='#548568', help='RGB hex tint for source scene mode; default muted green #548568')
     p.add_argument('--scene-tint-strength', type=float, default=.8, help='Source tint blend, 0-1; 0 preserves source colors')
     p.add_argument('--scene-exposure', type=float, default=.65, help='Source scene brightness multiplier, 0.1-2; default 0.65')
+    p.add_argument('--scene-highlights', type=float, default=0., help='Restore neutral highlights above the source tint, 0-1; 0 retains the tint, 1 makes bright highlights white')
+    p.add_argument('--analysis', action=argparse.BooleanOptionalAction, default=False, help='Readable scan HUD with a moving XY grid, automatic subject selection, descriptive text, and blinking analysis outlines; requires a segmented mode')
+    p.add_argument('--analysis-speed', type=float, default=1., help='Search/acquire/analysis/hold cycle speed, 0-5; 1 takes six seconds, 0 freezes the search')
+    p.add_argument('--analysis-blink-rate', type=float, default=2., help='Outline blinks per second during analysis, 0-4; 0 keeps it steady')
+    p.add_argument('--analysis-margin', type=float, default=.035, help='Safe margin for readable analysis text as a fraction of the short frame edge, 0.01-0.15')
     p.add_argument('--subject-outline', action=argparse.BooleanOptionalAction, default=False, help='Outline detected subject silhouettes; requires a segmented mode')
     p.add_argument('--subject-code', action=argparse.BooleanOptionalAction, default=False, help='Flow glyph code upward inside detected silhouettes; requires a segmented mode')
     p.add_argument('--subject-labels', action=argparse.BooleanOptionalAction, default=False, help='Stable overhead glyph titles and downward carets for detected subjects; requires a segmented mode')
@@ -675,8 +681,9 @@ def main(argv=None):
         hud_opacities(args.hud_opacity, args.hud_opacity_elements)
         NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed, args.neon_core_whiten)
         SignalStyle(**{key: getattr(args, key) for key in SIGNAL_OPTIONS})
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels):
-            p.error('Subject outlines, code, and titles require --thermal low-detail, cinematic, detailed, or very-detailed')
+        AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
+        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.subject_code or args.subject_labels or args.analysis):
+            p.error('Subject outlines, code, titles, and --analysis require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:

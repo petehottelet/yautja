@@ -45,8 +45,9 @@ class HudOpacityTests(unittest.TestCase):
         mask = np.zeros(field.shape, np.float32)
         mask[130:470, 400:580] = 1
         subjects = [Subject(mask, 'person', .95, track_id=1)]
-        def picture(key=None):
+        def picture(key=None, analysis=False):
             renderer = Renderer(960, 540, show_timecode=True, verbose=True,
+                                analysis=analysis,
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 hud_opacity_elements=None if key is None else key + '=0')
             return np.asarray(renderer.render_field(field, 1, subjects=subjects,
@@ -56,8 +57,9 @@ class HudOpacityTests(unittest.TestCase):
             if key == 'target-flash':
                 continue  # Its animated state is checked separately below.
             with self.subTest(element=key):
-                hidden = picture(key)
-                self.assertGreater(np.count_nonzero(baseline != hidden), 10)
+                hidden = picture(key, analysis=key.startswith('analysis-'))
+                active = picture(analysis=True) if key.startswith('analysis-') else baseline
+                self.assertGreater(np.count_nonzero(active != hidden), 10)
                 if key.startswith('waveform'):
                     np.testing.assert_array_equal(baseline[:, 150:], hidden[:, 150:])
 

@@ -41,6 +41,7 @@ def variants():
         result[f'texture-{name}'] = {'thermal': 'cinematic', **options}
     result.update({
         'look-netrunner': {'look_preset': 'netrunner'},
+        'look-fremont': {'look_preset': 'fremont'},
         'look-thermal-spectrum-reference-v1': {'look_preset': 'hottropic'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x')},
@@ -76,9 +77,9 @@ def variants():
                                     'hud_opacity_elements': 'waveform=0.3,target=0.7,timecode=0.9'},
         **{f'waveform-{style}': {'thermal': 'cinematic', 'palette': 'redline', 'wave_style': style,
                                'wave_width': .14, 'wave_height': 1.,
-                               **({'wave_width': .07, 'hud_theme': 'custom', 'hud_colors': 'waveform=#EF5042',
-                                   'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=0.12',
-                                   'neon_spread': .15, 'neon_core_whiten': 0.}
+                               **({'wave_width': .09, 'hud_theme': 'custom', 'hud_colors': 'waveform=#FF302B',
+                                   'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1.2',
+                                   'neon_spread': .4, 'neon_core_whiten': 0.}
                                   if style == 'digital-circuit' else {})}
            for style in ('rorschach', 'rorschach-split', 'rorschach-hollow', 'digital-blocks', 'digital-shards', 'digital-circuit')},
     })
@@ -140,7 +141,7 @@ def main():
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
                               surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
-                              refine_masks=any(o.get('subject_outline') and o.get('hud', True) for o in resolved_settings))
+                              refine_masks=any((o.get('subject_outline') or o.get('analysis')) and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
         if 'timecode' in resolved:

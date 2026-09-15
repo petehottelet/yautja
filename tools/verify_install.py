@@ -107,6 +107,25 @@ def check_runtime(python, env, cwd, prefix):
     assert neon['neon'] and neon['palette'] == 'abyss' and neon['target_colors'] == ['#267085', '#267085']
     presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
     assert any(p['id'] == 'hottropic' and p['name'] == 'HotTropic' for p in presets['presets'])
+    assert presets['presets'][-1]['id'] == 'fremont'
+    run(['yautja', '--stylepreset', 'fremont', '--save-preset', 'fremont.json'], cwd, image_env)
+    # Exercise the packaged font and analysis renderer offline with a supplied
+    # mask; model installation is independent of this base-package check.
+    run([python, '-c', '''
+import numpy as np
+from PIL import Image
+from yautja.render import Renderer
+from yautja.semantic import Subject
+from yautja.analysis import analysis_font
+assert analysis_font(16).getname()[0] == 'Michroma'
+frame = Image.open('photo.jpg').convert('RGB')
+mask = np.zeros((frame.height, frame.width), np.float32)
+mask[25:150, 130:200] = 1
+renderer = Renderer(*frame.size, look_preset='fremont')
+result = renderer.render(frame, 0, subjects=[Subject(mask, 'person', .9, track_id=1)], target_static=True)
+assert renderer.analysis.phase == 'HOLD' and len(renderer.analysis.text_boxes) == 3
+result.save('fremont.png')
+'''], cwd, image_env)
     run(['yautja', '--stylepreset', 'hottropic', '--thermal', 'classic',
          '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)
     preset = json.loads(run(['yautja', 'photo.jpg', 'preset.png', '--preset-file', 'saved-look.json'], cwd, image_env))

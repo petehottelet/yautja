@@ -81,3 +81,7 @@ Precedence is **CLI defaults → built-in base → file settings → explicit CL
 Files are data only, limited to 64 KiB. Unknown fields/settings, duplicate keys, unsupported schema versions, invalid types, and invalid settings fail without rendering. Presets cannot contain commands, external imports, media paths, or actions. Use the supported 2.x CLI to validate them; the lower-level Python helpers remain experimental.
 
 Conversion reports retain `look_preset` and add `preset_name`, `preset_kind` (`look`, `palette`, or `custom`), and `preset_file`. These fields are null when unused. Existing reports continue to include resolved colors, levels, effects, and settings.
+
+## Fremont
+
+`fremont` is a complete visual preset with source-scene grading and automatic readable analysis. The five visual settings `analysis`, `analysis_speed`, `analysis_blink_rate`, `analysis_margin`, and `scene_highlights` save/load with the preset and accept explicit overrides in either command order. See [analysis.md](analysis.md) for the recipe and new HUD elements. Detection classes such as vehicles remain per-conversion `--warm-objects` choices.

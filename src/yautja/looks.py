@@ -31,14 +31,31 @@ LOOK_PRESETS = {'hottropic': {
     'hud_opacity_elements': 'subject-code=0.8,waveform-axis=0.35,waveform-ticks=0.4',
     'verbose': False, 'timecode': True, 'target_flash': False, 'grain': 0., 'pixelation': 0,
     'sensor_texture': False, 'scanlines': False, 'heat_glow': 0.,
+}, 'fremont': {
+    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint': '#E51A24',
+    'scene_tint_strength': 1., 'scene_exposure': 1.25, 'scene_highlights': .95,
+    'hud': True, 'hud_theme': 'custom',
+    'hud_colors': ','.join(f'{key}=#F2F6FA' for key in HUD_DEFAULTS),
+    'analysis': True, 'analysis_speed': 1., 'analysis_blink_rate': 2., 'analysis_margin': .035,
+    'hud_opacity_elements': ','.join(f'{key}=0' for key in HUD_DEFAULTS if not key.startswith('analysis-')),
+    'subject_outline': False, 'subject_code': False, 'subject_labels': False,
+    'neon': False, 'glow': .25, 'verbose': False, 'timecode': False,
+    'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
+    'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
 }}
-COMPLETE_PRESETS = {'hottropic', 'netrunner'}
+COMPLETE_PRESETS = {'hottropic', 'netrunner', 'fremont'}
+PRESET_DESCRIPTIONS = {
+    'hottropic': 'Eleven colors, 12 soft thermal levels, dark scenery, no HUD or sensor texture.',
+    'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
+    'fremont': 'Detailed red/burgundy source scene, white readable analysis, moving XY search grid and blinking subject outlines.',
+}
 PRESET_LABELS = {
     'hottropic': 'HotTropic', 'yautja': 'Yautja', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
     'redline': 'Redline', 'virtualboy': 'Virtual Boy', 'green-phosphor': 'Green Phosphor',
     'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
     'thermal-spectrum': 'Thermal Spectrum',
     'netrunner': 'Netrunner',
+    'fremont': 'Fremont',
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}
                      for name in PRESET_LABELS if name not in COMPLETE_PRESETS})

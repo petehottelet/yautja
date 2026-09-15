@@ -8,3 +8,5 @@
 LICENSE text eol=lf
 *.toml text eol=lf
 *.in text eol=lf
+src/yautja/assets/fonts/Michroma-Regular.ttf binary
+src/yautja/assets/fonts/Michroma-OFL.txt whitespace=-blank-at-eol

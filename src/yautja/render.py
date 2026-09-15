@@ -19,6 +19,7 @@ from .waveform import WAVE_STYLES, inkblot_mask, vocoder_masks
 from .hud import HudPanel, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
 from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
+from .analysis import AnalysisHUD, ANALYSIS_ELEMENTS
 
 STOPS = [(0, (2, 3, 23)), (.12, (16, 9, 94)), (.28, (37, 25, 202)),
          (.43, (0, 132, 239)), (.56, (0, 222, 170)), (.68, (201, 240, 37)),
@@ -224,13 +225,17 @@ class Renderer:
                  scene_mode='thermal', scene_tint='#548568', scene_tint_strength=.8, scene_exposure=.65,
                  subject_outline=False, subject_code=False, subject_labels=False,
                  code_size=22., code_speed=1., code_density=.65, subject_head_gap=24.,
-                 subject_title_gap=18., subject_caret_scale=1.):
+                 subject_title_gap=18., subject_caret_scale=1., scene_highlights=0.,
+                 analysis=False, analysis_speed=1., analysis_blink_rate=2., analysis_margin=.035):
         self.width, self.height = width, height
         if hud_glyphs not in ('yautja', 'cyber'):
             raise ValueError('--HUDglyphs must be yautja or cyber')
         self.hud_glyphs = hud_glyphs
+        self.analysis = AnalysisHUD(analysis=analysis, analysis_speed=analysis_speed,
+                                    analysis_blink_rate=analysis_blink_rate, analysis_margin=analysis_margin)
         self.signal = SignalStyle(scene_mode=scene_mode, scene_tint=scene_tint, scene_tint_strength=scene_tint_strength,
-                                  scene_exposure=scene_exposure, subject_outline=subject_outline, subject_code=subject_code,
+                                  scene_exposure=scene_exposure, scene_highlights=scene_highlights,
+                                  subject_outline=subject_outline, subject_code=subject_code,
                                   subject_labels=subject_labels, code_size=code_size, code_speed=code_speed, code_density=code_density,
                                   subject_head_gap=subject_head_gap, subject_title_gap=subject_title_gap, subject_caret_scale=subject_caret_scale)
         self.transfer = ThermalTransfer(thermal_levels, thermal_band_softness, thermal_black_point,
@@ -293,7 +298,7 @@ class Renderer:
         # Alpha keeps gray ink gray over highlights and makes black ink visible.
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
-        self.overlay_mode = 'RGBA' if self.neon or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        self.overlay_mode = 'RGBA' if self.neon or analysis or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -313,6 +318,7 @@ class Renderer:
                             'timecode': 1.5, 'callouts': 1.5,
                             'leaders': max(1, 1.5 * s), 'markers': max(1.5, 2 * s)}
         self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in SUBJECT_ELEMENTS})
+        self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in ANALYSIS_ELEMENTS})
         self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
         self.fonts, self.tiles = {}, {}
@@ -375,7 +381,7 @@ class Renderer:
 
     def hud_panel(self, size, *elements):
         return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities,
-                        separate=self.neon or any(key in SUBJECT_ELEMENTS for key in elements))
+                        separate=self.neon or any(key in (*SUBJECT_ELEMENTS, *ANALYSIS_ELEMENTS) for key in elements))
 
     def composite_panel(self, image, panel, x, y):
         if self.neon:
@@ -627,7 +633,7 @@ class Renderer:
         image = highlight_glow(image, readout_luma, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.colors.palette[-1].mean() < self.colors.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id)
+            self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id, static=target_static)
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
             image = self.target_overlay.draw(image, time, targets, colors, shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
@@ -644,7 +650,7 @@ class Renderer:
             rgb = np.asarray(image, np.float32) + rng.normal(0, self.grain * 255, (self.height, self.width, 1))
             image = Image.fromarray(np.uint8(np.clip(rgb, 0, 255)))
         if self.hud:
-            self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects, shot_id=shot_id)
+            self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects, shot_id=shot_id, static=target_static)
             image = self.target_overlay.draw(image, time, targets,
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id,
                         static=target_static, neon_gain=self.neon_gain)
@@ -677,7 +683,7 @@ class Renderer:
         image = highlight_glow(image, u * 255, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.palette[-1].mean() < self.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id)
+            self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id, static=target_static)
             image = self.target_overlay.draw(image, time, targets,
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
@@ -689,11 +695,16 @@ class Renderer:
             height = max(2, round(self.height * self.wave_height))
             signal = np.abs(procedural_wave(time, self.seed)) if wave is None else np.maximum(np.abs(wave[0]), np.abs(wave[1]))
             x, y = max(1, round(self.width * .012)), (self.height - height) // 2
+            color = self.hud_colors['waveform']
             if self.wave_style == 'digital-circuit':
-                mask, housing = vocoder_masks(width, height, signal, detail=self.wave_detail)
-                # The casing shares waveform opacity/blur, but emits no light.
+                mask, housing, inactive = vocoder_masks(width, height, signal, detail=self.wave_detail)
+                # Idle segments share waveform ink, opacity and blur, but emit
+                # no light. Red ink produces a burgundy-to-black idle state.
                 backing = Image.new('RGBA', mask.size)
                 backing.putalpha(housing.point(lambda a: round(a * .96)))
+                standby = Image.new('RGBA', mask.size, (*[round(c * .2) for c in color], 0))
+                standby.putalpha(inactive)
+                backing = Image.alpha_composite(backing, standby)
                 holder = HudPanel('RGBA', mask.size, self.hud_blur_pixels, ('waveform',), self.hud_opacities, separate=True)
                 holder.replace('waveform', backing)
                 backing, pad = holder.finish()
@@ -701,7 +712,6 @@ class Renderer:
                 image.paste(Image.alpha_composite(region, backing).convert('RGB'), (x - pad, y - pad))
             else:
                 mask = inkblot_mask(width, height, signal, time, style=self.wave_style, detail=self.wave_detail, seed=self.seed)
-            color = self.hud_colors['waveform']
             if self.overlay_mode == 'RGBA':
                 panel = Image.new('RGBA', mask.size, (*color, 0))
                 panel.putalpha(mask)
@@ -757,10 +767,11 @@ class Renderer:
         self.composite_panel(image, panel, 0, 0)
         return size, stats
 
-    def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None):
+    def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None, static=False):
         if self.neon:
             self.neon_gain = self.neon_style.noise.gain(time, self.neon_style.flicker)
         self.signal.draw(self, image, subjects, time, shot_id)
+        self.analysis.draw(self, image, subjects, time, shot_id, static)
         s = self.scale
         size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.

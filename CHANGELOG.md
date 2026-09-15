@@ -1,9 +1,13 @@
 # Changelog
 
-## 2.6.3 — 2026-09-14
+## 2.7.0 — 2026-09-14
 
-- Refine Vocoder Bars into rounded dark housings filled with small vertical LED segments. Centers shine brighter and fade toward the ends, with alternating row lengths and audio-driven movement. Housing follows waveform opacity and blur without emitting neon light.
-- Refresh both GIF sizes with warm-red ink and restrained neon that preserves the individual segments; document the matching color and glow settings.
+- Add Fremont: detailed red/burgundy source grading with pale highlights, white readable analysis text, moving XY search grid, automatic subject selection, and blinking white outlines. Text stays within safe margins; cuts and lost tracks restart search. Decorative telemetry is seeded, while category labels come from detections.
+- Add independent analysis, cycle speed, blink rate, safe margin and source-highlight controls, per-element HUD styling, preset/report integration, and two Fremont preview sizes. Analysis outlines use current-frame contour refinement.
+- Bundle unmodified Michroma Regular with its SIL Open Font License 1.1 and attribution. The font retains its own license; code remains MIT.
+
+- Refine Vocoder Bars into rounded dark housings filled with small vertical LED segments. Audio activates bright segments with an exaggerated response above persistent dark burgundy-to-black inactive bars. Alternating row lengths stay fixed while the lit width expands with audio. Housing and idle segments follow waveform opacity and blur without emitting neon light.
+- Refresh both GIF sizes with vivid red ink, stronger neon, and a wider column that makes the waveform stand out; document the matching color and glow settings.
 
 ## 2.6.2 — 2026-09-14
 
