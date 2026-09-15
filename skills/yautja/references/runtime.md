@@ -8,7 +8,7 @@ Use the [PyPI package](https://pypi.org/project/yautja/) with the compatible com
 
 Reuse a compatible installed runtime first, including one installed with pipx. Check `yautja --version` and use `--doctor` to confirm its environment before adding dependencies. Do not create a second installation just because another route is now preferred.
 
-For a new installation, **pip in a virtual environment is the primary route**. Use an existing environment when it is suitable for this task, or create a dedicated one outside the skill folder. The public install command is `pip install yautja`; this skill uses the compatible range below. Install the `semantic` extra for segmented looks.
+For a new installation, **pip in a virtual environment is the primary route**. Use an existing environment when it is suitable for this task, or create a dedicated one outside the skill folder. The public install command is `pip install yautja`. Install the `semantic` extra for segmented looks.
 
 ### Virtual environment setup
 
