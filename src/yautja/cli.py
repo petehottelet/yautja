@@ -604,7 +604,7 @@ def parser():
     p.add_argument('--target-weak-spots', action=argparse.BooleanOptionalAction, default=False, help='Decorative holographic scan patches on selected subjects, not physical weak-point detection; requires segmentation')
     p.add_argument('--target-label-scale', type=float, default=1., help='Target caption size multiplier, 0.5-4')
     p.add_argument('--target-cursor', action=argparse.BooleanOptionalAction, default=False, help='Blink an underscore after the target caption')
-    p.add_argument('--geo-grid-projection', choices=['flat', 'sphere'], default='flat', help='Flat triangular lattice or curved geodesic sphere viewed from its center')
+    p.add_argument('--geo-grid-projection', choices=['flat', 'sphere'], default='flat', help='Flat triangular lattice or straight-edged triangular facets forming a surrounding sphere')
     p.add_argument('--target-motif', choices=['none', 'triangles'], default='none', help='Independent hollow-triangle target ornaments')
     p.add_argument('--target-motif-count', type=int, default=7, help='Triangles per visible target, 0-24')
     p.add_argument('--target-motif-scale', type=float, default=1., help='Triangle ornament scale, 0.25-3')

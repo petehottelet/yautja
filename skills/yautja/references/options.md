@@ -678,7 +678,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `flat`, `sphere`
 - Units: not applicable
 - Default: "flat"
-- Applies: Flat triangular lattice or curved geodesic sphere viewed from its center
+- Applies: Flat triangular lattice or straight-edged triangular facets forming a surrounding sphere
 - Requires: --geo-grid and --hud
 - Persistence: saved
 - Example: [Complete recipe](examples.md#grid)

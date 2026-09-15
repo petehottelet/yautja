@@ -63,12 +63,17 @@ class PresetRefreshTests(unittest.TestCase):
         self.assertEqual(sum(np.linalg.norm(c) > .74 for c in centers), 4)
         self.assertEqual(sum(np.linalg.norm(c) < .64 for c in centers), 6)
 
-    def test_sphere_has_curved_great_circle_edges_and_stable_seed(self):
+    def test_sphere_has_straight_facets_shared_vertices_and_stable_seed(self):
         a = GeometryStyle(geo_grid_projection='sphere')
-        a.lattice(self.size, 42)
+        vertices, edges, _ = a.lattice(self.size, 42)
         curves = np.asarray(a.curves)
         self.assertTrue(np.isfinite(curves).all())
-        self.assertGreater(np.max(np.linalg.norm(curves[:,4]-(curves[:,0]+curves[:,-1])/2, axis=1)), 2)
+        self.assertEqual(curves.shape[1:], (2,2))
+        np.testing.assert_array_equal(curves,vertices[np.asarray(edges)])
+        # The straight sides still connect a 3D spherical mesh, not a flat grid.
+        vectors = a.sphere_cache[1]
+        np.testing.assert_allclose(np.linalg.norm(vectors,axis=1),1)
+        self.assertGreater(np.ptp(vectors[:,2]),1.5)
         b = GeometryStyle(geo_grid_projection='sphere')
         b.lattice(self.size, 42)
         np.testing.assert_array_equal(curves, b.curves)

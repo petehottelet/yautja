@@ -165,8 +165,8 @@ class GeometryStyle:
             rng = np.random.default_rng()
             rng.bit_generator.state = state
             return self.project_sphere(size, signature, vectors, faces, depth, rng, angle, rotating)
-        # Subdivide an icosahedron on the unit sphere. Stereographic projection
-        # from its center makes great-circle edges bow across a wide field of view.
+        # Subdivide an icosahedron on the unit sphere. Project its shared vertices
+        # and join them with straight edges, so triangular facets imply curvature.
         phi = (1 + math.sqrt(5)) / 2
         vertices = np.array([(-1,phi,0),(1,phi,0),(-1,-phi,0),(1,-phi,0),
                              (0,-1,phi),(0,1,phi),(0,-1,-phi),(0,1,-phi),
@@ -216,13 +216,11 @@ class GeometryStyle:
         near_limit = min(-.65, max(-.99, (focal**2 - corner_radius**2) / (focal**2 + corner_radius**2) - .1))
         edges = sorted({tuple(sorted((a,b))) for face in faces for a,b in zip(face, (*face[1:],face[0]))
                         if rotating or min(vectors[a,2], vectors[b,2]) > near_limit})
-        self.curves = []
-        for a, b in edges:
-            t = np.linspace(0, 1, 9)[:, None]
-            arc = vectors[a] * (1-t) + vectors[b] * t
-            arc /= np.linalg.norm(arc, axis=1)[:, None]
-            self.curves.append(project(arc) if np.min(arc[:,2]) > near_limit or not rotating else np.full((9,2), np.nan))
         vertices = project(vectors)
+        # Keep complete edge IDs during rotation, including hidden edges. The
+        # breaks and satellite dots follow the same straight segment as its ink.
+        self.curves = [vertices[[a,b]] if not rotating or min(vectors[a,2], vectors[b,2]) > near_limit
+                       else np.full((2,2), np.nan) for a,b in edges]
         nodes = [i for i in range(len(vertices)) if (rotating or vectors[i,2] > near_limit) and rng.random() < .45]
         if rotating:
             vertices[vectors[:,2] <= near_limit] = np.nan
@@ -230,7 +228,7 @@ class GeometryStyle:
         return vertices, edges, nodes
 
     def grid_accents(self, size, seed, time, static=False):
-        """Seeded node rings and satellites breathing along incident sphere arcs."""
+        """Seeded node rings and satellites breathing along incident mesh edges."""
         vertices, edges, nodes = self.lattice(size, seed, time, static)
         if self.accents_key != self.geometry[0][:-1]:
             neighbors = {i: [] for i in nodes}

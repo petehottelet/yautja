@@ -39,7 +39,7 @@ Optional `--target-weak-spots` draws fictional holographic patches clipped to se
 
 ## Grid, targets, and captions
 
-`--geo-grid-projection sphere` places great-circle arcs on a subdivided sphere viewed from inside; `flat` uses a planar triangular lattice. Scale and jitter alter its geometry. Center fade clears the middle, width thickens lines, and breaks insert seeded irregular gaps. Details add breathing satellite dots and seven-sided node rings.
+`--geo-grid-projection sphere` places vertices on a subdivided sphere and joins them with straight edges. The triangles' arrangement and rotation create a curved, faceted surface around the viewer; `flat` uses a planar triangular lattice. Scale and jitter alter its geometry. Center fade clears the middle, width thickens lines, and breaks insert seeded irregular gaps. Details add breathing satellite dots along the edges and seven-sided node rings.
 
 `--geo-grid-speed` controls brightness and dot pulses; `--geo-grid-rotation` independently rotates the geometry. Rotation zero is stationary, speed zero freezes brightness, and stills freeze both. Breaks remain attached to their edges during rotation. [Complete grid example](examples.md#grid).
 
