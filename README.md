@@ -30,7 +30,7 @@ Re-skin local images and video frames with cold blues, warm silhouettes, and ali
 | Netrunner | Focus |
 | [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-netrunner.gif) | [![Focus: purple geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/look-focus.gif?v=2.10.0) |
 
-The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The original look is now **Costa Rica** (`--stylepreset costa-rica`). The smaller previews show four alternative styles. GIFs are silent; the hero waveform follows the source audio. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png?v=2.10.0).
+The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The smaller previews show four alternative styles. The waveform follows the original source audio. [View a still frame](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/poster.png?v=2.10.0).
 
 ## Quick start
 
