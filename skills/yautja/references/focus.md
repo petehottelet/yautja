@@ -41,6 +41,8 @@ Optional `--target-weak-spots` draws fictional holographic patches clipped to se
 
 `--geo-grid-projection sphere` places vertices on a subdivided sphere and joins them with straight edges. The triangles' arrangement and rotation create a curved, faceted surface around the viewer; `flat` uses a planar triangular lattice. Scale and jitter alter its geometry. Center fade clears the middle, width thickens lines, and breaks insert seeded irregular gaps. Details add breathing satellite dots along the edges and seven-sided node rings.
 
+The grid and its glow automatically fade around visible waveforms, waveform glyphs and the upper-right readout. Soft borders preserve the grid elsewhere; fully transparent HUD elements do not clear space. This applies to both projections and all waveform styles.
+
 `--geo-grid-speed` controls brightness and dot pulses; `--geo-grid-rotation` independently rotates the geometry in degrees per second. Focus and Relic use 1.8 for a gentle, visible drift. Rotation zero is stationary, speed zero freezes brightness, and stills freeze both. Breaks remain attached to their edges during rotation. [Complete grid example](examples.md#grid).
 
 `--target-mode selected` uses catalog targets, `auto` considers visible subjects, and `cycle` selects one at a time. `--target-motion persistent` glides one reticle without zoom; hold sets dwell and response sets smoothing. Empty automatic scenes keep the reticle searching, but have no figure-bound ornaments. Cuts and backward seeks reset selection. Explicit maskless catalog targets retain reticle-anchored ornament fallback.

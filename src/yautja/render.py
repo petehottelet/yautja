@@ -16,7 +16,7 @@ from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
 from .neon import NeonStyle
 from .waveform import WAVE_STYLES, waveform_masks, led_device, resolve_display
-from .hud import HudPanel, hud_blurs, hud_opacities
+from .hud import HudPanel, grid_clearance, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
 from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
 from .analysis import AnalysisHUD, ANALYSIS_ELEMENTS
@@ -417,6 +417,9 @@ class Renderer:
                         separate=self.neon or any(key in (*SUBJECT_ELEMENTS, *ANALYSIS_ELEMENTS, *GEOMETRY_ELEMENTS) for key in elements))
 
     def composite_panel(self, image, panel, x, y):
+        if getattr(self, '_readout_panels', None) is not None:
+            self._readout_panels.append((panel, x, y, False))
+            return
         if self.neon:
             for key, artwork in panel.layers.items():
                 self.neon_style.apply(image, artwork, x, y, self.hud_colors[key], element=key,
@@ -743,6 +746,12 @@ class Renderer:
         backing = Image.alpha_composite(backing, standby)
         holder = HudPanel('RGBA', housing.size, self.hud_blur_pixels, ('waveform',), self.hud_opacities, separate=True)
         holder.replace('waveform', backing)
+        if getattr(self, '_readout_panels', None) is not None:
+            self._readout_panels.append((holder, x, y, True))
+            return
+        self.composite_wave_backing(image, holder, x, y)
+
+    def composite_wave_backing(self, image, holder, x, y):
         backing, pad = holder.finish()
         region = image.crop((x-pad, y-pad, x-pad+backing.width, y-pad+backing.height)).convert('RGBA')
         image.paste(Image.alpha_composite(region, backing).convert(image.mode), (x-pad, y-pad))
@@ -833,9 +842,30 @@ class Renderer:
     def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None, static=False):
         if self.neon:
             self.neon_gain = self.neon_style.noise.gain(time, self.neon_style.flicker)
-        self.geometry.draw_grid(self, image, time, static)
+        # Lay out instruments once, before the background grid, then paint them
+        # in their usual order above the subject effects. No second animation pass.
+        panels = None
+        if self.geometry.geo_grid:
+            self._readout_panels = []
+            try:
+                self.draw_readouts(image, readout_luma, time, wave, subjects, shot_id=shot_id)
+                panels = self._readout_panels
+            finally:
+                self._readout_panels = None
+            clearance = grid_clearance(image.size, [(p, x, y) for p, x, y, _ in panels], self.scale)
+            self.geometry.draw_grid(self, image, time, static, clearance=clearance)
         self.signal.draw(self, image, subjects, time, shot_id, static)
         self.analysis.draw(self, image, subjects, time, shot_id, static)
+        if panels is not None:
+            for panel, x, y, backing in panels:
+                if backing:
+                    self.composite_wave_backing(image, panel, x, y)
+                else:
+                    self.composite_panel(image, panel, x, y)
+        else:
+            self.draw_readouts(image, readout_luma, time, wave, subjects, shot_id=shot_id)
+
+    def draw_readouts(self, image, readout_luma, time, wave, subjects, *, shot_id=None):
         s = self.scale
         size, stats = self.draw_waveform(image, readout_luma, time, wave)
         # Top-right readout. Optional human timecode goes below the alien string.

@@ -269,7 +269,7 @@ class GeometryStyle:
                     dots.append(tuple(np.interp(offset, distance, curve[:, axis]) for axis in (0, 1)))
             yield {'node': node, 'ring': points, 'dots': dots, 'brightness': .6 + .4 * breath}
 
-    def draw_grid(self, renderer, image, time, static=False):
+    def draw_grid(self, renderer, image, time, static=False, *, clearance=None):
         if not self.geo_grid:
             return
         vertices, edges, nodes = self.lattice(image.size, renderer.seed, time, static)
@@ -319,7 +319,12 @@ class GeometryStyle:
                 self.grid_fade_key = key
             ink.putalpha(ImageChops.multiply(ink.getchannel('A'), self.grid_fade))
         panel.replace('geo-grid', ink)
+        before = image.copy() if clearance is not None else None
         renderer.composite_panel(image, panel, 0, 0)
+        if before is not None:
+            # Fade the complete grid emission, including neon halos. Masking
+            # the ink first would change neon normalization elsewhere too.
+            image.paste(before, (0, 0), clearance)
 
     def motif_particles(self, seed, identity, time, static=False):
         """Ornaments emerge at their anchor, rise, then collapse and spin away."""

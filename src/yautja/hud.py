@@ -1,7 +1,7 @@
 """Independent HUD softness and opacity, applied before scene composition."""
 import math
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from .colors import HUD_DEFAULTS
 
@@ -66,6 +66,30 @@ def opacity_layer(image, amount):
         return result
     # Screen-blended artwork uses black as transparency, so scale its light.
     return image.point(lambda value: round(value * amount))
+
+
+def grid_clearance(size, panels, scale):
+    """Soft space for visible instruments, leaving the scene grid elsewhere intact."""
+    protected = {'waveform', 'waveform-axis', 'waveform-ticks', 'waveform-glyphs', 'readout', 'timecode'}
+    mask = Image.new('L', size)
+    padding = max(2, round(12 * scale))
+    for panel, x, y in panels:
+        for key, artwork in panel.layers.items():
+            keys = set(panel.opacities) if key == 'shared' else {key}
+            opacity = max((panel.opacities[k] for k in keys), default=0)
+            if not keys <= protected or opacity == 0:
+                continue
+            alpha = artwork.getchannel('A') if artwork.mode == 'RGBA' else artwork.convert('L')
+            bounds = alpha.getbbox()
+            if bounds is None:
+                continue
+            left, top, right, bottom = bounds
+            region = Image.new('L', size)
+            ImageDraw.Draw(region).rectangle(
+                (x+left-padding, y+top-padding, x+right+padding, y+bottom+padding),
+                fill=round(224 * min(1., opacity * 2)))
+            mask = ImageChops.lighter(mask, region)
+    return mask.filter(ImageFilter.GaussianBlur(max(2., 10 * scale)))
 
 
 class HudPanel:
