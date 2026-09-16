@@ -23,6 +23,41 @@ class PresetTests(unittest.TestCase):
             self.assertEqual(main([str(flag) for flag in flags]), 0)
         return json.loads(stdout.getvalue())
 
+    def test_luminance_default_explicit_and_saved_render_match_without_models(self):
+        with tempfile.TemporaryDirectory() as folder, \
+                patch('yautja.semantic.GroundedSegmenter', side_effect=AssertionError('Luminance needs no models')):
+            root = Path(folder)
+            source, preset = root / 'source.png', root / 'luminance.json'
+            Image.fromarray(np.tile(np.arange(256, dtype=np.uint8), (180, 1))).convert('RGB').save(source)
+            saved = self.invoke(['--save-preset', preset])
+            self.assertEqual(saved['settings']['thermal'], 'luminance')
+            self.assertEqual(parser().parse_args([]).thermal, 'luminance')
+            outputs = []
+            for name, flags in (('default', []), ('explicit', ['--thermal', 'luminance']),
+                                ('saved', ['--preset-file', preset])):
+                output = root / (name + '.png')
+                report = self.invoke([source, output, *flags])
+                self.assertEqual(report['thermal'], 'luminance')
+                with Image.open(output) as image:
+                    outputs.append(np.array(image))
+            np.testing.assert_array_equal(outputs[0], outputs[1])
+            np.testing.assert_array_equal(outputs[0], outputs[2])
+
+    def test_removed_classic_mode_is_rejected_by_cli_api_and_saved_preset(self):
+        with self.assertRaisesRegex(ValueError, 'Unknown thermal mode: classic'):
+            Renderer(320, 180, thermal='classic')
+        with tempfile.TemporaryDirectory() as folder:
+            preset = Path(folder) / 'old.json'
+            preset.write_text(json.dumps({'schema_version': 1, 'name': 'Old mode',
+                                          'settings': {'thermal': 'classic'}}), encoding='utf-8')
+            for flags in (['--thermal', 'classic'], ['--preset-file', str(preset)]):
+                with self.subTest(flags=flags), patch('sys.stderr', new_callable=io.StringIO) as stderr, \
+                        patch('yautja.cli.convert') as convert, self.assertRaises(SystemExit) as result:
+                    main(['input.png', 'output.png', *flags])
+                self.assertEqual(result.exception.code, 2)
+                self.assertIn('classic', stderr.getvalue())
+                convert.assert_not_called()
+
     def test_catalog_covers_every_palette_and_hottropic(self):
         with patch('yautja.cli.semantic_tracker') as models, patch('yautja.cli.convert') as convert:
             report = self.invoke(['--list-presets'])
@@ -61,8 +96,8 @@ class PresetTests(unittest.TestCase):
             self.invoke(['--stylepreset', 'ripley', '--save-preset', preset])
             saved = load_preset(preset)['settings']
             self.assertEqual((saved['palette'], saved['hud_colors']), ('ripley', args.hud_colors))
-            self.invoke([source, root / 'direct.png', '--stylepreset', 'ripley', '--thermal', 'classic'])
-            self.invoke([source, root / 'loaded.png', '--preset-file', preset, '--thermal', 'classic'])
+            self.invoke([source, root / 'direct.png', '--stylepreset', 'ripley', '--thermal', 'luminance'])
+            self.invoke([source, root / 'loaded.png', '--preset-file', preset, '--thermal', 'luminance'])
             with Image.open(root / 'direct.png') as direct, Image.open(root / 'loaded.png') as loaded:
                 np.testing.assert_array_equal(direct, loaded)
 
@@ -95,7 +130,7 @@ class PresetTests(unittest.TestCase):
             root = Path(folder)
             source, preset = root / 'source.png', root / 'mine.json'
             Image.fromarray(np.tile(np.arange(256, dtype=np.uint8), (180, 1))).convert('RGB').save(source)
-            flags = ['--thermal', 'classic', '--palette', 'custom', '--palette-colors', '#000,#137,#fa6',
+            flags = ['--thermal', 'luminance', '--palette', 'custom', '--palette-colors', '#000,#137,#fa6',
                      '--hud-theme', 'custom', '--hud-colors', 'waveform=#0f0,timecode=#fff',
                      '--timecode', '--thermal-levels', '8', '--thermal-band-softness', '.6',
                      '--sensor-texture', '--grain', '.02', '--hud-blur', '2', '--hud-opacity', '.7',
@@ -203,7 +238,7 @@ class PresetTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=frequency=330:duration=0.5', '-c:v', 'libx264',
                             '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', str(source)], check=True)
             preset = root / 'video.json'
-            self.invoke(['--save-preset', preset, '--stylepreset', 'white-hot', '--thermal', 'classic',
+            self.invoke(['--save-preset', preset, '--stylepreset', 'white-hot', '--thermal', 'luminance',
                          '--target-shape', 'crosshair', '--motion-blur', '.3', '--crt-lines', '--timecode'])
             report = self.invoke([source, root / 'out.mp4', '--preset-file', preset])
             self.assertEqual((report['frames'], report['audio_preserved'], report['target_shape']), (6, True, 'crosshair'))

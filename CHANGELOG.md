@@ -2,6 +2,7 @@
 
 ## 2.12.1
 
+- Put the Claude/Codex skill installer first in Quick start and present direct CLI use alongside it. Rename the model-free thermal mode from `classic` to `luminance` in the CLI, Python API and saved presets, with no alias for the old name. Update explicit flags and saved `thermal` values to `luminance`; commands without a thermal flag keep the same behavior.
 - Add the [Ripley preset](skills/yautja/references/presets.md#ripley), with near-black and burnt-orange thermal colors, orange HUD glyphs and callouts, and a brighter amber waveform. Its thermal palette is also available independently through `--palette ripley`.
 - Make `--wave-backlight 0` hide both inactive LED cells and their housing so the scene shows through. Use transparent backing in the Rorschach LED examples and refresh their previews.
 - Fade the geodesic grid and its glow around visible waveforms, glyphs and readouts, with soft borders that preserve grid intensity elsewhere. Refresh Focus and Relic previews.

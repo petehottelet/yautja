@@ -147,7 +147,7 @@ class PresetRefreshTests(unittest.TestCase):
         self.assertFalse(costa.scanlines)
         self.assertEqual(costa.colors.stops, STOPS)
         default = Renderer(*self.size)
-        self.assertEqual(default.thermal,'classic')
+        self.assertEqual(default.thermal,'luminance')
         self.assertTrue(default.scanlines)
         for tokens in (['--stylepreset','focus','--target-motion','acquire','--target-fill','filled'],
                        ['--target-motion','acquire','--target-fill','filled','--stylepreset','focus']):

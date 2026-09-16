@@ -6,7 +6,7 @@ import hashlib
 import numpy as np
 from PIL import Image, ImageFilter
 
-THERMAL_MODES = ('classic', 'low-detail', 'cinematic', 'detailed', 'very-detailed')
+THERMAL_MODES = ('luminance', 'low-detail', 'cinematic', 'detailed', 'very-detailed')
 THERMAL_ALIASES = {'semantic': 'low-detail', 'silhouette': 'low-detail', 'realistic': 'detailed'}
 
 

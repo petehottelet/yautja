@@ -17,7 +17,7 @@ from .build_skill_bundle import ROOT, FILES
 OPTION_FIELDS = ('Syntax', 'Values', 'Units', 'Default', 'Applies', 'Requires', 'Persistence', 'Example')
 AUTOMATIC_DEFAULTS = {
     'help': 'Print help and exit when requested.', 'version': 'Print the installed version and exit when requested.',
-    'palette_colors': 'No custom ramp; use the named palette.', 'look_preset': 'No recipe; --thermal classic with Yautja colors.',
+    'palette_colors': 'No custom ramp; use the named palette.', 'look_preset': 'No recipe; --thermal luminance with Yautja colors.',
     'preset_file': 'No saved settings loaded.', 'save_preset': 'No preset file written.',
     'save_preset_name': 'The output JSON filename stem.',
     'thermal_levels': 'Mode-specific quantization; specify --thermal-levels before using explicit grading controls.',

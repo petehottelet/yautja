@@ -166,7 +166,7 @@ class NeonTests(unittest.TestCase):
                         patch('yautja.cli.binary', side_effect=AssertionError('Stills do not need FFmpeg')):
                     self.assertEqual(main([str(f) for f in flags]), 0)
                     return json.loads(out.getvalue())
-            flags = ['--preset-file', preset, '--thermal', 'classic', '--neon-flicker', '.5', '--neon-elements', 'target=0,timecode=.4']
+            flags = ['--preset-file', preset, '--thermal', 'luminance', '--neon-flicker', '.5', '--neon-elements', 'target=0,timecode=.4']
             saved = invoke([*flags, '--save-preset', root / 'saved.json'])
             self.assertTrue(saved['settings']['neon'])
             direct = invoke([root / 'in.png', root / 'direct.png', *flags])
@@ -218,7 +218,7 @@ class NeonTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=frequency=440:duration=0.5', '-c:v', 'libx264', '-c:a', 'aac',
                             '-shortest', str(source)], check=True, capture_output=True)
             with patch('sys.stdout', new_callable=io.StringIO) as out, patch('sys.stderr', new_callable=io.StringIO), \
-                    patch('yautja.semantic.GroundedSegmenter', side_effect=AssertionError('Classic needs no models')):
+                    patch('yautja.semantic.GroundedSegmenter', side_effect=AssertionError('Luminance needs no models')):
                 self.assertEqual(main([str(source), str(target), '--neon', '--neon-flicker', '.5', '--timecode']), 0)
             report = json.loads(out.getvalue())
             self.assertTrue(report['neon'] and report['audio_preserved'])

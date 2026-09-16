@@ -215,7 +215,7 @@ class Renderer:
         self._configure(width, height, **settings)
 
     def _configure(self, width, height, *, seed=42, grain=None, glow=.65,
-                 show_timecode=False, timecode_start=0., thermal='classic', sensor_resolution=256, verbose=False,
+                 show_timecode=False, timecode_start=0., thermal='luminance', sensor_resolution=256, verbose=False,
                  sensor_texture=False, palette='auto', pixelation=None, scanlines=None, vhs=False,
                  palette_colors=None, hud_theme='standard', hud_colors=None, random_colors=False, hud=True,
                  target_colors=None, target_acquire=.8, target_flash=True, target_flash_rate=1.5, target_scale=1.,
@@ -337,7 +337,7 @@ class Renderer:
         self.annotation_centers = {}
         self.annotation_time = None
         self.annotation_shot = None
-        if self.thermal != 'classic':
+        if self.thermal != 'luminance':
             from .thermal import LowDetailHeatField, CinematicHeatField, SurfaceHeatField, VeryDetailedHeatField
             field = {'low-detail': LowDetailHeatField, 'cinematic': CinematicHeatField, 'detailed': SurfaceHeatField,
                      'very-detailed': VeryDetailedHeatField}[self.thermal]
@@ -633,7 +633,7 @@ class Renderer:
         if self.signal.scene_mode == 'source':
             return self.render_source(frame, time, wave, subjects, targets=targets, shot_id=shot_id, target_static=target_static)
         # All modes are artistic effects, not actual heat measurement.
-        if self.thermal != 'classic':
+        if self.thermal != 'luminance':
             luma = self.heat_field.build(frame, subjects)
         else:
             rgb = np.asarray(frame, dtype=np.uint8)

@@ -241,7 +241,7 @@ def output_paths(args, suffix):
 
 
 def semantic_tracker(args):
-    if args.thermal == 'classic' and not args.list_figures:
+    if args.thermal == 'luminance' and not args.list_figures:
         return None
     from .semantic import GroundedSegmenter, SemanticTracker
     print('Loading cached local segmentation and pose models...', file=sys.stderr, flush=True)
@@ -547,7 +547,7 @@ def parser():
     p.add_argument('output', nargs='?', type=Path, help='PNG for a still image; MP4 for a video')
     p.add_argument('--media', choices=['auto', 'image', 'video'], default='auto', help='Auto selects images for JPEG/PNG input or PNG output; use image with --doctor to skip FFmpeg checks')
     p.add_argument('--doctor', action='store_true', help='Check the local runtime, tools, and bundled shapes')
-    p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='classic', help='The default classic filter maps luminance to colors without models. Segmented modes: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Aliases: silhouette and semantic select low-detail; realistic selects detailed')
+    p.add_argument('--thermal', type=resolve_thermal, choices=THERMAL_MODES, default='luminance', help='The default luminance filter maps luminance to colors without models. Segmented modes: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Aliases: silhouette and semantic select low-detail; realistic selects detailed')
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Yautja by default; Costa Rica uses a blue-to-red ramp; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
@@ -732,7 +732,7 @@ def main(argv=None):
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
         GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
         HUDTypography(args.hud_font, args.hud_font_file)
-        if args.hud and args.thermal == 'classic' and (args.subject_outline or args.target_outline or args.target_weak_spots or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
+        if args.hud and args.thermal == 'luminance' and (args.subject_outline or args.target_outline or args.target_weak_spots or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
             p.error('Subject outlines, weak-spot highlights, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
@@ -754,7 +754,7 @@ def main(argv=None):
                 if 'libx264' not in encoders or ' aac ' not in encoders:
                     raise ConversionError('FFmpeg needs the libx264 and AAC encoders.')
             semantic = semantic_diagnostics(args.device, args.precision)
-            ready = (args.thermal == 'classic' and not args.list_figures) or semantic['ready']
+            ready = (args.thermal == 'luminance' and not args.list_figures) or semantic['ready']
             print(json.dumps({'python': sys.version.split()[0], 'characters': len(chars), 'media_type': media, **tools,
                               'environment': environment_info(), 'installation': installation_info(), 'thermal': args.thermal,
                               'ready': ready, 'semantic': semantic}, indent=2))
@@ -767,11 +767,11 @@ def main(argv=None):
             return 0
         if not args.save_preset and (not args.input or (not args.output and not args.list_figures)):
             p.error('input and output are required (or use --doctor)')
-        if args.hud and args.verbose and args.thermal == 'classic':
+        if args.hud and args.verbose and args.thermal == 'luminance':
             p.error('--verbose requires --thermal low-detail, cinematic, detailed, or very-detailed')
         if args.wave_style == 'trace' and (args.wave_width is not None or args.wave_height is not None):
             p.error('--wave-width and --wave-height require a non-trace --wave-style')
-        if args.precision != 'fp32' and args.thermal == 'classic' and not args.list_figures:
+        if args.precision != 'fp32' and args.thermal == 'luminance' and not args.list_figures:
             p.error('--precision bf16 requires --thermal low-detail, cinematic, detailed, or very-detailed')
         checks = [(args.start, 0, math.inf, '--start'), (args.timecode_start, 0, math.inf, '--timecode-start'),
                   (args.wave_window, .05, 5, '--wave-window'), (args.wave_gain, .01, 20, '--wave-gain'),

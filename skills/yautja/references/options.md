@@ -59,10 +59,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### thermal
 
 - Syntax: `--thermal`
-- Values: `classic`, `low-detail`, `cinematic`, `detailed`, `very-detailed`
+- Values: `luminance`, `low-detail`, `cinematic`, `detailed`, `very-detailed`
 - Units: not applicable
-- Default: "classic"
-- Applies: The default classic filter maps luminance to colors without models. Segmented modes: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Aliases: silhouette and semantic select low-detail; realistic selects detailed
+- Default: "luminance"
+- Applies: The default luminance filter maps luminance to colors without models. Segmented modes: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Aliases: silhouette and semantic select low-detail; realistic selects detailed
 - Requires: No additional enabling flag.
 - Persistence: saved
 - Example: [Complete recipe](examples.md#lightweight)
@@ -94,7 +94,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Syntax: `--stylepreset`
 - Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
-- Default: No recipe; --thermal classic with Yautja colors.
+- Default: No recipe; --thermal luminance with Yautja colors.
 - Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, and a starter for every palette. Explicit options override it; encoder --preset stays separate Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
 - Requires: Mutually exclusive with --preset-file
 - Persistence: runtime-only

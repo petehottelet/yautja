@@ -42,19 +42,19 @@ def environment(path):
     return python, env
 
 
-def classic_quickstart():
+def base_quickstart():
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
-    block = re.search(r'<!-- quick-start-classic:.*?-->\s*```bash\n(.*?)```', readme, re.S)
+    block = re.search(r'<!-- quick-start-base:.*?-->\s*```bash\n(.*?)```', readme, re.S)
     if block is None:
-        raise ValueError('README is missing its tested Classic quick-start block')
+        raise ValueError('README is missing its tested base quick-start block')
     commands = [shlex.split(line) for line in block.group(1).strip().splitlines()]
     if len(commands) != 4 or commands[0] != ['pip', 'install', 'yautja']:
-        raise ValueError('Classic quick start must install from pip, then check version, doctor, and an image')
+        raise ValueError('Base quick start must install from pip, then check version, doctor, and an image')
     return commands
 
 
 def check_runtime(python, env, cwd, prefix):
-    quickstart = classic_quickstart()
+    quickstart = base_quickstart()
     version = 'Yautja ' + project()['version']
     assert run(quickstart[1], cwd, env).strip() == version
     assert run([python, '-m', 'yautja', '--version'], cwd, env).strip() == version
@@ -68,11 +68,12 @@ def check_runtime(python, env, cwd, prefix):
     assert doctor['installation']['cli_matches_environment']
     assert doctor['environment']['system_site_packages'] is False
     run([python, '-m', 'pip', 'check'], cwd, env)
-    # These are the Classic conversion commands in SKILL.md, executed verbatim.
+    # These are the base conversion commands in SKILL.md, executed verbatim.
     text = (ROOT / 'skills/yautja/SKILL.md').read_text(encoding='utf-8')
     command = next(line.strip() for line in text.splitlines() if line.strip() == 'yautja "input.mov" "output-yautja.mp4"')
     report = json.loads(run(shlex.split(command), cwd, env))
     assert report['frames'] == 6 and report['audio_preserved']
+    assert report['thermal'] == 'luminance'
     run(['ffmpeg', '-v', 'error', '-xerror', '-i', 'output-yautja.mp4', '-f', 'null', '-'], cwd, env)
     image_command = 'yautja "photo.jpg" "photo-yautja.png"'
     assert image_command in text
@@ -82,6 +83,10 @@ def check_runtime(python, env, cwd, prefix):
     assert json.loads(run(quickstart[2], cwd, image_env))['ready']
     still = json.loads(run(quickstart[3], cwd, image_env))
     assert still['frames'] == 1 and still['media_type'] == 'image'
+    assert still['thermal'] == 'luminance'
+    explicit = json.loads(run(['yautja', 'photo.jpg', 'luminance.png', '--thermal', 'luminance'], cwd, image_env))
+    assert explicit['thermal'] == 'luminance'
+    run([python, '-c', "from PIL import Image; assert Image.open('photo-yautja.png').tobytes() == Image.open('luminance.png').tobytes()"], cwd, image_env)
     run([python, '-c', "from PIL import Image; im=Image.open('photo-yautja.png'); assert im.size==(320,180); im.verify()"], cwd, env)
     effects = json.loads(run(['yautja', 'photo.jpg', 'effects.png', '--palette', 'abyss', '--heat-glow', '.6',
                               '--heat-glow-speed', '0', '--crt-vertical-lines', '--crt-grid', '--crt-crosshatch', '--crt-strength', '.25',
@@ -102,7 +107,7 @@ def check_runtime(python, env, cwd, prefix):
     assert effects['neon_flicker'] == .3 and effects['neon_intensities']['target-flash'] == .5
     assert effects['hud_glyphs'] == 'cyber' and effects['neon_core_whiten'] == 0
     neon_preset = ROOT / 'skills/yautja/assets/presets/abyss-neon.json'
-    run(['yautja', '--preset-file', neon_preset, '--thermal', 'classic', '--save-preset', 'neon.json'], cwd, image_env)
+    run(['yautja', '--preset-file', neon_preset, '--thermal', 'luminance', '--save-preset', 'neon.json'], cwd, image_env)
     neon = json.loads(run(['yautja', 'photo.jpg', 'neon.png', '--preset-file', 'neon.json'], cwd, image_env))
     assert neon['neon'] and neon['palette'] == 'abyss' and neon['target_colors'] == ['#267085', '#267085']
     presets = json.loads(run(['yautja', '--list-presets'], cwd, image_env))
@@ -140,7 +145,7 @@ for name in ('focus', 'relic', 'murphy'):
     assert renderer.target_overlay.placements
     result.save(name + '.png')
 '''], cwd, image_env)
-    run(['yautja', '--stylepreset', 'hottropic', '--thermal', 'classic',
+    run(['yautja', '--stylepreset', 'hottropic', '--thermal', 'luminance',
          '--save-preset', 'saved-look.json', '--preset-name', 'Saved HotTropic'], cwd, image_env)
     preset = json.loads(run(['yautja', 'photo.jpg', 'preset.png', '--preset-file', 'saved-look.json'], cwd, image_env))
     assert preset['preset_name'] == 'Saved HotTropic' and preset['preset_kind'] == 'custom'
@@ -180,7 +185,7 @@ def main():
             if kind == 'wheel-venv':
                 # Run the public install command verbatim against only this
                 # release's prepared wheelhouse; network access stays disabled.
-                run(classic_quickstart()[0], cwd, dict(env, PIP_FIND_LINKS=str(wheelhouse)))
+                run(base_quickstart()[0], cwd, dict(env, PIP_FIND_LINKS=str(wheelhouse)))
             else:
                 reference = (skill / 'references/runtime.md').read_text(encoding='utf-8')
                 block = re.search(r'<!-- offline-install:.*?-->\s*```bash\n(.*?)```', reference, re.S).group(1)

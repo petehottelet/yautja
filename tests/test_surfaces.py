@@ -82,7 +82,7 @@ class SurfaceTests(unittest.TestCase):
 class SensorTextureTests(unittest.TestCase):
     def test_texture_is_opt_in_for_every_mode(self):
         frame = Image.new('RGB', (320, 240), (100, 100, 100))
-        for mode in ('classic', 'silhouette', 'cinematic', 'detailed'):
+        for mode in ('luminance', 'silhouette', 'cinematic', 'detailed'):
             with self.subTest(mode=mode):
                 plain = Renderer(320, 240, thermal=mode, scanlines=False).render(frame, 0, subjects=[person()])
                 explicit = Renderer(320, 240, thermal=mode, sensor_texture=False, grain=0, pixelation=0, scanlines=False).render(frame, 0, subjects=[person()])

@@ -191,12 +191,12 @@ class AnalysisTargetTests(unittest.TestCase):
             for style in ('focus', 'relic', 'murphy', 'netrunner'):
                 self.assertFalse(parser().parse_args(['--stylepreset', style]).analysis_target)
 
-    def test_invalid_controls_and_classic_mode_fail_before_opening_media(self):
+    def test_invalid_controls_and_luminance_mode_fail_before_opening_media(self):
         for options in ({'analysis_target_size': .09}, {'analysis_target_size': float('nan')},
                         {'analysis_target_response': -1}, {'analysis_target_response': float('inf')}):
             with self.assertRaisesRegex(ValueError, 'analysis-target'):
                 AnalysisHUD(**options)
         with patch('sys.stderr', new_callable=io.StringIO), patch('yautja.cli.convert') as convert:
             with self.assertRaises(SystemExit):
-                main(['missing.mp4', 'out.mp4', '--thermal', 'classic', '--analysis-target'])
+                main(['missing.mp4', 'out.mp4', '--thermal', 'luminance', '--analysis-target'])
             convert.assert_not_called()

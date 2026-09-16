@@ -148,6 +148,6 @@ class AnalysisTests(unittest.TestCase):
                 AnalysisHUD(**{name: value})
         with patch('sys.stderr', new_callable=io.StringIO), patch('yautja.cli.convert') as convert:
             with self.assertRaises(SystemExit) as result:
-                main(['missing.mp4', 'out.mp4', '--analysis', '--thermal', 'classic'])
+                main(['missing.mp4', 'out.mp4', '--analysis', '--thermal', 'luminance'])
             self.assertEqual(result.exception.code, 2)
             convert.assert_not_called()

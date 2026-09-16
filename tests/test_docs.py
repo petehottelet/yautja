@@ -25,7 +25,7 @@ echo "Classic now selects the original palette"
 ~~~~text
 Both new options default off.
 ~~~~
-<!-- quick-start-classic: Classic now selects -->
+<!-- quick-start-base: Classic now selects -->
 Use `Classic` or ``the original palette`` as literal data.
 [Reference](https://example.com/Classic) <a id="Classic"></a>
 The previous frame supplies the motion trail. A new filename protects the source.
@@ -33,7 +33,7 @@ The previous frame supplies the motion trail. A new filename protects the source
         self.assertEqual(prose_warnings(text), [])
 
     @unittest.skipUnless(shutil.which('ffmpeg') and shutil.which('ffprobe'),'Video fixture needs FFmpeg')
-    def test_copyable_classic_journey(self):
+    def test_copyable_base_journey(self):
         result=verify(fast=True)
         self.assertIn('reuse',result['passed'])
         self.assertIn('catalog-target',result['passed'])

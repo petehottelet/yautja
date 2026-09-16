@@ -10,7 +10,7 @@ Very Detailed (`--thermal very-detailed`) uses Detailed's surface segmentation a
 
 ## Setup and use
 
-The base `yautja` package provides the default luminance filter (`--thermal classic`). To use the segmented gallery looks, install `yautja[semantic]` in the selected virtual environment; it can also be installed directly as your first Yautja installation. Keep installation, model setup, diagnosis, and conversion in the same environment:
+The base `yautja` package provides the default luminance filter (`--thermal luminance`). To use the segmented gallery looks, install `yautja[semantic]` in the selected virtual environment; it can also be installed directly as your first Yautja installation. Keep installation, model setup, diagnosis, and conversion in the same environment:
 
 ```bash
 python -m pip install "yautja[semantic]"
@@ -22,9 +22,9 @@ python -m yautja --doctor --thermal cinematic
 python -m yautja "clip.mov" "outputs/clip-cinematic.mp4" --thermal cinematic --verbose --timecode
 ```
 
-Use your environment's Python executable for these commands. Palettes work with the base filter. Palette starter presets select Cinematic; complete scene/HUD presets use segmented overlays. Thermal-only presets can use `--thermal classic` as an override. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose accounts for about 344 MB; the semantic extra includes its SciPy dependency. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The release skill includes the Yautja wheel, but not model weights, dependency wheels, Python or FFmpeg. Follow the [complete offline setup](runtime.md#offline-install) for a disconnected machine. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
+Use your environment's Python executable for these commands. Palettes work with the base filter. Palette starter presets select Cinematic; complete scene/HUD presets use segmented overlays. Thermal-only presets can use `--thermal luminance` as an override. The explicit download command fetches about 1.2 GB of pinned model weights and configuration from Hugging Face into its standard cache. ViTPose accounts for about 344 MB; the semantic extra includes its SciPy dependency. Subsequent conversions require cached files and do not download models or upload frames. No account is normally required. The release skill includes the Yautja wheel, but not model weights, dependency wheels, Python or FFmpeg. Follow the [complete offline setup](runtime.md#offline-install) for a disconnected machine. For a fully offline machine, transfer the complete Hugging Face cache and preserve its upstream notices.
 
-`--device auto` selects CUDA if available, otherwise CPU. A CUDA-capable card also needs CUDA-enabled PyTorch; CPU-only PyTorch will use CPU even if a GPU is installed. Install a compatible PyTorch/torchvision pair using the [official PyTorch installer](https://pytorch.org/get-started/locally/). Start with a five-second sample. CPU processing is substantially slower than classic mode.
+`--device auto` selects CUDA if available, otherwise CPU. A CUDA-capable card also needs CUDA-enabled PyTorch; CPU-only PyTorch will use CPU even if a GPU is installed. Install a compatible PyTorch/torchvision pair using the [official PyTorch installer](https://pytorch.org/get-started/locally/). Start with a five-second sample. CPU processing is substantially slower than luminance mode.
 
 ### Diagnose before conversion
 
@@ -33,7 +33,7 @@ python -m yautja --doctor
 python -m yautja --doctor --thermal semantic --device cuda
 ```
 
-Doctor reports the executable, environment, package versions and import failures, CUDA build, selected device and reason, GPU name/VRAM, and required files from all three pinned model snapshots. A selected CUDA device must complete a small tensor operation. It never downloads weights or performs model inference; `ready` means the prerequisites passed, not that weight integrity or a real model render has been verified. Missing or broken optional ML packages remain nonfatal for the default classic check. A semantic check exits with status 1 if prerequisites fail.
+Doctor reports the executable, environment, package versions and import failures, CUDA build, selected device and reason, GPU name/VRAM, and required files from all three pinned model snapshots. A selected CUDA device must complete a small tensor operation. It never downloads weights or performs model inference; `ready` means the prerequisites passed, not that weight integrity or a real model render has been verified. Missing or broken optional ML packages remain nonfatal for the default luminance check. A semantic check exits with status 1 if prerequisites fail.
 
 Conversions print the actual device and selection reason. An explicit CUDA request never retries inference on CPU. Memory or driver failures preserve the protected output and remove conversion scratch files. `--verbose` controls glyph annotations.
 

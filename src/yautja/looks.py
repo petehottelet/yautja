@@ -149,7 +149,7 @@ def normalize_preset(name):
 
 def merge_look(base, overrides):
     result = dict(base)
-    if overrides.get('thermal') == 'classic' and 'verbose' not in overrides:
+    if overrides.get('thermal') == 'luminance' and 'verbose' not in overrides:
         result.pop('verbose', None)
     if 'palette' in overrides and overrides['palette'] != result.get('palette'):
         result.pop('palette_colors', None)

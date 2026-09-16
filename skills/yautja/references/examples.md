@@ -10,7 +10,7 @@ Each block is a complete command. The verifier runs the same blocks with generat
 
 Run these in the environment where Yautja is installed. Image diagnosis needs no FFmpeg.
 
-<!-- example: {"id": "inspect", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "inspect", "tier": "base", "checks": {}} -->
 ```bash
 yautja --help
 yautja --version
@@ -34,9 +34,9 @@ yautja --download-models
 
 Use your own JPEG or PNG. This runs without segmentation or FFmpeg.
 
-<!-- example: {"id": "lightweight", "tier": "classic", "checks": {"media_type": "image"}} -->
+<!-- example: {"id": "lightweight", "tier": "base", "checks": {"media_type": "image"}} -->
 ```bash
-yautja "photo.jpg" "classic.png" --thermal classic --palette costa-rica --max-size 960 --seed 42 --glow 0.4
+yautja "photo.jpg" "luminance.png" --thermal luminance --palette costa-rica --max-size 960 --seed 42 --glow 0.4
 ```
 
 ## The Yautja hero look
@@ -67,9 +67,9 @@ yautja "clip.mov" "ripley.mp4" --stylepreset ripley --duration 1
 
 Change only the palette while keeping the thermal mode and other settings. The first example selects a built-in ramp; the second authors a custom ramp.
 
-<!-- example: {"id": "palette-only", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "palette-only", "tier": "base", "checks": {}} -->
 ```bash
-yautja "photo.jpg" "palette.png" --thermal classic --palette green-phosphor --hud-theme palette
+yautja "photo.jpg" "palette.png" --thermal luminance --palette green-phosphor --hud-theme palette
 yautja "photo.jpg" "custom-palette.png" --palette custom --palette-colors "#000000,#0033ff,#ff2200,#fff0c0"
 ```
 
@@ -79,7 +79,7 @@ yautja "photo.jpg" "custom-palette.png" --palette custom --palette-colors "#0000
 
 Levels enable grading. White point must exceed black point by at least 0.01. Band softness changes transitions; thermal softness smooths the heat field.
 
-<!-- example: {"id": "thermal-grade", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "thermal-grade", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "graded.png" --thermal-levels 12 --thermal-band-softness 0.6 --thermal-black-point 0.1 --thermal-white-point 0.9 --thermal-gamma 1.1 --thermal-softness 1.5
 ```
@@ -90,7 +90,7 @@ yautja "photo.jpg" "graded.png" --thermal-levels 12 --thermal-band-softness 0.6 
 
 Explicit grain, pixelation and line switches override the sensor-texture defaults. Detection resolution is a different control.
 
-<!-- example: {"id": "sensor", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "sensor", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "sensor.png" --sensor-texture --sensor-resolution 256 --grain 0.025 --pixelation 96 --no-crt-lines
 ```
@@ -101,7 +101,7 @@ yautja "photo.jpg" "sensor.png" --sensor-texture --sensor-resolution 256 --grain
 
 These are independent whole-picture effects. Motion blur needs successive video frames; heat glow colors synthetic hot areas.
 
-<!-- example: {"id": "crt", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "crt", "tier": "base", "checks": {}} -->
 ```bash
 yautja "clip.mov" "crt.mp4" --duration 1 --crt-lines --crt-vertical-lines --crt-grid --crt-crosshatch --crt-strength 0.15 --crt-bleed 0.2 --vhs --motion-blur 0.25 --heat-glow 0.6 --heat-glow-speed 1.2
 ```
@@ -112,7 +112,7 @@ yautja "clip.mov" "crt.mp4" --duration 1 --crt-lines --crt-vertical-lines --crt-
 
 No HUD hides every overlay, including targets, code and device backplates. The selected palette, picture effects and soundtrack remain independent.
 
-<!-- example: {"id": "clean", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "clean", "tier": "base", "checks": {}} -->
 ```bash
 yautja "clip.mov" "clean.mp4" --duration 1 --no-hud --no-crt-lines --no-crt-grid --no-crt-crosshatch --no-crt-vertical-lines --no-vhs --grain 0 --pixelation 0
 ```
@@ -123,7 +123,7 @@ yautja "clip.mov" "clean.mp4" --duration 1 --no-hud --no-crt-lines --no-crt-grid
 
 Style selects shape, display selects the device, HUD color supplies ink, and neon lights active cells. Burgundy-to-black idle cells do not emit light.
 
-<!-- example: {"id": "vocoder", "tier": "classic", "checks": {"wave_display": "led"}} -->
+<!-- example: {"id": "vocoder", "tier": "base", "checks": {"wave_display": "led"}} -->
 ```bash
 yautja "clip.mov" "vocoder.mp4" --duration 1 --wave-style digital-circuit --wave-display led --wave-backlight 0.2 --wave-width 0.15 --wave-height 0.96 --wave-detail 0.7 --waveform audio --wave-window 0.6 --wave-gain 1.5 --hud-theme custom --hud-colors "waveform=#ff302b" --neon
 ```
@@ -134,7 +134,7 @@ yautja "clip.mov" "vocoder.mp4" --duration 1 --wave-style digital-circuit --wave
 
 The same device works with all seven shapes. Set backlight to zero for transparent inactive areas; only active cells are drawn. Trace retains its plain axis, ticks and glyph readouts.
 
-<!-- example: {"id": "led-inkblot", "tier": "classic", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
+<!-- example: {"id": "led-inkblot", "tier": "base", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
 ```bash
 yautja "photo.jpg" "led-inkblot.png" --wave-style rorschach --wave-display led --wave-backlight 0
 ```
@@ -145,7 +145,7 @@ yautja "photo.jpg" "led-inkblot.png" --wave-style rorschach --wave-display led -
 
 A supplied element map replaces the inherited map. Unlisted keys use the corresponding global setting; explicit zero remains zero. See [the role table](hud-elements.md).
 
-<!-- example: {"id": "hud-ink", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "hud-ink", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "hud-ink.png" --hud --timecode --timecode-start 90 --hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ffffff" --hud-blur 1 --hud-blur-elements "waveform=3,timecode=0" --hud-opacity 0.8 --hud-opacity-elements "waveform=0.5,timecode=1"
 yautja "photo.jpg" "random.png" --random-colors --seed 137
@@ -157,7 +157,7 @@ yautja "photo.jpg" "random.png" --random-colors --seed 137
 
 Neon replaces standard HUD bloom. Zero per-element neon disables its glow treatment, while opacity controls the actual artwork and halo together.
 
-<!-- example: {"id": "neon", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "neon", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "neon.png" --neon --neon-intensity 0.9 --neon-spread 0.8 --neon-core-whiten 0.2 --neon-flicker 0.1 --neon-elements "waveform=1.2,timecode=0" --timecode
 ```
@@ -179,7 +179,7 @@ yautja "clip.mov" "focus.mp4" --stylepreset focus --duration 4 --target-mode cyc
 
 Grid rotation has its own clock. Speed zero freezes light pulses while rotation can continue; a still freezes both.
 
-<!-- example: {"id": "grid", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "grid", "tier": "base", "checks": {}} -->
 ```bash
 yautja "clip.mov" "grid.mp4" --duration 4 --geo-grid --geo-grid-projection sphere --geo-grid-scale 160 --geo-grid-jitter 0.65 --geo-grid-speed 1 --geo-grid-rotation 1.8 --geo-grid-center-fade 0.96 --geo-grid-width 2.2 --geo-grid-breaks 0.7 --geo-grid-details
 ```
@@ -256,7 +256,7 @@ yautja "clip.mov" "netrunner.mp4" --stylepreset netrunner --duration 4 --HUDglyp
 
 Source mode preserves the original scene. Exposure is a brightness multiplier, and highlight retention restores pale highlights in the tinted portion.
 
-<!-- example: {"id": "source-grade", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "source-grade", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "source-grade.png" --scene-mode source --scene-tint "#8395E6" --scene-tint-strength 0.28 --scene-exposure 0.82 --scene-highlights 0.15
 ```
@@ -287,9 +287,9 @@ yautja "clip.mov" "figures.json" --list-figures --duration 1 --fps 12
 
 <a id="catalog-target"></a>
 
-After [scanning](#catalog-scan), substitute a real ID shown in figures.html for S001-F001. Explicit targets can be rendered with `--thermal classic` without loading segmentation. The verification fixture supplies a matching one-figure catalog.
+After [scanning](#catalog-scan), substitute a real ID shown in figures.html for S001-F001. Explicit targets can be rendered with `--thermal luminance` without loading segmentation. The verification fixture supplies a matching one-figure catalog.
 
-<!-- example: {"id": "catalog-target", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "catalog-target", "tier": "base", "checks": {}} -->
 ```bash
 yautja "clip.mov" "target.mp4" --duration 1 --figures "figures.json" --target S001-F001 --target-shape triangle-dots --target-colors "#ff302b,#ffffff" --target-acquire 0.8 --target-flash --target-flash-rate 1.5 --target-scale 1 --target-stroke 2 --target-stroke-colors "#660b12,#687a8d"
 ```
@@ -300,10 +300,10 @@ yautja "clip.mov" "target.mp4" --duration 1 --figures "figures.json" --target S0
 
 Saving needs no media or models. It captures resolved visual settings, including defaults, with an optional display name. Existing files require explicit overwrite.
 
-<!-- example: {"id": "save", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "save", "tier": "base", "checks": {}} -->
 ```bash
 yautja --list-presets
-yautja --stylepreset yautja --thermal classic --hud-theme palette --neon --heat-glow 0.6 --save-preset "my-style.json" --preset-name "My Style"
+yautja --stylepreset yautja --thermal luminance --hud-theme palette --neon --heat-glow 0.6 --save-preset "my-style.json" --preset-name "My Style"
 ```
 
 ## Load and override saved settings
@@ -312,7 +312,7 @@ yautja --stylepreset yautja --thermal classic --hud-theme palette --neon --heat-
 
 Run the [save recipe](#save) first. Reusing a file leaves its contents intact; explicit flags override the saved snapshot.
 
-<!-- example: {"id": "reuse", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "reuse", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "reused.png" --preset-file "my-style.json" --heat-glow 0.2
 ```
@@ -323,7 +323,7 @@ yautja "photo.jpg" "reused.png" --preset-file "my-style.json" --heat-glow 0.2
 
 CRF controls quality versus file size; lower is higher quality. Encoder preset controls encoding effort. It is unrelated to a style preset. Start/duration are seconds on the source timeline.
 
-<!-- example: {"id": "quality", "tier": "classic", "checks": {"audio_preserved": false}} -->
+<!-- example: {"id": "quality", "tier": "base", "checks": {"audio_preserved": false}} -->
 ```bash
 yautja "clip.mov" "quality.mp4" --start 0 --duration 1 --max-size 640 --fps 24 --crf 18 --preset slow --audio-stream 0 --mute --waveform audio --overwrite
 ```
@@ -334,7 +334,7 @@ yautja "clip.mov" "quality.mp4" --start 0 --duration 1 --max-size 640 --fps 24 -
 
 Supply your own printable-ASCII TTF or OTF as my-font.ttf. The path is machine-specific and is never saved. The verification fixture uses the existing bundled OFL font, not the rejected font pack.
 
-<!-- example: {"id": "font-file", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "font-file", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "font.png" --HUDglyphs tech --hud-font-file "my-font.ttf"
 ```

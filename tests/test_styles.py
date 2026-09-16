@@ -67,7 +67,7 @@ class StyleTests(unittest.TestCase):
                                           np.array(after.render(frame, 0, subjects=[person])))
             self.assertEqual(parser().parse_args(['--thermal', old]).thermal, new)
         original = Renderer(320, 240).palette
-        for mode in ('classic', 'silhouette', 'cinematic', 'detailed'):
+        for mode in ('luminance', 'silhouette', 'cinematic', 'detailed'):
             for palette in ('auto', 'yautja'):
                 np.testing.assert_array_equal(Renderer(320, 240, thermal=mode, palette=palette).palette, original)
 

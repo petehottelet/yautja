@@ -24,7 +24,7 @@ yautja "input.mov" "output-yautja.mp4"
 yautja "photo.jpg" "photo-yautja.png"
 ```
 
-These no-flag commands use `--thermal classic` with Yautja colors. A complete preset adds segmentation and coordinated overlays:
+These no-flag commands use `--thermal luminance` with Yautja colors. A complete preset adds segmentation and coordinated overlays:
 
 ```bash
 yautja "clip.mov" "hero.mp4" --stylepreset yautja --verbose --timecode

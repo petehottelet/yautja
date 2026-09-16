@@ -8,7 +8,7 @@ The supported interface is the `yautja` CLI, equivalently the chosen environment
 
 `import yautja` exposes `__version__` without loading image or ML libraries. `yautja.runtime` is also safe to import without those dependencies. Installation metadata comes from the installed distribution; contributors should use an editable install.
 
-Python rendering APIs are **experimental**: `yautja.render.Renderer(...).render(PIL_image, seconds, wave=None, subjects=())` returns a new RGB Pillow image. `render_field(uint8_array, seconds, wave=None, subjects=())` accepts an already computed two-dimensional field matching the renderer's height and width. The defaults use Classic luminance mapping. Segmented rendering requires subject masks from a separately configured semantic pipeline.
+Python rendering APIs are **experimental**: `yautja.render.Renderer(...).render(PIL_image, seconds, wave=None, subjects=())` returns a new RGB Pillow image. `render_field(uint8_array, seconds, wave=None, subjects=())` accepts an already computed two-dimensional field matching the renderer's height and width. The defaults use luminance mapping. Segmented rendering requires subject masks from a separately configured semantic pipeline.
 
 ```python
 from PIL import Image
@@ -96,7 +96,7 @@ CRT grid and crosshatch are available. `crt_grid` combines horizontal and vertic
 
 ## Preset naming and persistent targets
 
-`yautja` is the complete Cinematic recipe with the former HotTropic colors, red HUD, cyan annotations, and CRT lines. `costa-rica` preserves the original ramp. `hottropic` and `hot-tropic` normalize to `yautja`. Plain CLI use remains Classic with the new Yautja palette and CRT lines; `--no-crt-lines` turns them off.
+`yautja` is the complete Cinematic recipe with red HUD, cyan annotations, and CRT lines. `costa-rica` provides a separate thermal ramp. `hottropic` and `hot-tropic` normalize to `yautja`. Without a preset, the CLI uses luminance mapping with the Yautja palette and CRT lines; `--no-crt-lines` turns them off.
 
 The renderer and schema-1 visual presets accept `geo_grid_projection` (`flat` or `sphere`), `target_mode` (`selected`, `auto`, or `cycle`), `target_motion` (`acquire` or `persistent`), `target_hold`, `target_response`, `target_fill` (`auto`, `filled`, or `stroked`), `target_outline`, `target_label_scale`, and `target_cursor`. Read the [defaults and ranges](../skills/yautja/references/focus.md). `target-outline` is an independent HUD color/opacity/blur/neon role. Every target shape supports filled and stroked treatment. Filled marks and dots are solid; enclosed reticles add translucent interiors. Stroked open paths outline their thick bands, retaining end caps and gaps, and stroked lock dots are rings. Triangle lock-dot radii are 0.0924 target-radius units (12% smaller), with unchanged centers.
 

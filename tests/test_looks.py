@@ -93,15 +93,15 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(parser().parse_args(base + ['--preset', 'fast']).preset, 'fast')
         self.assertEqual(LOOK_PRESETS[NAME]['thermal_levels'], 12)
 
-    def test_cli_still_recipe_report_and_explicit_classic_override(self):
+    def test_cli_still_recipe_report_and_explicit_luminance_override(self):
         with tempfile.TemporaryDirectory() as folder:
             source, output = Path(folder) / 'in.png', Path(folder) / 'out.png'
             Image.fromarray(np.tile(np.arange(256, dtype=np.uint8), (180, 1))).convert('RGB').save(source)
             with patch('sys.stdout', new_callable=io.StringIO) as stdout:
-                self.assertEqual(main([str(source), str(output), '--stylepreset', NAME, '--thermal', 'classic']), 0)
+                self.assertEqual(main([str(source), str(output), '--stylepreset', NAME, '--thermal', 'luminance']), 0)
             report = json.loads(stdout.getvalue())
             self.assertEqual((report['look_preset'], report['thermal_levels'], report['hud']), (NAME, 12, True))
-            self.assertEqual(report['thermal'], 'classic')
+            self.assertEqual(report['thermal'], 'luminance')
             with Image.open(output) as image:
                 self.assertEqual(image.size, (256, 180))
 

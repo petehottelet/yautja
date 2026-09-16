@@ -26,7 +26,7 @@ jobs:
         include:
           - os: ubuntu-latest
             python: '3.10'
-            mode: classic
+            mode: base
     env:
       HF_HUB_OFFLINE: '1'
       TRANSFORMERS_OFFLINE: '1'

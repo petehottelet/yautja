@@ -37,7 +37,7 @@ def main():
     off, on = [statistics.median(samples[enabled]) for enabled in (False, True)]
     print(json.dumps({'platform': platform.platform(), 'python': platform.python_version(),
                       'size': [1920, 1080], 'frames_per_mode': len(samples[False]),
-                      'scope': 'render_field: Classic fixed heat field, moving locked target, waveform, timecode and one callout; no inference, decoding or encoding',
+                      'scope': 'render_field: fixed heat field, moving locked target, waveform, timecode and one callout; no inference, decoding or encoding',
                       'off_median_ms': off, 'neon_median_ms': on, 'overhead_percent': (on / off - 1) * 100}, indent=2))
 
 

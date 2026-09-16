@@ -25,14 +25,14 @@ def fake_torch(available=False, cuda_build=None, bf16=False):
 
 
 class DiagnosticsTests(unittest.TestCase):
-    def test_missing_ml_packages_are_nonfatal_only_for_classic_doctor(self):
+    def test_missing_ml_packages_are_nonfatal_only_for_luminance_doctor(self):
         missing = {key: {'cached': False} for key in MODELS}
-        for mode, expected in [('classic', 0), ('semantic', 1)]:
+        for mode, expected in [('luminance', 0), ('semantic', 1)]:
             with self.subTest(mode=mode), patch('yautja.runtime.import_module', side_effect=ImportError('not installed')), \
                     patch('yautja.runtime.model_cache_status', return_value=missing), patch('sys.stdout', new_callable=io.StringIO) as output:
                 self.assertEqual(main(['--doctor', '--thermal', mode]), expected)
                 result = json.loads(output.getvalue())
-                self.assertEqual(result['ready'], mode == 'classic')
+                self.assertEqual(result['ready'], mode == 'luminance')
                 self.assertFalse(result['semantic']['ready'])
                 self.assertEqual(result['environment']['executable'], sys.executable)
                 self.assertIn('yautja[semantic]>=2,<3', ' '.join(result['semantic']['errors']))

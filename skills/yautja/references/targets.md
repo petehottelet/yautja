@@ -27,7 +27,7 @@ Select up to 16 IDs. Figures are numbered left to right when first discovered wi
 
 The catalog stores normalized bounding boxes, source-relative times, opacity, and the source's SHA-256. It can be reused at different output resolutions, frame rates, or trims of the **same file**. Sample interpolation stays within a shot and does not bridge missing detections. Scans default to 24 fps; change `--fps`, `--start`, or `--duration` for video when needed. A scan above 500,000 figure samples must be split into shorter sections. Editing or transcoding the source invalidates its catalog. Catalogs contain thumbnails from the original footage; keep them local unless sharing is requested.
 
-Using a saved catalog with `--thermal classic` needs only the base runtime. Segmented thermal modes require their models. `--no-hud` suppresses targets and other overlays and skips loading the catalog. Reports include `targets`, `targets_seen`, `targets_unseen`, and `target_frames`; an unseen selection also produces a warning. Check that the requested IDs appeared in the rendered range.
+Using a saved catalog with `--thermal luminance` needs only the base runtime. Segmented thermal modes require their models. `--no-hud` suppresses targets and other overlays and skips loading the catalog. Reports include `targets`, `targets_seen`, `targets_unseen`, and `target_frames`; an unseen selection also produces a warning. Check that the requested IDs appeared in the rendered range.
 
 ## Target animation and color
 

@@ -21,7 +21,7 @@ Yautja is a **skill for Claude and Codex**, powered by a local Python tool for s
 
 **For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures. HUD elements are for entertainment/costume/cosplay purposes only. 
 
-Install the converter from PyPI and use it directly, or add the optional **agent skill for Claude and OpenAI Codex**. Videos use FFmpeg. [yautja.ai](https://yautja.ai).
+Use the CLI directly, or let Claude or Codex operate it. Videos use FFmpeg. [yautja.ai](https://yautja.ai).
 
 [![Yautja: soft thermal bands, red HUD, cyan annotations and CRT lines](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hero.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-yautja.gif)
 
@@ -42,11 +42,21 @@ Previews are 480×270; click one to open its **960×540 version on GitHub**. The
 <a id="still-images"></a>
 ## Quick start
 
+**Install the skill for Claude or Codex:**
+
+```bash
+npx skills add petehottelet/yautja
+```
+
+Then ask: **“Use Yautja to convert this photo with the Ripley preset.”** The skill checks the local runtime and guides setup for the look you choose. [Agent and global installation options](#install-the-agent-skill).
+
+### Direct CLI use
+
 **Install Yautja from [PyPI](https://pypi.org/project/yautja/).** Requires Python 3.10+. Use an activated virtual environment; [Windows and macOS/Linux setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#virtual-environment-setup) shows how to create one.
 
 **Base installation.** The base package converts images and video with a lightweight thermal filter. Try it on a JPEG or PNG; images need no FFmpeg or model downloads. For subject segmentation and the gallery presets, follow the setup below.
 
-<!-- quick-start-classic: exercised by tools.verify_install -->
+<!-- quick-start-base: exercised by tools.verify_install -->
 ```bash
 pip install yautja
 yautja --version
@@ -66,7 +76,7 @@ python -m yautja --doctor --media image --thermal cinematic
 python -m yautja "photo.jpg" "photo-cinematic.png" --thermal cinematic --verbose
 ```
 
-The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. Palettes work with the base filter. Palette starter presets and Yautja select Cinematic; Netrunner, Focus, Relic, Murphy, and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal classic`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
+The pinned models use roughly 1.2 GB and are reused from the local cache; ordinary conversions do not download them. Palettes work with the base filter. Palette starter presets and Yautja select Cinematic; Netrunner, Focus, Relic, Murphy, and Fremont use segmented outlines and need the same setup. Thermal presets can also use `--thermal luminance`; subject outlines, code, titles, and analysis require a segmented mode. [Segmentation and GPU setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/semantic.md).
 
 ### Video
 
@@ -101,7 +111,7 @@ yautja "clip.mov" "hero.mp4" --stylepreset yautja --verbose --timecode --duratio
 <a id="when-to-use-yautja"></a>
 ## Choose a look
 
-Choose a **complete preset** for a coordinated scene and HUD; a **palette starter** for Cinematic with named colors; `--palette` to change only colors; or `--thermal` to choose the image treatment independently. Without a preset, the command uses `--thermal classic` with Yautja colors. `--stylepreset yautja` adds the complete Cinematic recipe.
+Choose a **complete preset** for a coordinated scene and HUD; a **palette starter** for Cinematic with named colors; `--palette` to change only colors; or `--thermal` to choose the image treatment independently. Without a preset, the command uses `--thermal luminance` with Yautja colors. `--stylepreset yautja` adds the complete Cinematic recipe.
 
 | Complete preset | Scene | HUD and targeting |
 | --- | --- | --- |
@@ -119,7 +129,7 @@ All complete presets need [segmented setup](#segmented-looks). Palettes also wor
 <a id="five-thermal-modes"></a>
 ### Thermal detail modes
 
-The default filter (`--thermal classic`) maps luminance directly to the palette, needs no models, and does not segment subjects. The four modes below segment subjects, with different levels of detail. Choose the mode independently of the color palette. [Comparison recipe](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#exact-comparison-recipes).
+The default filter (`--thermal luminance`) maps luminance directly to the palette, needs no models, and does not segment subjects. The four modes below segment subjects, with different levels of detail. Choose the mode independently of the color palette. [Comparison recipe](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#exact-comparison-recipes).
 
 | Low Detail | Cinematic |
 | --- | --- |
@@ -469,7 +479,7 @@ In Blocks and Shards, `--wave-detail` controls pixel density: lower values make 
 
 **Shape and display are independent.** `--wave-style` chooses any of the seven shapes; `--wave-display plain|led` chooses direct ink or a segmented LED device. Digital Circuit defaults to LED, the others to plain. `--wave-backlight` controls non-emissive idle cells from 0–1; use `0` to hide both the idle cells and their housing so the background shows through. LED device materials follow waveform ink, opacity and blur; only active cells emit bloom/neon. Trace keeps its axis, ticks and glyphs plain.
 
-<!-- example: {"id": "readme-led", "tier": "classic", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
+<!-- example: {"id": "readme-led", "tier": "base", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
 ```bash
 yautja "clip.mov" "led-rorschach.mp4" --wave-style rorschach --wave-display led --wave-backlight 0 --hud-theme custom --hud-colors "waveform=#ff302b" --neon --duration 1
 ```
@@ -526,12 +536,12 @@ Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or
 
 Save a full portable snapshot of visual settings. Bundled font names are saved; custom font paths, media paths, catalog IDs, timing, encoding, audio selection and model/device/mask-runtime settings are chosen per conversion. Saving needs no media or models.
 
-<!-- example: {"id": "readme-save", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "readme-save", "tier": "base", "checks": {}} -->
 ```bash
-yautja --stylepreset yautja --thermal classic --hud-theme palette --neon --save-preset "readme-style.json" --preset-name "My Style"
+yautja --stylepreset yautja --thermal luminance --hud-theme palette --neon --save-preset "readme-style.json" --preset-name "My Style"
 ```
 
-<!-- example: {"id": "readme-reuse", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "readme-reuse", "tier": "base", "checks": {}} -->
 ```bash
 yautja "photo.jpg" "readme-reused.png" --preset-file "readme-style.json" --heat-glow 0.2
 ```
@@ -550,7 +560,7 @@ Share the JSON and load it with `--preset-file`. Exported snapshots include reso
 
 Keep aspect ratio with `--max-size`; set a frame rate with `--fps`, or omit it to retain the source rate. Trim with `--start` and `--duration`. Lower `--crf` means higher quality and larger files; encoder `--preset slow` spends more time compressing. It is unrelated to visual `--stylepreset`.
 
-<!-- example: {"id": "readme-quality", "tier": "classic", "checks": {}} -->
+<!-- example: {"id": "readme-quality", "tier": "base", "checks": {}} -->
 ```bash
 yautja "clip.mov" "quality.mp4" --start 0 --duration 1 --max-size 1280 --fps 24 --crf 18 --preset slow --audio-stream 0
 ```
@@ -565,7 +575,7 @@ Sound is retained by default. `--audio-stream 1` selects the second audio track 
 | --- | --- |
 | Models are missing | Install `yautja[semantic]`, then run `yautja --download-models` once. Ordinary conversion does not download. |
 | Video fails before conversion | Run `yautja --doctor`; put both FFmpeg and ffprobe on PATH. Image diagnosis uses `--media image`. |
-| A preset requires segmentation | Its subject overlays require segmentation. Install the semantic extra, or use only its palette with `--thermal classic --palette …`. |
+| A preset requires segmentation | Its subject overlays require segmentation. Install the semantic extra, or use only its palette with `--thermal luminance --palette …`. |
 | Target is missing | Automatic targeting needs segmented subjects; explicit targets need a catalog from the exact input file. Check `targets_seen` and `targets_unseen` in the report. |
 | Outline flickers around small accessories | Defaults stabilize masks. Tune `--mask-stability` and `--mask-min-region`; setting both to zero disables stabilization. |
 | A label reaches the frame edge | Fremont descriptions and target captions fit safe margins. Overhead Netrunner glyph titles intentionally crop while preserving head/caret spacing. |
@@ -577,13 +587,15 @@ The same seed repeats procedural artwork for the same inputs and settings. Model
 
 ## Install the agent skill
 
-**Optional:** add instructions for Claude Code or Codex to operate Yautja. The converter can be used directly without an agent or this installer.
+The Yautja skill lets Claude Code or Codex operate the local converter. The [Quick start](#quick-start) installer lets you choose your agents and installation scope. To install globally for both agents:
 
 ```bash
 npx skills add petehottelet/yautja --skill yautja --agent claude-code codex --global
 ```
 
 Then ask: **“Use Yautja’s Cinematic look with the Costa Rica palette, glyph callouts, timecode, and the source audio. Keep the image clean.”** The skill reuses a compatible installed runtime, checks prerequisites, and guides segmentation setup when needed.
+
+You can also [use the CLI directly](#direct-cli-use) in your terminal or scripts.
 
 The installer copies only `skills/yautja/`; it does not copy the converter or gallery. If the runtime is missing, the skill installs it separately from PyPI in a suitable environment. Release bundles include `yautja-skill.zip` with the matching application wheel; [offline setup](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/runtime.md#offline-install) also requires dependency wheels and, for segmentation, model caches.
 
