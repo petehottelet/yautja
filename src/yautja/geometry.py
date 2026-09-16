@@ -322,7 +322,7 @@ class GeometryStyle:
         renderer.composite_panel(image, panel, 0, 0)
 
     def motif_particles(self, seed, identity, time, static=False):
-        """Local ornaments rise, then collapse and spin away before respawning."""
+        """Ornaments emerge at their anchor, rise, then collapse and spin away."""
         rng = np.random.default_rng(stable_number(seed, 'motifs', identity))
         t = 0 if static else time * self.target_motif_speed
         for i in range(self.target_motif_count):
@@ -332,8 +332,8 @@ class GeometryStyle:
             phase = (t / lifetime + offset) % 1
             collapse = float(smoothstep((phase - .66) / .34))
             alpha = float(smoothstep(phase / .12) * (1 - smoothstep((phase - .80) / .20)))
-            yield {'index': i, 'x': math.cos(angle) * distance * self.target_motif_scale,
-                   'y': (math.sin(angle) * distance * 1.2 - .4 - phase * .7) * self.target_motif_scale,
+            yield {'index': i, 'x': math.cos(angle) * distance * .25 * phase * self.target_motif_scale,
+                   'y': -phase * self.target_motif_scale,
                    'radius': radius * self.target_motif_scale * (1-collapse)**1.2,
                    'rotation': (0 if direction == 1 else math.pi) + direction * math.tau * 1.15 * collapse**1.6,
                    'nested': nested, 'collapse': collapse, 'alpha': alpha, 'phase': phase, 'lifetime': lifetime}
@@ -452,15 +452,13 @@ class GeometryStyle:
             figures = {f'subject-{s.track_id}': (s, xx, yy) for s, xx, yy in attached}
             for identity, cx, cy, radius, opacity in motif_states:
                 for part in self.motif_particles(renderer.seed, identity, time, static):
-                    x, y = cx + radius * part['x'], cy + radius * part['y']
+                    x, y = cx + radius * part['x'], cy + radius * 3 * part['y']
                     if identity in figures:
                         subject, xx, yy = figures[identity]
-                        bw, bh = xx.max()-xx.min()+1, yy.max()-yy.min()+1
-                        rng = np.random.default_rng(stable_number(renderer.seed, 'motif-spawn', identity, part['index']))
-                        px, py = xx.min()+rng.uniform(.1,.9)*bw, yy.min()+rng.uniform(.03,.55)*bh
-                        nearest = np.argmin((xx-px)**2 + (yy-py)**2)
-                        x = xx[nearest] + cx-xx.mean()
-                        y = yy[nearest] + cy-yy.mean() - part['phase'] * bh * .25
+                        # Spawn at the selected silhouette's center of mass.
+                        # Height, rather than width or a held prop, sets the rise.
+                        bh = yy.max()-yy.min()+1
+                        y = cy + bh * .45 * part['y']
                     r = radius * part['radius']
                     alpha = round(255 * opacity * part['alpha'])
                     if r < .25 or not alpha:

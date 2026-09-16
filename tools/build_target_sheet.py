@@ -16,12 +16,11 @@ LABELS = {'triangle': 'Triangle', 'triangle-dots': 'Triangle + three lock dots',
 
 
 def fremont_tile(size, filled):
-    # Match the other cards. Keep the filled preset's native translucent ink;
-    # show its true stroked geometry in the catalog's shared red.
+    # Red is catalog artwork only; the preset keeps its native translucent ink.
     background = Image.new('RGB', size, '#101923')
     options = {'target_fill': 'filled' if filled else 'stroked'}
-    if not filled:
-        options['hud_colors'] = 'analysis-target=#FF4038'
+    options['hud_colors'] = ('analysis-target-fill=#FF4038' if filled
+                             else 'analysis-target=#FF4038')
     renderer = Renderer(*size, look_preset='fremont', analysis_target_size=.72, glow=0, **options)
     target = renderer.analysis.target
     target.advance((.5, .5), 0, 0, size, static=True)
@@ -65,10 +64,10 @@ def build_sheet(destination):
             left = x+8+side*156
             canvas.paste(tile.resize((tile.width*ss,tile.height*ss),Image.Resampling.LANCZOS),
                          (left*ss,(y+57)*ss))
-            label = 'DEFAULT FILL' if shape == 'fremont-analysis' and side == 0 else fill.upper()
+            label = fill.upper()
             text(left+74,y+205,label,10,'#94a3b4','ma')
     text(margin,footer+14,'All reticles: --target-fill filled / stroked. Lock-dot shapes shown after acquisition.',10,'#94a3b4')
-    text(margin,footer+34,'Red Fremont stroke: --hud-colors "analysis-target=#FF4038"',10,'#94a3b4')
+    text(margin,footer+34,'Fremont is shown in red for this sheet; its preset keeps its original colors.',10,'#94a3b4')
     destination = Path(destination)
     destination.parent.mkdir(parents=True,exist_ok=True)
     canvas.resize((width,height),Image.Resampling.LANCZOS).save(destination)

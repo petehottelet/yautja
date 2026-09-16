@@ -58,6 +58,8 @@ class RelicMotionTests(unittest.TestCase):
         period, offset = initial['lifetime'], initial['phase']
         def at(phase):
             return next(style.motif_particles(42,'one',(phase-offset+1)*period))
+        self.assertAlmostEqual(at(0)['x'],0)
+        self.assertAlmostEqual(at(0)['y'],0)
         early, middle, late, gone = [at(p) for p in (.2,.5,.9,.99999)]
         self.assertLess(middle['y'], early['y'])
         self.assertAlmostEqual(early['radius'],middle['radius'])
@@ -69,6 +71,31 @@ class RelicMotionTests(unittest.TestCase):
         self.assertEqual(list(style.motif_particles(42,'one',0,True)),list(style.motif_particles(42,'one',15,True)))
         frozen = GeometryStyle(target_motif_speed=0)
         self.assertEqual(list(frozen.motif_particles(42,'one',0)),list(frozen.motif_particles(42,'one',15)))
+
+    def test_attached_triangles_emerge_at_mass_center_then_rise(self):
+        size = (480, 360)
+        mask = np.zeros((360, 480), np.float32)
+        mask[55:320, 200:270] = 1
+        mask[130:145, 100:200] = 1  # Extended arm makes the bounding-box center wrong.
+        subject = Subject(mask, 'person', .95, track_id=1)
+        yy, xx = np.nonzero(mask)
+        cx, cy = xx.mean(), yy.mean()
+        height = yy.max() - yy.min() + 1
+        renderer = Renderer(*size, look_preset='relic', target_motif_count=1,
+                            target_motif_breaks=0, neon=False, glow=0)
+        initial = next(renderer.geometry.motif_particles(renderer.seed, 'subject-1', 0))
+        centers = []
+        for phase in (.08, .55):
+            time = (phase - initial['phase'] + 1) * initial['lifetime']
+            frame = renderer.draw_targets(Image.new('RGB', size), time, [subject],
+                                          None, ((0, 0, 0),) * 2, shot=1)
+            ink = np.asarray(frame).max(axis=2)
+            iy, ix = np.nonzero(ink > 8)
+            self.assertGreater(len(ix), 10)
+            centers.append((ix.mean(), iy.mean()))
+        self.assertLess(abs(centers[0][0] - cx), 5)
+        self.assertLess(abs(centers[0][1] - cy), height * .07)
+        self.assertGreater(centers[0][1] - centers[1][1], height * .16)
 
     def test_relic_has_three_times_the_streams_at_the_same_glyph_size(self):
         size, counts, glyph_sizes = (1920,1080), [], []
