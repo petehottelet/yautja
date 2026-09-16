@@ -17,7 +17,7 @@
 <a id="yautja-is-sci-fi-segmentation-re-skinning-and-annotation-for-video-and-images"></a>
 # Yautja
 
-Yautja is a local Python tool for sci-fi image and video effects: synthetic thermal colors, subject outlines, animated targeting, alien glyphs, and an audio-reactive HUD.
+Yautja is a **skill for Claude and Codex**, powered by a local Python tool for sci-fi image and video effects: synthetic thermal colors, subject outlines, animated targeting, alien glyphs, and an audio-reactive HUD.
 
 **For entertainment purposes only.** Colors assigned during re-skinning are purely algorithmically generated, with some randomness. They do not represent measured temperatures. HUD elements are for entertainment/costume/cosplay purposes only. 
 
