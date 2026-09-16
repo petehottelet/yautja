@@ -14,7 +14,7 @@ yautja "clip.mov" "green.mp4" --stylepreset green-phosphor
 
 **Yautja** uses eleven colors from black and deep blue through cyan, green, yellow, orange, red, pink, and pale pink-white. It applies **12 thermal levels with soft transitions**, dark scenery, red HUD, cyan callouts, and CRT lines. See [colors.md](colors.md#thermal-levels-and-reference-preset) for the fixed palette positions and grading values.
 
-Every existing palette also has a starter preset: `yautja`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, and `thermal-spectrum`. Each selects that palette with Cinematic detail; other settings use the normal defaults. HUD colors follow the existing palette behavior, including light gray for White Hot, black for Black Hot, and muted cyan for Abyss. Add `--hud-theme palette` for coordinated HUD colors on other palettes.
+Palette starter presets are `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, and `thermal-spectrum`. Each selects that palette with Cinematic detail; other settings use the normal defaults. HUD colors follow the existing palette behavior, including light gray for White Hot, black for Black Hot, and muted cyan for Abyss. Add `--hud-theme palette` for coordinated HUD colors on other palettes.
 
 Explicit options override a preset regardless of argument order:
 
@@ -25,6 +25,12 @@ yautja "clip.mov" "my-tropic.mp4" --stylepreset yautja --thermal very-detailed -
 The encoder's existing `--preset fast` option remains separate and keeps its meaning.
 
 **Netrunner** uses a green-tinted source scene, red neon outlines and HUD, rising Cyber rain inside detected subjects, and cyan overhead titles with yellow carets. Select it with `--stylepreset netrunner`. Cyber is its glyph set, configurable through `--HUDglyphs cyber` or `--HUDglyphs yautja`. See [the recipe and individual controls](cyber.md). These settings, including source tint, subject overlays, code motion, glyph choice, and title/caret spacing, are saved with visual presets.
+
+## Ripley
+
+`--stylepreset ripley` combines Cinematic detail with near-black, burnt-orange and amber thermal colors. Its HUD uses burnt orange (`#D35D0C`) for glyphs and callouts, brighter amber (`#EEB03D`) for the waveform and targets, and dim brown scale lines. Highlights remain amber. Timecode and callouts are enabled, with a restrained glow.
+
+Use `--palette ripley` to select only the thermal ramp. The complete preset, per-element colors and explicit overrides save as ordinary schema-1 settings. [Runnable example](examples.md#ripley).
 
 ## Save your own preset
 

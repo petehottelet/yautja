@@ -119,6 +119,12 @@
     "frames": 96,
     "duration_ms": 4000
   },
+  "assets/examples/large/look-ripley.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
   "assets/examples/large/look-yautja.gif": {
     "width": 960,
     "height": 540,
@@ -450,6 +456,12 @@
     "duration_ms": 4000
   },
   "assets/examples/look-relic.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-ripley.gif": {
     "width": 480,
     "height": 270,
     "frames": 96,

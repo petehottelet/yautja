@@ -1,6 +1,6 @@
 ---
 name: yautja
-description: Re-skin local images and videos with sci-fi thermal palettes, segmented subject overlays, animated targeting and audio-reactive waveforms. Use for Yautja, Fremont, Murphy, Netrunner, Focus or Relic video/image conversion and local exports. Colors and telemetry are decorative, not measured temperatures or physical assessments.
+description: Re-skin local images and videos with sci-fi thermal palettes, segmented subject overlays, animated targeting and audio-reactive waveforms. Use for Yautja, Fremont, Murphy, Netrunner, Focus, Relic or Ripley video/image conversion and local exports. Colors and telemetry are decorative, not measured temperatures or physical assessments.
 ---
 
 # Yautja
@@ -33,6 +33,7 @@ yautja "clip.mov" "murphy.mp4" --stylepreset murphy
 yautja "clip.mov" "focus.mp4" --stylepreset focus
 yautja "clip.mov" "relic.mp4" --stylepreset relic
 yautja "clip.mov" "netrunner.mp4" --stylepreset netrunner
+yautja "clip.mov" "ripley.mp4" --stylepreset ripley
 ```
 
 Start with a short `--duration 4 --max-size 640` video when checking a new look. Remove preview limits for final output. Preserve source audio unless the user requests muting; `--mute` suppresses playback while keeping waveform analysis. `--crf 18 --preset slow` favors quality and compression; `--crf 24 --preset fast` suits previews. Encoder `--preset` is independent of visual `--stylepreset`.

@@ -2,6 +2,7 @@
 
 ## 2.12.1
 
+- Add the [Ripley preset](skills/yautja/references/presets.md#ripley), with near-black and burnt-orange thermal colors, orange HUD glyphs and callouts, and a brighter amber waveform. Its thermal palette is also available independently through `--palette ripley`.
 - Make `--wave-backlight 0` hide both inactive LED cells and their housing so the scene shows through. Use transparent backing in the Rorschach LED examples and refresh their previews.
 - Fade the geodesic grid and its glow around visible waveforms, glyphs and readouts, with soft borders that preserve grid intensity elsewhere. Refresh Focus and Relic previews.
 - Describe current behavior throughout the README and linked guides, group Visual FX before targeting, and consolidate preview and comparison guidance. Synchronize CLI help with the option reference and add advisory prose warnings to documentation checks.

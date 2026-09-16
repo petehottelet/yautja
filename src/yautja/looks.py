@@ -98,7 +98,19 @@ LOOK_PRESETS['murphy'] = {
     'pixelation': 0, 'sensor_texture': False, 'vhs': False, 'motion_blur': 0., 'heat_glow': 0.,
     'hud_opacity_elements': 'waveform=0,waveform-axis=0,waveform-ticks=0,waveform-glyphs=0,readout=0,timecode=0',
 }
-COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}
+LOOK_PRESETS['ripley'] = {
+    'thermal': 'cinematic', 'palette': 'ripley', 'hud': True, 'hud_theme': 'custom',
+    'hud_colors': ','.join(f'{key}={value}' for key, value in {
+        **dict.fromkeys(HUD_DEFAULTS, '#D35D0C'), 'waveform': '#EEB03D',
+        'waveform-axis': '#60330C', 'waveform-ticks': '#874108',
+        'timecode': '#C68927', 'markers': '#EEB03D', 'target': '#EEB03D',
+        'target-flash': '#FFC968', 'target-weak-spots': '#EEB03D',
+        'analysis-target-fill': '#3B280B'}.items()),
+    'verbose': True, 'timecode': True, 'neon': False, 'glow': .18,
+    'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
+    'vhs': False, 'heat_glow': 0.,
+}
+COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'ripley'}
 PRESET_DESCRIPTIONS = {
     'yautja': 'Eleven colors, 12 soft thermal levels, red HUD, cyan annotations and CRT lines.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
@@ -106,12 +118,14 @@ PRESET_DESCRIPTIONS = {
     'focus': 'Neon-purple HUD and gliding hexagon, blue spherical grid and waveform, and thin blue holographic outlines.',
     'relic': 'Focus with hot-pink triangle ornaments and soft rising light streams centered behind each body core.',
     'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a Michroma medium-weight TARGETING caption with blinking cursor.',
+    'ripley': 'Near-black and burnt-orange thermal colors, orange glyphs and callouts, and a brighter amber waveform.',
 }
 PRESET_LABELS = {
     'yautja': 'Yautja', 'costa-rica': 'Costa Rica', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
     'redline': 'Redline', 'virtualboy': 'Virtual Boy', 'green-phosphor': 'Green Phosphor',
     'amber-phosphor': 'Amber Phosphor', 'white-hot': 'White Hot', 'black-hot': 'Black Hot',
     'thermal-spectrum': 'Thermal Spectrum',
+    'ripley': 'Ripley',
     'netrunner': 'Netrunner',
     'focus': 'Focus', 'relic': 'Relic', 'murphy': 'Murphy',
     'fremont': 'Fremont',

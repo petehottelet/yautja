@@ -111,6 +111,7 @@ Choose a **complete preset** for a coordinated scene and HUD; a **palette starte
 | `focus` | Dark, cool source detail | Neon-purple HUD, blue grid and waveform, thin holographic edges, one gliding hexagon |
 | `relic` | Focus scene grade | Hot-pink triangles and rising light streams behind each body core |
 | `netrunner` | Dark green source tint | Red edges, upward Cyber code, cyan titles, yellow carets |
+| `ripley` | Near-black, burnt-orange and amber thermal colors | Orange glyphs and callouts, brighter amber waveform |
 
 All complete presets need [segmented setup](#segmented-looks). Palettes also work with the base filter. Every preset consists of ordinary options; no effect is reserved for one preset.
 
@@ -192,6 +193,17 @@ This preset uses the segmented setup above; no figure catalog is needed. Stills 
 Use `--analysis-speed 2` for a faster sequence, `--analysis-blink-rate 0` for a steady outline, and `--analysis-margin 0.06` for more space at the edges. `--analysis-target-size 0.45` enlarges the disk; `--analysis-target-response 0.9` makes focus changes more gradual. `--no-analysis-target` hides just the disk and crosshair, `--no-analysis` hides the grid/text/outline, and `--no-hud` hides every overlay. The source highlights are adjustable with `--scene-highlights`. To scan vehicles, add `--warm-objects "person,car,motorcycle,bicycle,bus,truck"`. [Full analysis controls and styling](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/analysis.md).
 
 Use `--hud-font orbitron-medium` for medium-weight text and `--analysis-outline-width 5` to set outline thickness in reference pixels at a 1080px short edge. These controls save with the style preset.
+
+### Ripley
+
+Ripley uses near-black shadows, burnt-orange glyphs and callouts, and a brighter amber waveform. Use the complete preset for the coordinated scene and HUD, or `--palette ripley` to change only the thermal colors.
+
+<!-- example: {"id": "readme-ripley", "tier": "models", "checks": {"look_preset": "ripley", "palette": "ripley"}} -->
+```bash
+yautja "clip.mov" "ripley.mp4" --stylepreset ripley --duration 4
+```
+
+[![Ripley: burnt-orange thermal colors and glyphs with a brighter amber waveform](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-ripley.gif?v=2.12.1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-ripley.gif)
 
 ### Style presets based on palettes
 

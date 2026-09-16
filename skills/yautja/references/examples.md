@@ -50,6 +50,17 @@ yautja "photo.jpg" "classic.png" --thermal classic --palette costa-rica --max-si
 yautja "clip.mov" "hero.mp4" --stylepreset yautja --verbose --timecode --duration 4
 ```
 
+## Ripley colors
+
+<a id="ripley"></a>
+
+**Segmented.** Near-black and burnt-orange thermal colors with orange glyphs and a brighter amber waveform. Use `--palette ripley` for the thermal colors alone.
+
+<!-- example: {"id": "ripley", "tier": "models", "checks": {"look_preset": "ripley", "palette": "ripley", "preset_kind": "look"}} -->
+```bash
+yautja "clip.mov" "ripley.mp4" --stylepreset ripley --duration 1
+```
+
 ## Palette substitution
 
 <a id="palette-only"></a>

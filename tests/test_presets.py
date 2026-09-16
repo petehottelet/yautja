@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 
 from yautja.cli import main, parser
-from yautja.looks import LOOK_PRESETS
+from yautja.looks import LOOK_PRESETS, COMPLETE_PRESETS
 from yautja.presets import VISUAL_OPTIONS, load_preset
 from yautja.render import PALETTES, Renderer
 
@@ -35,10 +35,36 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(set(presets) - { 'netrunner', 'fremont', 'focus', 'relic', 'murphy'}, set(PALETTES))
         for name in PALETTES:
             args = parser().parse_args(['--stylepreset', name])
-            self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'look' if name == 'yautja' else 'palette'))
+            self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'look' if name in COMPLETE_PRESETS else 'palette'))
         self.assertEqual(presets['yautja']['name'], 'Yautja')
         self.assertEqual(parser().parse_args(['--stylepreset', 'HotTropic']).look_preset, 'yautja')
         self.assertEqual(presets['yautja']['aliases'], ['hottropic', 'hot-tropic'])
+
+    def test_ripley_colors_round_trip_and_explicit_overrides(self):
+        args = parser().parse_args(['--stylepreset', 'Ripley'])
+        self.assertEqual((args.look_preset, args.preset_name, args.preset_kind), ('ripley', 'Ripley', 'look'))
+        renderer = Renderer(320, 180, look_preset='ripley')
+        self.assertEqual(tuple(renderer.palette[0]), (13, 14, 9))
+        self.assertEqual(tuple(renderer.palette[-1]), (238, 176, 61))
+        self.assertEqual(renderer.hud_colors['waveform'], (238, 176, 61))
+        self.assertEqual(renderer.hud_colors['readout'], (211, 93, 12))
+        self.assertTrue(all(r >= g >= b for r, g, b in renderer.hud_colors.values()))
+        self.assertNotEqual(renderer.hud_colors['waveform'], renderer.hud_colors['readout'])
+        for flags in (['--palette', 'white-hot', '--hud-theme', 'palette'], ['--no-hud', '--glow', '0']):
+            a = parser().parse_args(['--stylepreset', 'ripley', *flags])
+            b = parser().parse_args([*flags, '--stylepreset', 'ripley'])
+            self.assertEqual(vars(a), vars(b))
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source, preset = root / 'source.png', root / 'ripley.json'
+            Image.fromarray(np.tile(np.arange(256, dtype=np.uint8), (180, 1))).convert('RGB').save(source)
+            self.invoke(['--stylepreset', 'ripley', '--save-preset', preset])
+            saved = load_preset(preset)['settings']
+            self.assertEqual((saved['palette'], saved['hud_colors']), ('ripley', args.hud_colors))
+            self.invoke([source, root / 'direct.png', '--stylepreset', 'ripley', '--thermal', 'classic'])
+            self.invoke([source, root / 'loaded.png', '--preset-file', preset, '--thermal', 'classic'])
+            with Image.open(root / 'direct.png') as direct, Image.open(root / 'loaded.png') as loaded:
+                np.testing.assert_array_equal(direct, loaded)
 
     def test_removed_reference_name_is_rejected_by_cli_api_and_preset_base(self):
         removed = 'thermal-spectrum-reference-v1'

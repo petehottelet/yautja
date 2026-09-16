@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 from yautja.render import Renderer, PALETTES
-from yautja.looks import resolve_look
+from yautja.looks import COMPLETE_PRESETS, resolve_look
 from yautja.presets import load_preset
 from yautja.figures import TargetSelection
 from yautja.semantic import GroundedSegmenter, SemanticTracker
@@ -24,7 +24,7 @@ from yautja.cli import (AudioAnalysis, ConversionError, audio_filter, binary, di
 def variants():
     result = {f'style-{style}': {'thermal': style} for style in ('low-detail', 'cinematic', 'detailed', 'very-detailed')}
     for palette in PALETTES:
-        if palette != 'yautja':
+        if palette not in COMPLETE_PRESETS:
             result[f'palette-{palette}'] = {'look_preset': palette}
     for name, options in {
         'grain': {'grain': .06}, 'pixelation': {'pixelation': 80},
@@ -46,6 +46,7 @@ def variants():
         'look-relic': {'look_preset': 'relic'},
         'look-murphy': {'look_preset': 'murphy'},
         'look-yautja': {'look_preset': 'yautja'},
+        'look-ripley': {'look_preset': 'ripley'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},

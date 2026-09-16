@@ -70,7 +70,7 @@ The fixed fields below are checked against the parser and preset registries by `
 #### palette
 
 - Syntax: `--palette`
-- Values: `auto`, `thermal-spectrum`, `costa-rica`, `yautja`, `ironbow`, `abyss`, `redline`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `virtualboy`, `custom`, `random`
+- Values: `auto`, `thermal-spectrum`, `costa-rica`, `yautja`, `ironbow`, `abyss`, `redline`, `green-phosphor`, `amber-phosphor`, `ripley`, `white-hot`, `black-hot`, `virtualboy`, `custom`, `random`
 - Units: not applicable
 - Default: "yautja"
 - Applies: Thermal colors, independent of thermal style. Yautja by default; Costa Rica uses a blue-to-red ramp; custom uses --palette-colors; random uses --seed
@@ -92,10 +92,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### stylepreset
 
 - Syntax: `--stylepreset`
-- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
+- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
 - Default: No recipe; --thermal classic with Yautja colors.
-- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
+- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, and a starter for every palette. Explicit options override it; encoder --preset stays separate Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
 - Requires: Mutually exclusive with --preset-file
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#hero)
