@@ -674,7 +674,7 @@ def parser():
     p.add_argument('--timecode-start', type=float, default=0., help='Offset the displayed elapsed time, in seconds')
     p.add_argument('--waveform', choices=['auto', 'audio', 'procedural'], default='auto')
     p.add_argument('--wave-display', choices=['plain', 'led'], default=None, help='Waveform device: plain ink or segmented LED cells; default led for digital-circuit, plain for other styles')
-    p.add_argument('--wave-backlight', type=float, default=.2, help='Unlit LED cell brightness relative to waveform ink, 0-1; independent of glow/neon')
+    p.add_argument('--wave-backlight', type=float, default=.2, help='Unlit LED cell brightness, 0-1; zero hides idle cells and housing for a transparent background; independent of glow/neon')
     p.add_argument('--wave-style', choices=WAVE_STYLES, default='trace', help='Trace, Rorschach filled/split/hollow, or digital distortion: blocks, shards, stacked segmented vocoder bars (digital-circuit)')
     p.add_argument('--wave-width', type=float, help='Styled waveform maximum width as a fraction of the frame, 0.02-0.3; default 0.12')
     p.add_argument('--wave-height', type=float, help='Styled waveform height as a fraction of the frame, 0.1-1; default 0.96')

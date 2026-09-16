@@ -738,6 +738,8 @@ class Renderer:
 
     def draw_wave_backing(self, image, x, y, housing, inactive):
         # Device materials follow waveform ink/opacity/blur, but never emit neon.
+        if self.wave_backlight == 0:
+            return
         backing = Image.new('RGBA', housing.size)
         backing.putalpha(housing.point(lambda a: round(a * .96 * min(1., self.wave_backlight / .2))))
         color = self.hud_colors['waveform']

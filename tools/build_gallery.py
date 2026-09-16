@@ -90,7 +90,7 @@ def variants():
     result['target-shape-iron-sights']['target_shape'] = 'hollow-cross'
     result['target-opacity-neon'] = {**result['target-opacity-elements'], 'neon': True}
     result['waveform-led-rorschach'] = {
-        **result['waveform-rorschach'], 'wave_display': 'led', 'wave_backlight': .2,
+        **result['waveform-rorschach'], 'wave_display': 'led', 'wave_backlight': 0.,
         'hud_theme': 'custom', 'hud_colors': 'waveform=#FF302B',
         'neon': True, 'neon_intensity': 0., 'neon_elements': 'waveform=1.2',
         'neon_spread': .4, 'neon_core_whiten': 0.,

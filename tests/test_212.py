@@ -93,6 +93,26 @@ class Release212Tests(unittest.TestCase):
             images=[Renderer(320,180,**base,wave_display='led',wave_backlight=b,hud_opacity_elements='waveform=0').render_field(field,0,wave=(-signal,signal)) for b in (0,.5)]
             np.testing.assert_array_equal(*images)
 
+    def test_zero_led_backlight_preserves_background_in_silent_cells(self):
+        rng = np.random.default_rng(42)
+        field = rng.integers(0, 256, (180, 320), dtype=np.uint8)
+        silence = np.zeros(128)
+        for style in WAVE_STYLES:
+            for neon in (False, True):
+                with self.subTest(style=style, neon=neon):
+                    settings = dict(wave_style=style, wave_display='led', wave_backlight=0,
+                                    neon=neon, glow=.5, hud_blur_elements='waveform=2')
+                    renderer = Renderer(320, 180, **settings)
+                    background = Image.fromarray(np.repeat(field[..., None], 3, axis=2))
+                    before = background.copy()
+                    renderer.draw_wave_backing(background, 4, 0, Image.new('L', (50, 180), 255),
+                                               Image.new('L', (50, 180), 180))
+                    np.testing.assert_array_equal(background, before)
+                    if style != 'trace':  # A silent trace still draws its center line.
+                        actual = renderer.render_field(field, 0, wave=(silence, silence))
+                        hidden = Renderer(320, 180, **settings, hud_opacity_elements='waveform=0')
+                        np.testing.assert_array_equal(actual, hidden.render_field(field, 0, wave=(silence, silence)))
+
     def test_rotation_independent_clocks_stills_determinism_and_topology(self):
         size=(320,180)
         for projection in ('flat','sphere'):

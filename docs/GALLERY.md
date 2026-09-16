@@ -48,5 +48,5 @@ Focus, Relic and the four presets below the hero play four seconds at normal sou
 The README's LED Rorschach preview uses this complete recipe. The waveform gain compensates for the quiet demonstration soundtrack. The gallery builder samples the original clip at 24 fps and creates 480 × 270 and 960 × 540 GIFs; both play four seconds of footage in four seconds.
 
 ```bash
-yautja "clip.mov" "led-preview.mp4" --thermal cinematic --palette redline --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines --wave-style rorschach --wave-width 0.14 --wave-height 1 --wave-gain 4 --wave-display led --wave-backlight 0.2 --hud-theme custom --hud-colors "waveform=#FF302B" --neon --neon-intensity 0 --neon-elements "waveform=1.2" --neon-spread 0.4 --neon-core-whiten 0 --duration 4 --fps 24
+yautja "clip.mov" "led-preview.mp4" --thermal cinematic --palette redline --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines --wave-style rorschach --wave-width 0.14 --wave-height 1 --wave-gain 4 --wave-display led --wave-backlight 0 --hud-theme custom --hud-colors "waveform=#FF302B" --neon --neon-intensity 0 --neon-elements "waveform=1.2" --neon-spread 0.4 --neon-core-whiten 0 --duration 4 --fps 24
 ```

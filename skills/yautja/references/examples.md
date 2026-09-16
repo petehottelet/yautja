@@ -121,11 +121,11 @@ yautja "clip.mov" "vocoder.mp4" --duration 1 --wave-style digital-circuit --wave
 
 <a id="led-inkblot"></a>
 
-The same device works with all seven shapes. Trace retains its plain axis, ticks and glyph readouts.
+The same device works with all seven shapes. Set backlight to zero for transparent inactive areas; only active cells are drawn. Trace retains its plain axis, ticks and glyph readouts.
 
-<!-- example: {"id": "led-inkblot", "tier": "classic", "checks": {"wave_display": "led"}} -->
+<!-- example: {"id": "led-inkblot", "tier": "classic", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
 ```bash
-yautja "photo.jpg" "led-inkblot.png" --wave-style rorschach --wave-display led --wave-backlight 0.3
+yautja "photo.jpg" "led-inkblot.png" --wave-style rorschach --wave-display led --wave-backlight 0
 ```
 
 ## Style HUD elements independently

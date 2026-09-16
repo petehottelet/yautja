@@ -1426,7 +1426,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 0–1
 - Units: unitless
 - Default: 0.2
-- Applies: Unlit LED cell brightness relative to waveform ink, 0-1; independent of glow/neon
+- Applies: Unlit LED cell brightness, 0-1; zero hides idle cells and housing for a transparent background; independent of glow/neon
 - Requires: --wave-display led and --hud
 - Persistence: saved
 - Example: [Complete recipe](examples.md#vocoder)

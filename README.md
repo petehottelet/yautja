@@ -455,16 +455,16 @@ The digital styles use distinct geometries: stacked blocks with square cutouts, 
 
 In Blocks and Shards, `--wave-detail` controls pixel density: lower values make larger chunks, higher values make finer blocks. In Vocoder Bars it controls the number of horizontal rows. The casings and idle segments stay fixed while audio expands and brightens the active segments. Silence leaves the dim inactive bars visible. The vocoder preview uses `--hud-theme custom --hud-colors "waveform=#FF302B"` and `--neon --neon-intensity 0 --neon-elements "waveform=1.2" --neon-spread 0.4 --neon-core-whiten 0` for bright red active segments with a strong glow. Inactive segments use a dim version of the chosen waveform color and emit no light. The dark casing shares waveform opacity and blur, and emits no light; color and neon are configurable. `--wave-style trace` is the default. All six styled waveforms replace the left trace, scale, and flanking glyph rows. They use the waveform color, work with all HUD themes, blur, opacity, and neon, and leave timecode, callouts, and selected targets intact. Combine `--crt-bleed 0.3` for softer edges or `--motion-blur 0.4` for video trails.
 
-**Shape and display are independent.** `--wave-style` chooses any of the seven shapes; `--wave-display plain|led` chooses direct ink or a segmented LED device. Digital Circuit defaults to LED, the others to plain. `--wave-backlight` controls non-emissive idle cells from 0–1. LED device materials follow waveform ink, opacity and blur; only active cells emit bloom/neon. Trace keeps its axis, ticks and glyphs plain.
+**Shape and display are independent.** `--wave-style` chooses any of the seven shapes; `--wave-display plain|led` chooses direct ink or a segmented LED device. Digital Circuit defaults to LED, the others to plain. `--wave-backlight` controls non-emissive idle cells from 0–1; use `0` to hide both the idle cells and their housing so the background shows through. LED device materials follow waveform ink, opacity and blur; only active cells emit bloom/neon. Trace keeps its axis, ticks and glyphs plain.
 
-<!-- example: {"id": "readme-led", "tier": "classic", "checks": {"wave_display": "led"}} -->
+<!-- example: {"id": "readme-led", "tier": "classic", "checks": {"wave_display": "led", "wave_backlight": 0}} -->
 ```bash
-yautja "clip.mov" "led-rorschach.mp4" --wave-style rorschach --wave-display led --wave-backlight 0.2 --hud-theme custom --hud-colors "waveform=#ff302b" --neon --duration 1
+yautja "clip.mov" "led-rorschach.mp4" --wave-style rorschach --wave-display led --wave-backlight 0 --hud-theme custom --hud-colors "waveform=#ff302b" --neon --duration 1
 ```
 
-The same Rorschach shape rendered as an LED display: glowing red active cells, dark burgundy idle cells, and a non-emissive black backing. [Exact preview recipe](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#led-waveform).
+The same Rorschach shape rendered as an LED display: glowing red active cells with the scene visible through the inactive areas. [Exact preview recipe](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#led-waveform).
 
-[![Rorschach waveform rendered with bright red LED cells and a dark inactive display](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-led-rorschach.gif?v=2.12.1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/waveform-led-rorschach.gif)
+[![Rorschach waveform rendered with bright red LED cells and transparent inactive areas](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/waveform-led-rorschach.gif?v=2.12.1-transparent)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/waveform-led-rorschach.gif)
 
 ### Target shapes
 
@@ -545,7 +545,7 @@ yautja "clip.mov" "quality.mp4" --start 0 --duration 1 --max-size 1280 --fps 24 
 
 For a quick check, use `--max-size 640 --fps 12 --crf 24 --preset fast --duration 1`, then remove the preview limits for the final export.
 
-Sound is retained by default. `--audio-stream 1` selects the second audio track for both playback and waveform analysis. `--mute` removes playback but keeps analysis. Auto waveforms use procedural motion when audio is absent or silent; `--waveform audio` requires an audio track and preserves silent samples. LED idle cells remain visible during silence. Stills always use procedural waveform sampling; timing/encoding/audio options intended for video are inactive or rejected where inappropriate. [Output and audio examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/examples.md#quality).
+Sound is retained by default. `--audio-stream 1` selects the second audio track for both playback and waveform analysis. `--mute` removes playback but keeps analysis. Auto waveforms use procedural motion when audio is absent or silent; `--waveform audio` requires an audio track and preserves silent samples. With nonzero backlight, LED idle cells remain visible during silence. Stills always use procedural waveform sampling; timing/encoding/audio options intended for video are inactive or rejected where inappropriate. [Output and audio examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/examples.md#quality).
 
 ## Troubleshooting
 
