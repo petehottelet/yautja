@@ -9,7 +9,7 @@ Use the installed Yautja CLI to create local sci-fi image or video effects. This
 
 ## Select one runtime
 
-Run `yautja --version`. Reuse a working installation, including pipx; use that same environment for installation, diagnosis, conversion and upgrades. For a new installation, follow [runtime setup](references/runtime.md#install-one-runtime): prefer a virtual environment outside the skill folder, then install `yautja` for Classic or `yautja[semantic]` for segmented presets. Do not bypass an externally managed Python installation. Use the `yautja` package on PyPI or the matching release wheel, not a similarly named package.
+Run `yautja --version`. Reuse a working installation, including pipx; use that same environment for installation, diagnosis, conversion and upgrades. For a new installation, follow [runtime setup](references/runtime.md#install-one-runtime): prefer a virtual environment outside the skill folder, then install `yautja` for the base filter or `yautja[semantic]` for segmented presets. Do not bypass an externally managed Python installation. Use the `yautja` package on PyPI or the matching release wheel, not a similarly named package.
 
 If a launcher is missing from PATH, invoke that environment's Python with `-m yautja`; do not silently substitute a different Python. Check `yautja --doctor --media image` for stills or `yautja --doctor` for video. The installation report identifies the interpreter and PATH mismatch. Videos require FFmpeg and ffprobe. Segmented modes require an explicit one-time `yautja --download-models`; conversions read cached models without downloading.
 
@@ -24,7 +24,7 @@ yautja "input.mov" "output-yautja.mp4"
 yautja "photo.jpg" "photo-yautja.png"
 ```
 
-These no-flag commands use lightweight Classic with Yautja colors. A complete preset adds segmentation and coordinated overlays:
+These no-flag commands use `--thermal classic` with Yautja colors. A complete preset adds segmentation and coordinated overlays:
 
 ```bash
 yautja "clip.mov" "hero.mp4" --stylepreset yautja --verbose --timecode
@@ -44,7 +44,7 @@ Inspect the JSON report, output dimensions and a representative frame. For video
 Every preset is ordinary visual settings. Precedence is defaults → optional built-in base → saved settings → explicit flags; explicit options win regardless of argument order. Choose one of `--stylepreset` and `--preset-file`. A supplied element map replaces an inherited map; unlisted keys inherit the relevant global default, and zero remains explicit.
 
 - [All options](references/options.md): authoritative syntax, negative aliases, ranges, units, effective defaults, enabling flags and persistence. [Runnable recipes](references/examples.md) cover every family.
-- [Thermal and colors](references/colors.md): Classic plus four segmented modes, palette-only substitutions, custom ramps and thermal grading. Costa Rica is the original palette; Yautja is the renamed Hot Tropic recipe. `hottropic` remains an alias.
+- [Thermal and colors](references/colors.md): The base luminance filter and four segmented modes, palette-only substitutions, custom ramps and thermal grading. Costa Rica uses a blue-to-red ramp; Yautja combines soft thermal bands with a red/cyan HUD. [Preset aliases](references/options.md#stylepreset).
 - [Segmentation](references/semantic.md): supported subjects, runtime/device setup, mask stability and limitations. Probability masks and flow-aligned overlay silhouettes are separate; mask stability and island filtering are runtime options, never portable preset settings.
 - [Netrunner](references/cyber.md): red outlines, upward Cyber code, overhead titles and carets. `--HUDglyphs` selects Yautja, Cyber or readable Tech. Titles intentionally crop at frame edges while preserving their gaps.
 - [Focus, Relic and Murphy](references/focus.md): independent grid rotation/pulses, partial holographic edges, figure-bound ornaments, body-centered light streams and readable captions. Relic uses rising light trails; Focus leaves subject streams off. Both leave decorative weak-spot patches off unless requested.

@@ -62,7 +62,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `classic`, `low-detail`, `cinematic`, `detailed`, `very-detailed`
 - Units: not applicable
 - Default: "classic"
-- Applies: Four segmented looks: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Classic is the lightweight luminance filter; semantic/realistic aliases remain supported
+- Applies: The default classic filter maps luminance to colors without models. Segmented modes: low-detail (soft blobs), cinematic (broad patches), detailed (surfaces), very-detailed (source facial/fabric features). Aliases: silhouette and semantic select low-detail; realistic selects detailed
 - Requires: No additional enabling flag.
 - Persistence: saved
 - Example: [Complete recipe](examples.md#lightweight)
@@ -73,7 +73,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `auto`, `thermal-spectrum`, `costa-rica`, `yautja`, `ironbow`, `abyss`, `redline`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `virtualboy`, `custom`, `random`
 - Units: not applicable
 - Default: "yautja"
-- Applies: Thermal colors, independent of thermal style. Yautja by default; Costa Rica preserves the original palette; custom uses --palette-colors; random uses --seed
+- Applies: Thermal colors, independent of thermal style. Yautja by default; Costa Rica uses a blue-to-red ramp; custom uses --palette-colors; random uses --seed
 - Requires: No additional enabling flag.
 - Persistence: saved
 - Example: [Complete recipe](examples.md#lightweight)
@@ -94,8 +94,8 @@ The fixed fields below are checked against the parser and preset registries by `
 - Syntax: `--stylepreset`
 - Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
-- Default: No recipe; Classic with Yautja colors.
-- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate
+- Default: No recipe; --thermal classic with Yautja colors.
+- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, and a starter for every palette. Explicit options override it; encoder --preset stays separate Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
 - Requires: Mutually exclusive with --preset-file
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#hero)
@@ -149,8 +149,8 @@ The fixed fields below are checked against the parser and preset registries by `
 - Syntax: `--thermal-levels`
 - Values: 0 for continuous color, or integer 2–64
 - Units: unitless
-- Default: Legacy mode-specific quantization; specify --thermal-levels before using explicit grading controls.
-- Applies: Representative thermal levels: 2–64, or 0 for continuous. Omitted retains legacy grading
+- Default: Mode-specific quantization; specify --thermal-levels before using explicit grading controls.
+- Applies: Representative thermal levels: 2–64, or 0 for continuous. Omit to use mode-specific grading
 - Requires: No additional enabling flag.
 - Persistence: nullable
 - Example: [Complete recipe](examples.md#thermal-grade)
@@ -623,7 +623,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `auto`, `filled`, `stroked`
 - Units: not applicable
 - Default: "auto"
-- Applies: All reticles, including the analysis scan disk: original treatment, filled artwork, or hollow outlines
+- Applies: All reticles, including the analysis scan disk: design-specific default treatment, filled artwork, or hollow outlines
 - Requires: --hud and catalog targets, automatic selection, or --analysis-target in a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#focus)
@@ -975,7 +975,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 0–1
 - Units: unitless
 - Default: 1.0
-- Applies: Shared HUD visibility, 0-1: 0 is transparent, 1 keeps full existing visibility (default); includes outlines and glow
+- Applies: Shared HUD visibility, 0-1: 0 is transparent, 1 is full opacity (default); includes outlines and glow
 - Requires: --hud
 - Persistence: saved
 - Example: [Complete recipe](examples.md#hud-ink)
@@ -1096,7 +1096,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: `triangle`, `triangle-dots`, `crosshair`, `hollow-cross`, `square`, `round-dot`, `square-cross`, `square-mil`, `square-x`, `hexagon`, `frame-box`
 - Units: not applicable
 - Default: "triangle"
-- Applies: Animated reticle geometry; triangle by default. Round-dot is a circular outline with four gaps and three center dots arranged in a triangle, appearing on lock. Hollow-cross has four L-shaped bands with an open center and arm ends; vector-lock and iron-sights remain aliases
+- Applies: Animated reticle geometry; triangle by default. Round-dot is a circular outline with four gaps and three center dots arranged in a triangle, appearing on lock. Hollow-cross has four L-shaped bands with an open center and arm ends; vector-lock and iron-sights are aliases for hollow-cross
 - Requires: --hud and catalog targets or automatic selection in a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#focus)
@@ -1327,7 +1327,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 0–1
 - Units: seconds
 - Default: 0.18
-- Applies: Flow-aligned mask smoothing in seconds, 0-1; 0 disables smoothing and hysteresis Applied to flow-aligned refinement; probability masks remain separate from stable overlay masks. Set both mask controls to zero for the old behavior.
+- Applies: Flow-aligned mask smoothing in seconds, 0-1; 0 disables smoothing and hysteresis. Applied to flow-aligned refinement; probability masks remain separate from stable overlay masks. Set both mask controls to zero to disable stabilization.
 - Requires: A segmented mode or --list-figures
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#tracking)

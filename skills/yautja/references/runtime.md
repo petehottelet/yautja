@@ -2,7 +2,7 @@
 
 ## Install one runtime
 
-Requires Python 3.10+; Python 3.10 and 3.11 are covered by CI. Classic needs only the base package. Low Detail, Cinematic, Detailed, and Very Detailed also need the `semantic` extra and explicit model setup in [semantic.md](semantic.md). The `tracking` extra supplies OpenCV for tracker development but does not install the models.
+Requires Python 3.10+; Python 3.10 and 3.11 are covered by CI. The default luminance filter needs only the base package. Low Detail, Cinematic, Detailed, and Very Detailed also need the `semantic` extra and explicit model setup in [semantic.md](semantic.md). The `tracking` extra supplies OpenCV for tracker development but does not install the models.
 
 Use the [PyPI package](https://pypi.org/project/yautja/) with the compatible commands below, or the matching wheel from a [GitHub release](https://github.com/petehottelet/yautja/releases). For development, install the GitHub source with `python -m pip install "yautja @ git+https://github.com/petehottelet/yautja.git@main"`. Add `[semantic]` after `yautja` for segmentation. The source route requires Git and can include changes beyond the latest release.
 
@@ -86,7 +86,7 @@ Run commands with the environment's Python executable; activation is optional. I
 
 Still-image input supports single-frame JPEG and PNG, decoded locally with Pillow. JPEG/PNG input suffixes or a PNG output select image mode; `--media image` can also select it explicitly. The output must be PNG. EXIF rotation/mirroring is applied before resizing, aspect ratio and odd dimensions are retained, and `--max-size` limits the longest edge without upscaling. Transparency is flattened over black before coloring, and source metadata is omitted from the RGB PNG. Animated PNG and other still formats are rejected.
 
-Images use the same Low Detail, Cinematic, Detailed, Very Detailed, or legacy Classic renderer at time zero. Segmentation modes run detection, segmentation, and human pose estimation once, without temporal tracking. The waveform is a static procedural pattern, with no audio. Optional `--timecode` shows `--timecode-start` (default zero). Nondefault video controls for trim, duration, frame rate, encoding, audio, or detection interval produce an error. Use the shared thermal, palette, grain, pixelation, scanlines, sensor texture, annotation, glow, size, and seed controls for stills.
+Images use the same Low Detail, Cinematic, Detailed, Very Detailed, or `--thermal classic` renderer at time zero. Segmentation modes run detection, segmentation, and human pose estimation once, without temporal tracking. The waveform is a static procedural pattern, with no audio. Optional `--timecode` shows `--timecode-start` (default zero). Nondefault video controls for trim, duration, frame rate, encoding, audio, or detection interval produce an error. Use the shared thermal, palette, grain, pixelation, scanlines, sensor texture, annotation, glow, size, and seed controls for stills.
 
 Inputs can be any local video FFmpeg can decode: common MP4, MOV, MKV, WebM, AVI, and others. DRM-protected content, damaged files, missing decoders, and audio-only files are outside the converter's capabilities. URLs are not fetched automatically. The first non-cover-art video stream is used.
 
@@ -102,7 +102,7 @@ Grain and chunky pixels are off by default. Horizontal CRT lines are on for Yaut
 
 Audio timestamp gaps are padded before waveform analysis and soundtrack trimming, so a trim starting inside a gap retains its leading silence. Analysis still decodes the full selected track for peak calibration; short trims of long recordings therefore have setup costs proportional to the source duration.
 
-For the optional subject-based heat simulation, model setup, GPU selection, and tracking limits, see [semantic.md](semantic.md). Classic mode does not import the machine-learning runtime or require model downloads.
+For the optional subject-based heat simulation, model setup, GPU selection, and tracking limits, see [semantic.md](semantic.md). `--thermal classic` does not import the machine-learning runtime or require model downloads.
 
 ## CRT and VHS display effects
 

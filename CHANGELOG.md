@@ -2,6 +2,7 @@
 
 ## 2.12.1
 
+- Describe current behavior throughout the README and linked guides, group Visual FX before targeting, and consolidate preview and comparison guidance. Synchronize CLI help with the option reference and add advisory prose warnings to documentation checks.
 - Emit Relic triangles below the selected silhouette's center of mass, then float them upward before they contract and spin out. Refresh both normal-speed Relic previews.
 - Draw the spherical geodesic grid with straight triangle edges, letting the 3D mesh form the curved surface. Set Focus/Relic rotation to a gentle but visible 1.8 degrees per second, preserving center fade, broken edges, pulsing satellites and node rings.
 - Use Michroma with a synthesized medium weight for Murphy. Add the portable `michroma-medium` HUD font choice for captions, Tech glyphs and analysis, with accurate weight reporting and unchanged bundled font files.

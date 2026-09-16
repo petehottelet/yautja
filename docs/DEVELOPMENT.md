@@ -62,3 +62,7 @@ Use the original skill installer to update instructions. Upgrade the runtime in 
 ## Documentation checks
 
 Run `python -m tools.check_docs` and `python -m tools.verify_readme` after changing documentation or the parser. Add `--models` locally to exercise segmented examples using cached models. New options need a canonical entry, runnable example mapping and a CHANGELOG link. The skill manifest includes the canonical reference.
+
+README prose should describe current behavior. `check_docs` reports advisory warnings for likely revision narration, with line numbers; warnings do not fail CI. Judge them in context: still images, existing output files, and original artwork are valid descriptions. Commands, URLs, inline literals, and machine markers are excluded. Option/schema, link, and media errors fail the check. Update CLI help and the hand-maintained option reference together; the checker does not generate prose.
+
+After reorganizing the README, preserve command blocks, machine markers, licensing, existing anchors and preview destinations. GIF clicks should open the large file's GitHub page. Review rendered headings and tables as well as automated results. Record setup and model examples skipped by verification rather than calling a partial run complete.

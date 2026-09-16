@@ -1,6 +1,6 @@
 # Additional gallery details
 
-The README keeps one preview for each look, palette and headline effect, two animated lock-dot reticles and a compact contact sheet. Larger versions are available by clicking previews. This page holds redundant matrices and maintainer comparison details; media dimensions and durations are checked in [media.json](media.json).
+The README shows looks, palettes, effects, two animated lock-dot reticles and a contact sheet. This guide records their comparison recipes and preview details; media dimensions and durations are checked in [media.json](media.json).
 
 ## Custom preset
 
@@ -27,7 +27,7 @@ Saving needs no source or models. `--save-preset` writes a complete snapshot of 
 
 | Tropic Glow · Yautja with neon HUD and heat glow |
 | --- |
-| [![Tropic Glow: Yautja with palette-matched neon HUD and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif?v=2.10.0)](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/large/preset-tropic-glow.gif?v=2.10.0) |
+| [![Tropic Glow: Yautja with palette-matched neon HUD and animated heat glow](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/preset-tropic-glow.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/preset-tropic-glow.gif) |
 | [Editable JSON preset](../skills/yautja/assets/presets/tropic-glow.json) · [Creation, schema, and sharing guide](../skills/yautja/references/presets.md) |
 
 The editable JSON example uses `"base": "yautja"` to inherit the starting settings and lists its changes under `settings`, including `"neon": true`. Load it with `--preset-file "tropic-glow.json"`. Presets exported with `--save-preset` contain the full settings, so they can be reused without the starting preset. Add `--no-neon` when loading Tropic Glow to disable only its neon styling.
@@ -35,7 +35,13 @@ The editable JSON example uses `"base": "yautja"` to inherit the starting settin
 
 ## Exact comparison recipes
 
-The original comparison base is `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Apply the single change shown in each README caption. Saved-look previews name their complete preset. The [gallery builder](../tools/build_gallery.py) records each variant’s resolved settings and source hash; [development instructions](DEVELOPMENT.md#development) explain regeneration.
+The shared comparison base is `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Apply the option shown in each README caption; target comparisons also use a [catalog selection](../README.md#choose-a-figure-and-add-a-target). Complete-look previews identify their preset. The [gallery builder](../tools/build_gallery.py) records each variant’s resolved settings and source hash; [development instructions](DEVELOPMENT.md#development) explain regeneration.
+
+Thermal detail comparisons use `yautja "clip.mov" "detail.mp4" --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`, with one of the pictured `--thermal` settings. This isolates the change in detail from changes in palette or texture.
+
+All comparisons use the same local source footage, with ranges chosen for each effect. Embedded previews are 480×270; their GitHub links open the corresponding 960×540 file page. The large versions render HUD artwork and textures at that resolution. The hero is also 960×540. GIFs compare styling choices rather than model accuracy; the source footage stays local.
+
+Focus, Relic and the four presets below the hero play four seconds at normal source speed and 24 fps. The two lock-dot reticles also play at normal source speed and 24 fps. Target acquisition, neon, reticle stroke/blur and transparency examples show seconds 0–3.25 with matching target selections, callouts and timecode. These selections follow the foreground explorer separately in the first two shots. The checked media manifest records each file's frame count and duration.
 
 ### LED waveform
 

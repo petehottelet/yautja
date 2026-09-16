@@ -17,10 +17,10 @@ from .build_skill_bundle import ROOT, FILES
 OPTION_FIELDS = ('Syntax', 'Values', 'Units', 'Default', 'Applies', 'Requires', 'Persistence', 'Example')
 AUTOMATIC_DEFAULTS = {
     'help': 'Print help and exit when requested.', 'version': 'Print the installed version and exit when requested.',
-    'palette_colors': 'No custom ramp; use the named palette.', 'look_preset': 'No recipe; Classic with Yautja colors.',
+    'palette_colors': 'No custom ramp; use the named palette.', 'look_preset': 'No recipe; --thermal classic with Yautja colors.',
     'preset_file': 'No saved settings loaded.', 'save_preset': 'No preset file written.',
     'save_preset_name': 'The output JSON filename stem.',
-    'thermal_levels': 'Legacy mode-specific quantization; specify --thermal-levels before using explicit grading controls.',
+    'thermal_levels': 'Mode-specific quantization; specify --thermal-levels before using explicit grading controls.',
     'thermal_band_softness': '0.35 when explicit levels are enabled; inactive for continuous color.',
     'outline_width': 'Solid 2, shimmer 3, holographic 8 reference pixels.',
     'target_label': 'No caption.', 'hud_font_file': 'Use the bundled font selected by --hud-font.',
@@ -94,6 +94,41 @@ def anchors(text):
         base = slug(name); n = counts.get(base, 0); counts[base] = n+1
         found.add(base + ('-'+str(n) if n else ''))
     return found
+
+
+def prose_warnings(text):
+    """Flag likely revision narration for review, without rejecting ordinary prose."""
+    def blank(match):
+        return re.sub(r'[^\n]', ' ', match.group())
+
+    text = re.sub(r'<!--.*?-->', blank, text, flags=re.S)
+    lines, fence = [], None
+    for line in text.splitlines(keepends=True):
+        marker = re.match(r'^\s{0,3}(`{3,}|~{3,})(.*)$', line)
+        if fence:
+            if marker and marker[1][0] == fence[0] and len(marker[1]) >= fence[1] and not marker[2].strip():
+                fence = None
+            lines.append('\n' if line.endswith('\n') else '')
+        elif marker:
+            fence = (marker[1][0], len(marker[1]))
+            lines.append('\n' if line.endswith('\n') else '')
+        else:
+            lines.append(line)
+    text = ''.join(lines)
+    text = re.sub(r'(`+).*?\1', blank, text)
+    text = re.sub(r'(?<=\]\()[^)]*|<[^>]*>|https?://[^\s<>]+', blank, text)
+    pattern = re.compile(
+        r'\bClassic\b|'
+        r'(?i:\b(?:now|no longer)\s+(?:selects?|supports?|uses?|requires?|enables?|includes?)\b|'
+        r'\b(?:new|older)\s+(?:options?|presets?|features?|flags?)\b|'
+        r'\boriginal\s+(?:palette|look)\b|\b(?:old|previous)\s+(?:behavior|version)\b|'
+        r'\balias(?:es)?\s+(?:remain|still)\b|\bexisting commands still work\b|'
+        r'\bretain(?:s)?\s+(?:their|its|the)\s+\d+(?:\.\d+)?%|'
+        r'\b(?:is|are)\s+(?:thinner|thicker)\b)')
+    return [{'line': number, 'phrase': match.group(),
+             'message': 'Review for revision history; describe current behavior.'}
+            for number, line in enumerate(text.splitlines(), 1)
+            for match in pattern.finditer(line)]
 
 
 def local_url(url, source):
@@ -206,7 +241,8 @@ def check(root=ROOT):
     for data in re.findall(r'<!-- media: (\{.*?\}) -->',readme):
         claim=json.loads(data); relative=claim.pop('file')
         if any(manifest.get(relative,{}).get(k)!=v for k,v in claim.items()): errors.append('Incorrect README media claim: '+relative)
-    return {'families':len(items),'spellings':len(flags_to_dest),'examples':len(examples),'media':len(manifest),'errors':errors}
+    return {'families':len(items),'spellings':len(flags_to_dest),'examples':len(examples),'media':len(manifest),
+            'warnings':prose_warnings(readme),'errors':errors}
 
 
 def main(argv=None):

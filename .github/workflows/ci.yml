@@ -59,6 +59,8 @@ jobs:
           python -m yautja --version
       - name: Build, validate, and reproduce release artifacts
         run: python -m tools.prepare_release
+      - name: Check documentation and report prose warnings
+        run: python -m tools.check_docs
       - name: Test conversion, tracking, and packaged runtime
         run: python -m unittest discover -s tests -v
       - name: Verify clean wheel, offline skill, and sdist installs

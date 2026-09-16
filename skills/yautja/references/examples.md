@@ -276,7 +276,7 @@ yautja "clip.mov" "figures.json" --list-figures --duration 1 --fps 12
 
 <a id="catalog-target"></a>
 
-After [scanning](#catalog-scan), substitute a real ID shown in figures.html for S001-F001. Explicit targets can be rendered in Classic without loading segmentation. The verification fixture supplies a matching one-figure catalog.
+After [scanning](#catalog-scan), substitute a real ID shown in figures.html for S001-F001. Explicit targets can be rendered with `--thermal classic` without loading segmentation. The verification fixture supplies a matching one-figure catalog.
 
 <!-- example: {"id": "catalog-target", "tier": "classic", "checks": {}} -->
 ```bash
