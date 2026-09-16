@@ -287,7 +287,9 @@ Use any key in the [HUD role table](https://github.com/petehottelet/yautja/blob/
 
 See the [color controls guide](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/colors.md) for full commands, element descriptions, and how custom ink interacts with glow and analog effects.
 
-### Grain and chunky pixels
+### Visual FX
+
+#### Grain and chunky pixels
 
 Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
 
@@ -324,7 +326,7 @@ python -m yautja "clip.mov" "outputs/clip-virtualboy.mp4" --thermal silhouette -
 
 Comparison GIFs use the same source footage, with ranges chosen for each effect; Focus and Relic show four seconds at normal speed and 24 fps. Embedded previews are 480×270; click one to open its **960×540 large version on GitHub**, rendered with HUD and textures at that size. The hero is also 960×540. They compare styling choices, not model accuracy. The source footage stays local.
 
-### Heat glow, vertical CRT lines, and adjustable trails
+#### Heat glow, vertical CRT lines, and adjustable trails
 
 Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
 
@@ -357,6 +359,87 @@ Click any preview for its large animated GIF. Grid is equivalent to enabling `--
 | `--crt-bleed 0.3` | `--crt-bleed 0.85` |
 
 All of these controls are independent of VHS, grain, pixelation, and the sensor-texture preset. Click each preview for the large animated GIF.
+
+#### Neon HUD
+
+Add **`--neon`** to illuminate waveform artwork, glyphs, timecode, callouts, leaders, markers, and selected targets. A bright core and two soft halos follow each element's color. Neon is off by default and works with every palette, for images and video.
+
+| Steady neon | Neon hum |
+| --- | --- |
+| [![Neon waveform, glyphs, callouts and LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/texture-neon.gif) | [![The same neon HUD with gentle synchronized flicker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon-flicker.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/texture-neon-flicker.gif) |
+| `--neon` | `--neon --neon-flicker 0.5` |
+
+These matched examples show seconds 0–3.25 with verbose callouts and timecode enabled. Click a preview for the large GIF. The [Abyss target example](#choose-a-figure-and-add-a-target) also uses neon: its muted `#267085` ink emits a brighter cyan halo.
+
+| Control | Meaning |
+| --- | --- |
+| `--neon` / `--no-neon` | Enable or disable the entire treatment; default off |
+| `--neon-intensity 1` | Brightness from 0–2; default 1. Zero keeps the original ink with no neon |
+| `--neon-spread 0.6` | Halo spread from 0–2; default 0.6. Lower values give a tighter rim |
+| `--neon-flicker 0.5` | Synchronized seeded hum from 0–1; default 0 is steady |
+| `--neon-elements "waveform=0.6,target=1.2,timecode=0"` | Independent intensity overrides; omitted elements inherit the shared value |
+
+Element names are shared with [HUD blur](#reticle-stroke-and-hud-blur); `target` covers both flash states. Existing colors, outlines, blur and opacity still apply. Blur softens the core; opacity fades both core and halo. White Hot glows white, Black Hot diffuses black, and Virtual Boy retains its red-only display. `--heat-glow` remains independent. Neon replaces standard `--glow` bloom while enabled, and CRT/VHS effects run afterward. `--no-hud` hides all of it.
+
+Load or customize the bundled [Abyss Neon preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/assets/presets/abyss-neon.json) with `--preset-file`. All six neon controls can be saved with `--save-preset`. [Full controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#neon-hud).
+
+#### Reticle stroke and HUD blur
+
+Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
+
+Add an optional outline with `--target-stroke 5`. Choose one outline color or a landing/flash pair with `--target-stroke-colors "#660b12,#687a8d"`; omit the colors to use darker shades of the current target colors. The outline is drawn inward, keeping the corner gaps open. It is off by default (`--target-stroke 0`); the bare flag uses width 2 and the range is 0–12.
+
+`--hud-blur 3` softens all HUD artwork. Use `--hud-blur-elements "waveform=6,target=4,timecode=0"` for independent overrides: omitted elements inherit the shared amount, and explicit 0 keeps an element sharp. Every radius is 0–20, with 0 as the default. Blur and stroke widths are pixels at a **1080px short edge**, scaled with output size. HUD blur affects the artwork before it is placed on the scene, leaving the underlying thermal image sharp.
+
+| Reticle outline · separate flash colors | Target blur only |
+| --- | --- |
+| [![Reticle with an optional colored outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-outline.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-outline.gif) | [![Soft target with crisp waveform, callouts, and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-blur.gif) |
+| `--target-stroke 5 --target-stroke-colors "#660b12,#687a8d"` | `--hud-blur-elements "target=8"` |
+
+| Matched red · waveform + reticle blur | Shared HUD blur · sharp timecode |
+| --- | --- |
+| [![Blurred red Rorschach waveform and reticle with a crisp matching timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-wave-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-wave-blur.gif) | [![HUD softened by element while its timecode remains sharp](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-hud-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-hud-blur.gif) |
+| `--wave-style rorschach --wave-width 0.14 --wave-height 1 --hud-blur-elements "waveform=6,target=6"` | `--hud-blur 3 --hud-blur-elements "waveform=6,target=5,timecode=0"` |
+
+Click any preview for the large GIF. These comparisons show seconds 0–3.25 with the [target selections used in the targeting examples](#choose-a-figure-and-add-a-target). Blur keys are `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. Target blur applies to both flash states. These controls work for images and videos, alongside HUD bloom, heat glow, and CRT/VHS effects. `--no-hud` hides them all. [Full controls and examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#reticle-stroke-and-independent-hud-blur).
+
+The matched-red Rorschach example additionally uses `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`. Both reticle states use the same red. Custom HUD colors use alpha compositing, avoiding the pink shift that screen blending can introduce over a blue scene.
+
+#### HUD transparency
+
+Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
+
+Set `--hud-opacity 0.5` for half-strength HUD artwork, or `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` for separate values. **0 is invisible; 1 keeps full existing visibility** (the default). Omitted elements inherit the shared opacity; explicit values override it. Blur and opacity are independent, and both work for stills and videos.
+
+| Entire HUD · opacity 0.5 | Independent opacity · waveform / target / timecode |
+| --- | --- |
+| [![All HUD artwork at half opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity.gif) | [![Red waveform at 0.3 opacity, target at 0.7, and timecode at 0.9](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-elements.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity-elements.gif) |
+| `--hud-opacity 0.5` | `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` with the matched red Rorschach colors and shape above |
+
+| Independent opacity · neon on |
+| --- |
+| [![Neon red waveform, target, and timecode with cyan callouts and independent opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-neon.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity-neon.gif) |
+| Add `--neon` to the independent-opacity example above |
+
+This keeps the Costa Rica thermal colors, red waveform/target/timecode, cyan callouts, and the same opacity values: waveform 0.3, target 0.7, and timecode 0.9. Neon adds bright cores and soft halos to the HUD; both target states stay red. Click the preview for the large animated GIF.
+
+Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. A `target` override controls both states unless `target-flash` is explicitly set. Reticle outlines and glow follow their element's opacity. `--no-hud` still hides everything. Click either GIF for the large version. [Detailed transparency controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#hud-transparency).
+
+#### Turn the HUD off
+
+Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, glyphs, timecode, callouts, connector lines, and target markers—even when `--timecode` or `--verbose` is also supplied. Thermal style, palette, textures, and the video soundtrack stay active. HUD is on by default; `--hud` turns it back on.
+
+| HUD on · default | HUD off |
+| --- | --- |
+| [![Cinematic thermal output with the full HUD and annotations](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/style-cinematic.gif) | [![Cinematic thermal output with every HUD overlay hidden](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hud-off.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/hud-off.gif) |
+| Default HUD, with `--verbose --timecode` for annotations and clock | `--no-hud` |
+
+With `--verbose`, callout lines aim at a smoothed center of each visible silhouette—an image-based approximation of center of mass. Labels keep their position relative to the figure while that space remains clear, reducing jumps between moving arms and shoulders. If the center falls outside a concave or partly hidden silhouette, the marker uses the nearest visible point. This is automatic; no extra flag is needed.
+
+```bash
+python -m yautja "clip.mov" "thermal-only.mp4" --thermal cinematic --no-hud
+python -m yautja "photo.jpg" "thermal-only.png" --palette green-phosphor --no-hud
+```
 
 ### Waveforms
 
@@ -415,7 +498,7 @@ The original `triangle` is the default; `--target-scale` changes the reticle siz
 
 ### Choose a figure and add a target
 
-Scan a clip or still to get a **shot-by-shot figure list**, thumbnails, and reusable IDs. Scanning needs the semantic setup below. Open the generated contact sheet, choose an ID, then render:
+Scan a clip or still to get a **shot-by-shot figure list**, thumbnails, and reusable IDs. Scanning needs the [segmented setup](#segmented-looks). Open the generated contact sheet, choose an ID, then render:
 
 ```bash
 yautja "clip.mov" "figures.json" --list-figures
@@ -433,87 +516,6 @@ The saved catalog belongs to the exact source file. Reuse it for different palet
 These target examples show seconds 0–3.25 of the source, selecting the foreground explorer separately in the first two shots. The triangle contracts into a compact marker at the figure's center, with solid-color sides and narrow, clear gaps at all three corners. It assembles in **0.8 seconds**, lands red, then flashes red/white at **1.5 cycles per second**. Set `--target-acquire`, `--target-scale`, and `--target-flash-rate` to change timing and size; scale 1 uses the compact reticle. `--no-target-flash` keeps the assembly and holds the primary color; equal primary/flash colors work too. White Hot uses light gray and Black Hot uses black for both target states unless colors are overridden. Stills display the assembled triangle immediately.
 
 Set `--target-colors "#ff302b,#ffffff"` for independent primary/flash colors, or use the `target` and `target-flash` keys with custom HUD colors. Palette-matched and random HUD themes also color targets. `--no-hud` hides them along with every other overlay. [All target controls, bounds, scan details, and effect options](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md).
-
-### Neon HUD
-
-Add **`--neon`** to illuminate waveform artwork, glyphs, timecode, callouts, leaders, markers, and selected targets. A bright core and two soft halos follow each element's color. Neon is off by default and works with every palette, for images and video.
-
-| Steady neon | Neon hum |
-| --- | --- |
-| [![Neon waveform, glyphs, callouts and LCD timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/texture-neon.gif) | [![The same neon HUD with gentle synchronized flicker](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/texture-neon-flicker.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/texture-neon-flicker.gif) |
-| `--neon` | `--neon --neon-flicker 0.5` |
-
-These matched examples show seconds 0–3.25 with verbose callouts and timecode enabled. Click a preview for the large GIF. The Abyss target example above also uses neon: its muted `#267085` ink emits a brighter cyan halo.
-
-| Control | Meaning |
-| --- | --- |
-| `--neon` / `--no-neon` | Enable or disable the entire treatment; default off |
-| `--neon-intensity 1` | Brightness from 0–2; default 1. Zero keeps the original ink with no neon |
-| `--neon-spread 0.6` | Halo spread from 0–2; default 0.6. Lower values give a tighter rim |
-| `--neon-flicker 0.5` | Synchronized seeded hum from 0–1; default 0 is steady |
-| `--neon-elements "waveform=0.6,target=1.2,timecode=0"` | Independent intensity overrides; omitted elements inherit the shared value |
-
-Element names are the same as HUD blur below; `target` covers both flash states. Existing colors, outlines, blur and opacity still apply. Blur softens the core; opacity fades both core and halo. White Hot glows white, Black Hot diffuses black, and Virtual Boy retains its red-only display. `--heat-glow` remains independent. Neon replaces standard `--glow` bloom while enabled, and CRT/VHS effects run afterward. `--no-hud` hides all of it.
-
-Load or customize the bundled [Abyss Neon preset](https://github.com/petehottelet/yautja/blob/main/skills/yautja/assets/presets/abyss-neon.json) with `--preset-file`. All six neon controls can be saved with `--save-preset`. [Full controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#neon-hud).
-
-### Reticle stroke and HUD blur
-
-Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
-
-Add an optional outline with `--target-stroke 5`. Choose one outline color or a landing/flash pair with `--target-stroke-colors "#660b12,#687a8d"`; omit the colors to use darker shades of the current target colors. The outline is drawn inward, keeping the corner gaps open. It is off by default (`--target-stroke 0`); the bare flag uses width 2 and the range is 0–12.
-
-`--hud-blur 3` softens all HUD artwork. Use `--hud-blur-elements "waveform=6,target=4,timecode=0"` for independent overrides: omitted elements inherit the shared amount, and explicit 0 keeps an element sharp. Every radius is 0–20, with 0 as the default. Blur and stroke widths are pixels at a **1080px short edge**, scaled with output size. HUD blur affects the artwork before it is placed on the scene, leaving the underlying thermal image sharp.
-
-| Reticle outline · separate flash colors | Target blur only |
-| --- | --- |
-| [![Reticle with an optional colored outline](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-outline.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-outline.gif) | [![Soft target with crisp waveform, callouts, and readout](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-blur.gif) |
-| `--target-stroke 5 --target-stroke-colors "#660b12,#687a8d"` | `--hud-blur-elements "target=8"` |
-
-| Matched red · waveform + reticle blur | Shared HUD blur · sharp timecode |
-| --- | --- |
-| [![Blurred red Rorschach waveform and reticle with a crisp matching timecode](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-wave-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-wave-blur.gif) | [![HUD softened by element while its timecode remains sharp](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-hud-blur.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-hud-blur.gif) |
-| `--wave-style rorschach --wave-width 0.14 --wave-height 1 --hud-blur-elements "waveform=6,target=6"` | `--hud-blur 3 --hud-blur-elements "waveform=6,target=5,timecode=0"` |
-
-Click any preview for the large GIF. These comparisons use the same 0–3.25-second clip and target selections as the examples above. Blur keys are `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, and `target`. Target blur applies to both flash states. These controls work for images and videos, alongside HUD bloom, heat glow, and CRT/VHS effects. `--no-hud` hides them all. [Full controls and examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#reticle-stroke-and-independent-hud-blur).
-
-The matched-red Rorschach example additionally uses `--hud-theme custom --hud-colors "waveform=#ff302b,timecode=#ff302b" --target-colors "#ff302b,#ff302b"`. Both reticle states use the same red. Custom HUD colors use alpha compositing, avoiding the pink shift that screen blending can introduce over a blue scene.
-
-### HUD transparency
-
-Comparison base: `yautja "clip.mov" "comparison.mp4" --thermal cinematic --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`. Add the pictured option; target comparisons also use a [catalog selection](#choose-a-figure-and-add-a-target). The complete saved-look examples identify their own preset.
-
-Set `--hud-opacity 0.5` for half-strength HUD artwork, or `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` for separate values. **0 is invisible; 1 keeps full existing visibility** (the default). Omitted elements inherit the shared opacity; explicit values override it. Blur and opacity are independent, and both work for stills and videos.
-
-| Entire HUD · opacity 0.5 | Independent opacity · waveform / target / timecode |
-| --- | --- |
-| [![All HUD artwork at half opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity.gif) | [![Red waveform at 0.3 opacity, target at 0.7, and timecode at 0.9](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-elements.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity-elements.gif) |
-| `--hud-opacity 0.5` | `--hud-opacity-elements "waveform=0.3,target=0.7,timecode=0.9"` with the matched red Rorschach colors and shape above |
-
-| Independent opacity · neon on |
-| --- |
-| [![Neon red waveform, target, and timecode with cyan callouts and independent opacity](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/target-opacity-neon.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/target-opacity-neon.gif) |
-| Add `--neon` to the independent-opacity example above |
-
-This keeps the Costa Rica thermal colors, red waveform/target/timecode, cyan callouts, and the same opacity values: waveform 0.3, target 0.7, and timecode 0.9. Neon adds bright cores and soft halos to the HUD; both target states stay red. Click the preview for the large animated GIF.
-
-Opacity keys cover all HUD elements: `waveform`, `waveform-axis`, `waveform-ticks`, `waveform-glyphs`, `readout`, `timecode`, `callouts`, `leaders`, `markers`, `target`, and `target-flash`. A `target` override controls both states unless `target-flash` is explicitly set. Reticle outlines and glow follow their element's opacity. `--no-hud` still hides everything. Click either GIF for the large version. [Detailed transparency controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/targets.md#hud-transparency).
-
-### Turn the HUD off
-
-Use **`--no-hud`** for the thermal image alone. It removes the waveform, scale, glyphs, timecode, callouts, connector lines, and target markers—even when `--timecode` or `--verbose` is also supplied. Thermal style, palette, textures, and the video soundtrack stay active. HUD is on by default; `--hud` turns it back on.
-
-| HUD on · default | HUD off |
-| --- | --- |
-| [![Cinematic thermal output with the full HUD and annotations](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/style-cinematic.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/style-cinematic.gif) | [![Cinematic thermal output with every HUD overlay hidden](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/hud-off.gif?v=2.10.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/hud-off.gif) |
-| Default HUD, with `--verbose --timecode` for annotations and clock | `--no-hud` |
-
-With `--verbose`, callout lines aim at a smoothed center of each visible silhouette—an image-based approximation of center of mass. Labels keep their position relative to the figure while that space remains clear, reducing jumps between moving arms and shoulders. If the center falls outside a concave or partly hidden silhouette, the marker uses the nearest visible point. This is automatic; no extra flag is needed.
-
-```bash
-python -m yautja "clip.mov" "thermal-only.mp4" --thermal cinematic --no-hud
-python -m yautja "photo.jpg" "thermal-only.png" --palette green-phosphor --no-hud
-```
 
 <a id="create-your-own-style-presets"></a>
 ## Save, load and share
