@@ -130,7 +130,7 @@ class Release212Tests(unittest.TestCase):
             self.assertFalse(report['target_weak_spots'])
             self.assertEqual(report['outline_width'],4.8)
             self.assertEqual(report['outline_shine'],.65)
-            self.assertEqual(report['geo_grid_rotation'],.6)
+            self.assertEqual(report['geo_grid_rotation'],1.8)
             for role in ('target','readout','waveform-glyphs','callouts','subject-labels','target-label'):
                 self.assertEqual(r.hud_colors[role],(136,51,255))
             for role in ('geo-grid','waveform'):

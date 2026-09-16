@@ -72,7 +72,7 @@ class RelicMotionTests(unittest.TestCase):
         frozen = GeometryStyle(target_motif_speed=0)
         self.assertEqual(list(frozen.motif_particles(42,'one',0)),list(frozen.motif_particles(42,'one',15)))
 
-    def test_attached_triangles_emerge_at_mass_center_then_rise(self):
+    def test_attached_triangles_emerge_below_mass_center_then_rise(self):
         size = (480, 360)
         mask = np.zeros((360, 480), np.float32)
         mask[55:320, 200:270] = 1
@@ -94,7 +94,8 @@ class RelicMotionTests(unittest.TestCase):
             self.assertGreater(len(ix), 10)
             centers.append((ix.mean(), iy.mean()))
         self.assertLess(abs(centers[0][0] - cx), 5)
-        self.assertLess(abs(centers[0][1] - cy), height * .07)
+        self.assertGreater(centers[0][1] - cy, height * .10)
+        self.assertLess(centers[0][1] - cy, height * .20)
         self.assertGreater(centers[0][1] - centers[1][1], height * .16)
 
     def test_relic_has_three_times_the_streams_at_the_same_glyph_size(self):

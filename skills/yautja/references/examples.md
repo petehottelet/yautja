@@ -170,7 +170,7 @@ Grid rotation has its own clock. Speed zero freezes light pulses while rotation 
 
 <!-- example: {"id": "grid", "tier": "classic", "checks": {}} -->
 ```bash
-yautja "photo.jpg" "grid.png" --geo-grid --geo-grid-projection sphere --geo-grid-scale 160 --geo-grid-jitter 0.65 --geo-grid-speed 1 --geo-grid-rotation 0.6 --geo-grid-center-fade 0.96 --geo-grid-width 2.2 --geo-grid-breaks 0.7 --geo-grid-details
+yautja "clip.mov" "grid.mp4" --duration 4 --geo-grid --geo-grid-projection sphere --geo-grid-scale 160 --geo-grid-jitter 0.65 --geo-grid-speed 1 --geo-grid-rotation 1.8 --geo-grid-center-fade 0.96 --geo-grid-width 2.2 --geo-grid-breaks 0.7 --geo-grid-details
 ```
 
 ## Partial holographic outlines

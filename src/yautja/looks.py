@@ -61,7 +61,7 @@ FOCUS_SETTINGS = {
     'geo_grid': True, 'geo_grid_scale': 160., 'geo_grid_jitter': .65, 'geo_grid_speed': 1.,
     'geo_grid_projection': 'sphere', 'target_mode': 'cycle', 'target_motion': 'persistent',
     'geo_grid_center_fade': .96, 'geo_grid_width': 2.2, 'geo_grid_breaks': .7,
-    'geo_grid_details': True, 'geo_grid_rotation': .6, 'target_weak_spots': False,
+    'geo_grid_details': True, 'geo_grid_rotation': 1.8, 'target_weak_spots': False,
     'target_shape': 'hexagon', 'target_flash': False, 'target_fill': 'stroked',
     'target_motif': 'none', 'target_label': None,
     'neon': True, 'neon_intensity': 1.15, 'neon_spread': 1.05, 'neon_core_whiten': 0.,

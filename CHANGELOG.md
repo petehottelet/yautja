@@ -2,8 +2,8 @@
 
 ## 2.12.1
 
-- Emit Relic triangles from the selected silhouette's center of mass, then float them upward before they contract and spin out. Refresh both normal-speed Relic previews.
-- Draw the spherical geodesic grid with straight triangle edges, letting the 3D mesh form the curved surface. Preserve rotation, center fade, broken edges, pulsing satellites and node rings in Focus and Relic.
+- Emit Relic triangles below the selected silhouette's center of mass, then float them upward before they contract and spin out. Refresh both normal-speed Relic previews.
+- Draw the spherical geodesic grid with straight triangle edges, letting the 3D mesh form the curved surface. Set Focus/Relic rotation to a gentle but visible 1.8 degrees per second, preserving center fade, broken edges, pulsing satellites and node rings.
 - Use Michroma with a synthesized medium weight for Murphy. Add the portable `michroma-medium` HUD font choice for captions, Tech glyphs and analysis, with accurate weight reporting and unchanged bundled font files.
 - Apply the shared filled/stroked control to Fremont's scan disk, with a clear interior and complete outer/inner circles in stroked mode. Show both variants in red on neutral contact-sheet backgrounds, retaining the preset's original colors.
 - Separate Focus/Relic's neon-purple HUD and glyphs from their blue grid and matching waveform. Make holographic outlines 25% thinner and bluer; give Relic's body-centered light streams and triangles a distinct violet-leaning neon pink glow matched to the reference.

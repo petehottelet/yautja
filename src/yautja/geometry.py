@@ -455,10 +455,10 @@ class GeometryStyle:
                     x, y = cx + radius * part['x'], cy + radius * 3 * part['y']
                     if identity in figures:
                         subject, xx, yy = figures[identity]
-                        # Spawn at the selected silhouette's center of mass.
+                        # Spawn below the selected silhouette's center of mass.
                         # Height, rather than width or a held prop, sets the rise.
                         bh = yy.max()-yy.min()+1
-                        y = cy + bh * .45 * part['y']
+                        y = cy + bh * (.18 + .45 * part['y'])
                     r = radius * part['radius']
                     alpha = round(255 * opacity * part['alpha'])
                     if r < .25 or not alpha:
