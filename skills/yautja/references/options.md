@@ -10,6 +10,8 @@ The fixed fields below are checked against the parser and preset registries by `
 
 [-h](#h) · [--version](#version) · [--media](#media) · [--doctor](#doctor) · [--thermal](#thermal) · [--palette](#palette) · [--palette-colors](#palette-colors) · [--stylepreset](#stylepreset) · [--preset-file](#preset-file) · [--list-presets](#list-presets) · [--save-preset](#save-preset) · [--preset-name](#preset-name) · [--thermal-levels](#thermal-levels) · [--thermal-band-softness](#thermal-band-softness) · [--thermal-black-point](#thermal-black-point) · [--thermal-white-point](#thermal-white-point) · [--thermal-gamma](#thermal-gamma) · [--thermal-softness](#thermal-softness) · [--hud-theme](#hud-theme) · [--HUDglyphs](#hudglyphs) · [--scene-mode](#scene-mode) · [--scene-tint](#scene-tint) · [--scene-tint-strength](#scene-tint-strength) · [--scene-exposure](#scene-exposure) · [--scene-highlights](#scene-highlights) · [--analysis](#analysis) · [--analysis-speed](#analysis-speed) · [--analysis-blink-rate](#analysis-blink-rate) · [--analysis-margin](#analysis-margin) · [--analysis-target](#analysis-target) · [--analysis-target-size](#analysis-target-size) · [--analysis-target-response](#analysis-target-response) · [--hud-font](#hud-font) · [--hud-font-file](#hud-font-file) · [--outline-style](#outline-style) · [--outline-shine](#outline-shine) · [--outline-width](#outline-width) · [--outline-coverage](#outline-coverage) · [--outline-arcs](#outline-arcs) · [--outline-speed](#outline-speed) · [--code-layer](#code-layer) · [--geo-grid](#geo-grid) · [--geo-grid-rotation](#geo-grid-rotation) · [--geo-grid-scale](#geo-grid-scale) · [--geo-grid-jitter](#geo-grid-jitter) · [--geo-grid-speed](#geo-grid-speed) · [--geo-grid-center-fade](#geo-grid-center-fade) · [--geo-grid-width](#geo-grid-width) · [--geo-grid-breaks](#geo-grid-breaks) · [--geo-grid-details](#geo-grid-details) · [--target-mode](#target-mode) · [--target-motion](#target-motion) · [--target-hold](#target-hold) · [--target-response](#target-response) · [--target-fill](#target-fill) · [--target-outline](#target-outline) · [--target-weak-spots](#target-weak-spots) · [--target-label-scale](#target-label-scale) · [--target-cursor](#target-cursor) · [--geo-grid-projection](#geo-grid-projection) · [--target-motif](#target-motif) · [--target-motif-count](#target-motif-count) · [--target-motif-scale](#target-motif-scale) · [--target-motif-speed](#target-motif-speed) · [--target-motif-breaks](#target-motif-breaks) · [--target-label](#target-label) · [--analysis-outline-width](#analysis-outline-width) · [--subject-outline](#subject-outline) · [--subject-code](#subject-code) · [--subject-labels](#subject-labels) · [--subject-head-gap](#subject-head-gap) · [--subject-title-gap](#subject-title-gap) · [--subject-caret-scale](#subject-caret-scale) · [--code-size](#code-size) · [--code-speed](#code-speed) · [--code-density](#code-density) · [--hud](#hud) · [--hud-colors](#hud-colors) · [--neon](#neon) · [--neon-intensity](#neon-intensity) · [--neon-spread](#neon-spread) · [--neon-core-whiten](#neon-core-whiten) · [--neon-flicker](#neon-flicker) · [--neon-elements](#neon-elements) · [--hud-blur](#hud-blur) · [--hud-blur-elements](#hud-blur-elements) · [--hud-opacity](#hud-opacity) · [--hud-opacity-elements](#hud-opacity-elements) · [--random-colors](#random-colors) · [--sensor-texture](#sensor-texture) · [--pixelation](#pixelation) · [--crt-lines](#crt-lines) · [--vhs](#vhs) · [--list-figures](#list-figures) · [--figures](#figures) · [--target](#target) · [--target-colors](#target-colors) · [--target-shape](#target-shape) · [--target-acquire](#target-acquire) · [--target-flash](#target-flash) · [--target-flash-rate](#target-flash-rate) · [--target-scale](#target-scale) · [--target-stroke](#target-stroke) · [--target-stroke-colors](#target-stroke-colors) · [--motion-blur](#motion-blur) · [--crt-bleed](#crt-bleed) · [--crt-vertical-lines](#crt-vertical-lines) · [--crt-grid](#crt-grid) · [--crt-crosshatch](#crt-crosshatch) · [--crt-strength](#crt-strength) · [--heat-glow](#heat-glow) · [--heat-glow-speed](#heat-glow-speed) · [--download-models](#download-models) · [--device](#device) · [--precision](#precision) · [--warm-objects](#warm-objects) · [--hot-objects](#hot-objects) · [--confidence](#confidence) · [--mask-stability](#mask-stability) · [--mask-min-region](#mask-min-region) · [--detect-interval](#detect-interval) · [--sensor-resolution](#sensor-resolution) · [--verbose](#verbose) · [--timecode](#timecode) · [--timecode-start](#timecode-start) · [--waveform](#waveform) · [--wave-display](#wave-display) · [--wave-backlight](#wave-backlight) · [--wave-style](#wave-style) · [--wave-width](#wave-width) · [--wave-height](#wave-height) · [--wave-detail](#wave-detail) · [--wave-window](#wave-window) · [--wave-gain](#wave-gain) · [--audio-stream](#audio-stream) · [--mute](#mute) · [--start](#start) · [--duration](#duration) · [--fps](#fps) · [--max-size](#max-size) · [--crf](#crf) · [--preset](#preset) · [--grain](#grain) · [--glow](#glow) · [--seed](#seed) · [--overwrite](#overwrite)
 
+[--object-outline](#object-outline) · [--object-outline-width](#object-outline-width) · [--object-outline-block](#object-outline-block) · [--object-outline-padding](#object-outline-padding) · [--object-outline-fill](#object-outline-fill) · [--object-outline-glow](#object-outline-glow) · [--object-outlines](#object-outlines) · [--hud-top-left](#hud-top-left) · [--hud-top-right](#hud-top-right) · [--hud-bottom-left](#hud-bottom-left) · [--hud-bottom-right](#hud-bottom-right) · [--hud-panel-scale](#hud-panel-scale) · [--hud-panel-margin](#hud-panel-margin) · [--readout-style](#readout-style) · [--readout-color](#readout-color) · [--readout-glow](#readout-glow) · [--readout-fill](#readout-fill)
+
 ## Definitions
 
 #### h
@@ -92,10 +94,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### stylepreset
 
 - Syntax: `--stylepreset`
-- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
+- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `brand-new-day`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
 - Default: No recipe; --thermal luminance with Yautja colors.
-- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, and a starter for every palette. Explicit options override it; encoder --preset stays separate Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
+- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, Brand New Day, and a starter for every palette. Explicit options override it; encoder --preset stays separate. Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner; Brand New Day selects brand-new-day.
 - Requires: Mutually exclusive with --preset-file
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#hero)
@@ -367,10 +369,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### hud-font
 
 - Syntax: `--hud-font`
-- Values: `michroma`, `michroma-medium`, `orbitron`, `orbitron-medium`, `orbitron-bold`
+- Values: `michroma`, `michroma-medium`, `orbitron`, `orbitron-medium`, `orbitron-bold`, `pixel`, `crt`, `crt-clean`, `crt-wide`
 - Units: not applicable
 - Default: "michroma"
-- Applies: Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions
+- Applies: Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold, Pixel, serifed CRT, CRT Clean or CRT Wide; applies to Tech, analysis, corner instruments and target captions
 - Requires: --hud
 - Persistence: saved
 - Example: [Complete recipe](examples.md#murphy)
@@ -876,7 +878,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: quoted element=#RGB or element=#RRGGBB assignments
 - Units: unitless
 - Default: Standard colors for unspecified elements.
-- Applies: With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target. Unspecified elements keep standard colors
+- Applies: With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target, object-outline, corner-top-left, corner-top-right, corner-bottom-left, corner-bottom-right. Unspecified elements keep standard colors
 - Requires: --hud-theme custom and --hud
 - Persistence: nullable
 - Example: [Complete recipe](examples.md#vocoder)
@@ -942,7 +944,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: quoted element=0–2 assignments
 - Units: unitless
 - Default: Every element inherits --neon-intensity.
-- Applies: Comma-separated element=intensity overrides, 0-2; 0 disables neon for that element. Others inherit --neon-intensity. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target. Target applies to both flash states
+- Applies: Comma-separated element=intensity overrides, 0-2; 0 disables neon for that element. Others inherit --neon-intensity. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target, object-outline, corner-top-left, corner-top-right, corner-bottom-left, corner-bottom-right. Target applies to both flash states
 - Requires: --neon and --hud
 - Persistence: nullable
 - Example: [Complete recipe](examples.md#neon)
@@ -964,7 +966,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: quoted element=0–20 assignments
 - Units: unitless
 - Default: Every element inherits --hud-blur.
-- Applies: Override blur independently with quoted comma-separated element=radius values, 0-20; explicit 0 keeps an element sharp. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target. Target applies to both flash states
+- Applies: Override blur independently with quoted comma-separated element=radius values, 0-20; explicit 0 keeps an element sharp. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target, object-outline, corner-top-left, corner-top-right, corner-bottom-left, corner-bottom-right. Target applies to both flash states
 - Requires: --hud
 - Persistence: nullable
 - Example: [Complete recipe](examples.md#hud-ink)
@@ -986,7 +988,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: quoted element=0–1 assignments
 - Units: unitless
 - Default: Every element inherits --hud-opacity.
-- Applies: Independent transparency via quoted comma-separated element=opacity values, 0-1; omitted elements inherit --hud-opacity. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target. Target-flash inherits target unless explicitly set
+- Applies: Independent transparency via quoted comma-separated element=opacity values, 0-1; omitted elements inherit --hud-opacity. Elements: waveform, waveform-axis, waveform-ticks, waveform-glyphs, readout, timecode, callouts, leaders, markers, target, target-flash, subject-outline, subject-code, subject-labels, subject-carets, analysis-grid, analysis-text, analysis-outline, geo-grid, target-motif, target-label, target-outline, target-weak-spots, analysis-target-fill, analysis-target, object-outline, corner-top-left, corner-top-right, corner-bottom-left, corner-bottom-right. Target-flash inherits target unless explicitly set
 - Requires: --hud
 - Persistence: nullable
 - Example: [Complete recipe](examples.md#hud-ink)
@@ -1063,8 +1065,8 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: Local filesystem path.
 - Units: not applicable
 - Default: No figure catalog.
-- Applies: Saved figure catalog from the same source, used with --target
-- Requires: --target
+- Applies: Saved figure catalog from the same source, used with --target or --object-outlines
+- Requires: --target or --object-outlines
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#catalog-target)
 
@@ -1628,3 +1630,190 @@ The fixed fields below are checked against the parser and preset registries by `
 - Requires: No additional enabling flag.
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#quality)
+
+#### object-outline
+
+- Syntax: `--object-outline`
+- Values: `off`, `chunky`, `box`
+- Units: unitless
+- Default: "off"
+- Applies: Default geometry for all recognized humans and other objects: block contour or full rectangular box. Each object uses one geometry at a time.
+- Requires: A segmented thermal mode and enabled HUD.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outline-width
+
+- Syntax: `--object-outline-width`
+- Values: Number from 1 to 32.
+- Units: pixels at a 1080px short edge
+- Default: 8.0
+- Applies: Half-thickness of the block contour and full box stroke width.
+- Requires: Object outlines enabled globally or for a figure.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outline-block
+
+- Syntax: `--object-outline-block`
+- Values: Number from 2 to 64.
+- Units: pixels at a 1080px short edge
+- Default: 14.0
+- Applies: Square contour cell size, independent of scene pixelation.
+- Requires: Chunky object outline style.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outline-padding
+
+- Syntax: `--object-outline-padding`
+- Values: Number from 0 to 80.
+- Units: pixels at a 1080px short edge
+- Default: 12.0
+- Applies: Clearance around the full detected object bounding box.
+- Requires: Box object outline style.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outline-fill
+
+- Syntax: `--object-outline-fill`
+- Values: Number from 0 to 1.
+- Units: opacity
+- Default: 0.0
+- Applies: Fill inside each object outline in its outline color; 0 keeps the interior transparent. Brand New Day uses 0.35. Overlapping detections do not accumulate fill opacity.
+- Requires: Object outlines enabled globally or for a figure.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outline-glow
+
+- Syntax: `--object-outline-glow`
+- Values: Number from 0 to 1.
+- Units: intensity
+- Default: 0.0
+- Applies: Broad bloom, tight fringe and a bright core from object edges. Independent of interior fill and global neon; Brand New Day uses 0.65.
+- Requires: Object outlines enabled globally or for a figure.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### object-outlines
+
+- Syntax: `--object-outlines`
+- Values: Comma-separated S001-F001=chunky assignments; modes off, chunky or box; one assignment per figure.
+- Units: scene-local figure IDs
+- Default: No per-object overrides; every detected object uses --object-outline.
+- Applies: Override individual objects in individual scenes; unmatched figures retain the default.
+- Requires: Source-verified --figures catalog, segmentation and enabled HUD. Up to 256 unique IDs.
+- Persistence: runtime-only
+- Example: [Complete recipe](examples.md#object-outlines)
+
+#### hud-top-left
+
+- Syntax: `--hud-top-left`
+- Values: `off`, `readout`, `city-map`, `elevation`, `telemetry`
+- Units: unitless
+- Default: "off"
+- Applies: Select the top-left technical instrument. Maps, coordinates and terrain are simulated.
+- Requires: Enabled HUD.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### hud-top-right
+
+- Syntax: `--hud-top-right`
+- Values: `off`, `readout`, `city-map`, `elevation`, `telemetry`
+- Units: unitless
+- Default: "off"
+- Applies: Select the top-right technical instrument. Maps, coordinates and terrain are simulated.
+- Requires: Enabled HUD.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### hud-bottom-left
+
+- Syntax: `--hud-bottom-left`
+- Values: `off`, `readout`, `city-map`, `elevation`, `telemetry`
+- Units: unitless
+- Default: "off"
+- Applies: Select the bottom-left technical instrument. Maps, coordinates and terrain are simulated.
+- Requires: Enabled HUD.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### hud-bottom-right
+
+- Syntax: `--hud-bottom-right`
+- Values: `off`, `readout`, `city-map`, `elevation`, `telemetry`
+- Units: unitless
+- Default: "off"
+- Applies: Select the bottom-right technical instrument. Maps, coordinates and terrain are simulated.
+- Requires: Enabled HUD.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### hud-panel-scale
+
+- Syntax: `--hud-panel-scale`
+- Values: Number from 0.5 to 2.
+- Units: multiplier
+- Default: 1.0
+- Applies: Scale corner instruments within the available frame space; opposite corners cannot overlap.
+- Requires: At least one corner instrument.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### hud-panel-margin
+
+- Syntax: `--hud-panel-margin`
+- Values: Number from 0.01 to 0.15.
+- Units: fraction of short frame edge
+- Default: 0.035
+- Applies: Inset all corner instruments from the frame edges.
+- Requires: At least one corner instrument.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### readout-style
+
+- Syntax: `--readout-style`
+- Values: `ink`, `reversed`, `amber-black`, `amber-bars`, `amber-glow`, `amber-reversed`
+- Units: unitless
+- Default: "ink"
+- Applies: Technical text on transparency, black or amber reversed highlights with transparent letter cutouts, glowing amber on stepped black backing fitted to every readout row and graphic or individual black highlight bars, or glowing amber border with dim amber fill. Reversed bars are 15% taller than the lettering, rounded to pixels.
+- Requires: A corner set to readout.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### readout-color
+
+- Syntax: `--readout-color`
+- Values: RGB hex color.
+- Units: RGB
+- Default: "#ffbf47"
+- Applies: Text, border and fill hue in amber readout treatments; ink uses the corner HUD color.
+- Requires: Amber readout style.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### readout-glow
+
+- Syntax: `--readout-glow`
+- Values: Number from 0 to 1.
+- Units: unitless
+- Default: 0.65
+- Applies: Readout text and border halo strength; zero is crisp, independent of global neon.
+- Requires: Amber readout style.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)
+
+#### readout-fill
+
+- Syntax: `--readout-fill`
+- Values: Number from 0 to 0.6.
+- Units: opacity
+- Default: 0.24
+- Applies: Dim colored box fill; zero leaves the interior transparent.
+- Requires: Amber-glow readout style.
+- Persistence: saved
+- Example: [Complete recipe](examples.md#brand-new-day)

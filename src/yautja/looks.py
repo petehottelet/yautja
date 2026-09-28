@@ -110,7 +110,23 @@ LOOK_PRESETS['ripley'] = {
     'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
     'vhs': False, 'heat_glow': 0.,
 }
-COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'ripley'}
+LOOK_PRESETS['brand-new-day'] = {
+    'thermal': 'low-detail', 'scene_mode': 'source', 'scene_tint_strength': 0., 'scene_exposure': 1.,
+    'hud': True, 'hud_glyphs': 'tech', 'hud_font': 'crt', 'hud_theme': 'custom',
+    'hud_colors': ','.join(f'{key}=' + ('#ffbf47' if key == 'object-outline' else '#000000') for key in HUD_DEFAULTS),
+    'hud_opacity_elements': ','.join(f'{key}=0' for key in HUD_DEFAULTS
+                                   if key != 'object-outline' and not key.startswith('corner-')),
+    'object_outline': 'chunky', 'object_outline_width': 5.6, 'object_outline_block': 33.6,
+    'object_outline_padding': 12., 'object_outline_fill': .35, 'object_outline_glow': .65,
+    'hud_top_left': 'readout', 'hud_top_right': 'city-map',
+    'hud_bottom_left': 'elevation', 'hud_bottom_right': 'telemetry',
+    'readout_style': 'amber-black', 'readout_color': '#ffbf47', 'readout_glow': .65, 'readout_fill': .24,
+    'subject_outline': False, 'subject_code': False, 'subject_labels': False,
+    'target_mode': 'selected', 'target_flash': False, 'verbose': False, 'timecode': False,
+    'neon': False, 'glow': 0., 'grain': 0., 'pixelation': 0, 'sensor_texture': False,
+    'scanlines': True, 'crt_strength': .18, 'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': .2,
+}
+COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'ripley', 'brand-new-day'}
 PRESET_DESCRIPTIONS = {
     'yautja': 'Eleven colors, 12 soft thermal levels, red HUD, cyan annotations and CRT lines.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
@@ -119,6 +135,7 @@ PRESET_DESCRIPTIONS = {
     'relic': 'Focus with hot-pink triangle ornaments and soft rising light streams centered behind each body core.',
     'murphy': 'Blue-tinted scene, glowing green box and subject outline, CRT scanlines and a Michroma medium-weight TARGETING caption with blinking cursor.',
     'ripley': 'Near-black and burnt-orange thermal colors, orange glyphs and callouts, and a brighter amber waveform.',
+    'brand-new-day': 'Source colors with full-frame CRT scanlines and phosphor bleed, glowing amber contours with 35% fill, black corner instruments and black backing fitted to each readout row. Choose chunky contours or rectangular boxes per object.',
 }
 PRESET_LABELS = {
     'yautja': 'Yautja', 'costa-rica': 'Costa Rica', 'ironbow': 'Ironbow', 'abyss': 'Abyss',
@@ -128,6 +145,7 @@ PRESET_LABELS = {
     'ripley': 'Ripley',
     'netrunner': 'Netrunner',
     'focus': 'Focus', 'relic': 'Relic', 'murphy': 'Murphy',
+    'brand-new-day': 'Brand New Day',
     'fremont': 'Fremont',
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}
@@ -138,6 +156,8 @@ LEVEL_OPTIONS = ('thermal_levels', 'thermal_band_softness', 'thermal_black_point
 
 def normalize_preset(name):
     name = name.strip().lower()
+    if name == 'brand new day':
+        name = 'brand-new-day'
     if name == 'ghost-signal':
         name = 'netrunner'
     if name in ('hottropic', 'hot-tropic'):

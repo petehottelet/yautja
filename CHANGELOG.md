@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+- Add [Brand New Day](skills/yautja/references/presets.md#brand-new-day): original scene colors with full-frame CRT scanlines and phosphor bleed, glowing amber object contours with a 33.6-pixel reference grid, 5.6-pixel line width and 35% fill, mutually exclusive chunky or rectangular outlines per object, and independent black corner instruments with simulated map coordinates, elevation profiles and telemetry. Choose styles for individual figures in each scene with [`--object-outlines`](skills/yautja/references/options.md#object-outlines).
+- Add selectable Pixel, CRT, CRT Clean and CRT Wide HUD lettering, plus transparent ink, black or glowing amber highlights with transparent letter cutouts, bright amber text with bloom on individual black highlight bars or padded black backing that follows the widths of every readout row, divider and footer strip, and glowing amber border/dim-fill readout treatments. Reversed highlights are 15% taller than their lettering, rounded to pixels. Save visual controls in portable presets; keep source-specific figure assignments on the conversion command.
+
 ## 2.12.1
 
 - Put the Claude/Codex skill installer first in Quick start and present direct CLI use alongside it. Rename the model-free thermal mode from `classic` to `luminance` in the CLI, Python API and saved presets, with no alias for the old name. Update explicit flags and saved `thermal` values to `luminance`; commands without a thermal flag keep the same behavior.

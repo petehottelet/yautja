@@ -99,7 +99,7 @@ class FigureCatalog:
 
 
 class TargetSelection:
-    def __init__(self, path, source, identifiers):
+    def __init__(self, path, source, identifiers, *, max_selected=16):
         path = Path(path)
         if path.stat().st_size > 128 * 1024 * 1024:
             raise ValueError('Figure catalog exceeds the 128 MB limit.')
@@ -114,8 +114,8 @@ class TargetSelection:
         unknown = self.selected - set(self.figures)
         if not self.selected or unknown:
             raise ValueError('Unknown target IDs: ' + ', '.join(sorted(unknown)) + '. Choose IDs from the figure catalog.')
-        if len(self.selected) > 16:
-            raise ValueError('Select at most 16 targets per render.')
+        if len(self.selected) > max_selected:
+            raise ValueError(f'Select at most {max_selected} targets per render.')
 
     def _validate(self):
         def require(condition):
@@ -153,13 +153,13 @@ class TargetSelection:
                 self.figures[identifier] = figure
                 self.times[identifier] = [s[0] for s in figure['samples']]
 
-    def at(self, time):
+    def at(self, time, identifiers=None):
         shot = next((s for s in self.data['shots'] if s['start'] <= time < s['end']), None)
         if shot is None:
             return [], None
         result = []
         interval = 1 / self.data['fps']
-        for identifier in sorted(self.selected):
+        for identifier in sorted(self.selected if identifiers is None else identifiers):
             if not identifier.startswith(shot['id'] + '-'):
                 continue
             figure, times = self.figures[identifier], self.times[identifier]
@@ -178,6 +178,46 @@ class TargetSelection:
                     alpha += (b[5] - alpha) * fraction
             result.append({'id': identifier, 'bbox': box, 'opacity': alpha})
         return result, shot['id']
+
+
+class OutlineSelection(TargetSelection):
+    """Match catalog figures to live masks, with one-to-one shot-local assignments."""
+    def __init__(self, path, source, rules):
+        super().__init__(path, source, list(rules), max_selected=256)
+        self.rules, self.seen = dict(rules), set()
+        self.matches = {}
+        self.shot = self.time = None
+
+    def styles_at(self, time, subjects):
+        candidates, shot = self.at(time, self.figures)
+        if shot != self.shot or self.time is None or time < self.time or time-self.time > .5:
+            self.matches = {}
+        self.shot, self.time = shot, time
+        pairs = []
+        for subject in subjects:
+            box = subject_box(subject)
+            if box is None or subject.opacity <= .05:
+                continue
+            for candidate in candidates:
+                identifier = candidate['id']
+                if self.figures[identifier].get('category') != subject.label:
+                    continue
+                a, b = box, candidate['bbox']
+                intersection = max(0, min(a[2],b[2])-max(a[0],b[0])) * max(0, min(a[3],b[3])-max(a[1],b[1]))
+                union = (a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - intersection
+                iou = intersection / max(union, 1e-12)
+                if iou >= .35:
+                    continuity = .15 if self.matches.get(subject.track_id) == identifier else 0.
+                    pairs.append((iou + continuity, identifier, subject.track_id))
+        matches, used = {}, set()
+        for _, identifier, track in sorted(pairs, reverse=True):
+            if track not in matches and identifier not in used:
+                matches[track] = identifier
+                used.add(identifier)
+        self.matches = matches
+        styles = {track: self.rules[identifier] for track, identifier in matches.items() if identifier in self.rules}
+        self.seen.update(identifier for identifier in matches.values() if identifier in self.rules)
+        return styles
 
 
 def scan(args):

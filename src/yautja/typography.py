@@ -7,14 +7,25 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from .crt_font import FAMILIES as CRT_FAMILIES
+
 FONT_FILES = {'michroma': 'Michroma-Regular.ttf', 'michroma-medium': 'Michroma-Regular.ttf',
               'orbitron': 'Orbitron-Light.ttf',
-              'orbitron-medium': 'Orbitron-Medium.ttf', 'orbitron-bold': 'Orbitron-Bold.ttf'}
+              'orbitron-medium': 'Orbitron-Medium.ttf', 'orbitron-bold': 'Orbitron-Bold.ttf',
+              'pixel': None, **dict.fromkeys(CRT_FAMILIES)}
 TECH_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
 
 @lru_cache(maxsize=128)
 def bundled_font(name, size):
+    if FONT_FILES[name] is None:
+        if name in CRT_FAMILIES:
+            from .crt_font import font_data
+            data = font_data(name)
+        else:
+            from .pixel_font import font_data
+            data = font_data()
+        return ImageFont.truetype(io.BytesIO(data), size)
     return ImageFont.truetype(io.BytesIO(files('yautja').joinpath('assets/fonts/' + FONT_FILES[name]).read_bytes()), size)
 
 
@@ -52,6 +63,12 @@ class HUDTypography:
         return self.fonts[size]
 
     def mask(self, text, height, tracking=0.):
+        if self.data is None and self.hud_font in CRT_FAMILIES:
+            from .crt_font import crt_mask
+            return crt_mask(text, height, tracking, self.hud_font)
+        if self.data is None and self.hud_font == 'pixel':
+            from .pixel_font import pixel_mask
+            return pixel_mask(text, height, tracking)
         height = max(1, round(height))
         key = (text, height, tracking)
         if key in self.tiles:
@@ -96,6 +113,10 @@ class HUDTypography:
         return max(1, round(size * .012)) if self.hud_font == 'michroma-medium' and self.data is None else 0
 
     def report(self):
+        if self.data is None and (self.hud_font == 'pixel' or self.hud_font in CRT_FAMILIES):
+            return {'hud_font': self.hud_font, 'hud_font_file': None,
+                    'hud_font_family': CRT_FAMILIES.get(self.hud_font, 'Yautja Pixel'),
+                    'hud_font_weight': 'Regular'}
         weight = 'Medium (synthetic)' if self.stroke_width(24) else self.font(24).getname()[1]
         return {'hud_font': self.hud_font, 'hud_font_file': str(self.path) if self.path else None,
                 'hud_font_family': self.font(24).getname()[0], 'hud_font_weight': weight}

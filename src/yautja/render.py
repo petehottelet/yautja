@@ -14,6 +14,7 @@ from .thermal import resolve_thermal
 from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
+from .brand_new_day import DayHUD, DAY_ELEMENTS
 from .neon import NeonStyle
 from .waveform import WAVE_STYLES, waveform_masks, led_device, resolve_display
 from .hud import HudPanel, grid_clearance, hud_blurs, hud_opacities
@@ -241,8 +242,21 @@ class Renderer:
                  target_label_scale=1., target_cursor=False,
                  geo_grid_center_fade=0., geo_grid_width=1.3, geo_grid_breaks=0.,
                  target_motif_speed=1., target_motif_breaks=0., geo_grid_details=False,
-                 outline_width=None, target_weak_spots=False, outline_shine=.55, geo_grid_rotation=0., wave_display=None, wave_backlight=.2):
+                 outline_width=None, target_weak_spots=False, outline_shine=.55, geo_grid_rotation=0., wave_display=None, wave_backlight=.2,
+                 object_outline='off', object_outline_width=8., object_outline_block=14., object_outline_padding=12., object_outline_fill=0., object_outline_glow=0.,
+                 hud_top_left='off', hud_top_right='off', hud_bottom_left='off', hud_bottom_right='off',
+                 hud_panel_scale=1., hud_panel_margin=.035, readout_style='ink', readout_color='#ffbf47',
+                 readout_glow=.65, readout_fill=.24):
         self.width, self.height = width, height
+        self.day = DayHUD(object_outline=object_outline, object_outline_width=object_outline_width,
+                          object_outline_block=object_outline_block, object_outline_padding=object_outline_padding,
+                          object_outline_fill=object_outline_fill,
+                          object_outline_glow=object_outline_glow,
+                          hud_top_left=hud_top_left, hud_top_right=hud_top_right,
+                          hud_bottom_left=hud_bottom_left, hud_bottom_right=hud_bottom_right,
+                          hud_panel_scale=hud_panel_scale, hud_panel_margin=hud_panel_margin,
+                          readout_style=readout_style, readout_color=readout_color,
+                          readout_glow=readout_glow, readout_fill=readout_fill)
         if hud_glyphs not in ('yautja', 'cyber', 'tech'):
             raise ValueError('--HUDglyphs must be yautja, cyber, or tech')
         self.hud_glyphs = hud_glyphs
@@ -333,6 +347,8 @@ class Renderer:
         # Screen blending would brighten the gray toward white or erase black.
         fixed_gray = self.colors.palette_name == 'white-hot' and self.hud_theme in ('standard', 'palette')
         self.overlay_mode = 'RGBA' if self.neon or target_outline or target_weak_spots or geo_grid or target_motif != 'none' or target_label is not None or analysis or analysis_target or subject_outline or subject_code or subject_labels or self.hud_theme == 'custom' or fixed_gray or self.hud_colors['waveform'] == (0, 0, 0) else 'RGB'
+        if self.day.active:
+            self.overlay_mode = 'RGBA'
         self.annotation_positions = {}
         self.annotation_centers = {}
         self.annotation_time = None
@@ -353,6 +369,7 @@ class Renderer:
                             'leaders': max(1, 1.5 * s), 'markers': max(1.5, 2 * s)}
         self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in SUBJECT_ELEMENTS})
         self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in (*ANALYSIS_ELEMENTS, *GEOMETRY_ELEMENTS)})
+        self.neon_widths.update({key: max(1., 2 * min(width, height) / 1080) for key in DAY_ELEMENTS})
         self.color = self.hud_colors['waveform']
         self.font_data, self.font_chars = load_glyph_font() if self.hud else (None, [])
         self.fonts, self.tiles = {}, {}
@@ -415,8 +432,9 @@ class Renderer:
         image.paste(ImageChops.screen(image.crop((x, y, x + overlay.width, y + overlay.height)), overlay), (x, y))
 
     def hud_panel(self, size, *elements):
-        return HudPanel(self.overlay_mode, size, self.hud_blur_pixels, elements, self.hud_opacities,
-                        separate=self.neon or any(key in (*SUBJECT_ELEMENTS, *ANALYSIS_ELEMENTS, *GEOMETRY_ELEMENTS) for key in elements))
+        mode = 'RGBA' if any(key in DAY_ELEMENTS for key in elements) else self.overlay_mode
+        return HudPanel(mode, size, self.hud_blur_pixels, elements, self.hud_opacities,
+                        separate=self.neon or any(key in (*SUBJECT_ELEMENTS, *ANALYSIS_ELEMENTS, *GEOMETRY_ELEMENTS, *DAY_ELEMENTS) for key in elements))
 
     def composite_panel(self, image, panel, x, y):
         if getattr(self, '_readout_panels', None) is not None:
@@ -424,7 +442,11 @@ class Renderer:
             return
         if self.neon:
             for key, artwork in panel.layers.items():
-                self.neon_style.apply(image, artwork, x, y, self.hud_colors[key], element=key,
+                color = self.hud_colors[key]
+                if (key.startswith('corner-') and self.day.readout_style in ('amber-black', 'amber-bars', 'amber-glow', 'amber-reversed')
+                        and getattr(self.day, 'hud_' + key.removeprefix('corner-').replace('-', '_')) == 'readout'):
+                    color = self.day.amber
+                self.neon_style.apply(image, artwork, x, y, color, element=key,
                                       width=self.neon_widths[key], gain=self.neon_gain,
                                       opacity=self.hud_opacities[key], blur=self.hud_blur_pixels[key])
             return
@@ -624,14 +646,14 @@ class Renderer:
                 layer.paste(tile, (x + i * step, y))
         self.composite_panel(image, panel, 0, 0)
 
-    def render(self, frame, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False):
+    def render(self, frame, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False, object_styles=None):
         if self.display.motion_blur:
             coarse = np.asarray(frame.convert('L').resize((32, 18)), np.float32)
             if self.previous_source is not None and np.abs(coarse - self.previous_source).mean() > 38:
                 self.display.reset()
             self.previous_source = coarse
         if self.signal.scene_mode == 'source':
-            return self.render_source(frame, time, wave, subjects, targets=targets, shot_id=shot_id, target_static=target_static)
+            return self.render_source(frame, time, wave, subjects, targets=targets, shot_id=shot_id, target_static=target_static, object_styles=object_styles)
         # All modes are artistic effects, not actual heat measurement.
         if self.thermal != 'luminance':
             luma = self.heat_field.build(frame, subjects)
@@ -641,9 +663,9 @@ class Renderer:
             luma = np.clip((luma - 127.5) * 1.10 + 127.5, 0, 255)
             if self.transfer.levels is None:
                 luma = luma.astype(np.uint8)
-        return self.render_field(luma, time, wave=wave, subjects=subjects, targets=targets, shot_id=shot_id, target_static=target_static)
+        return self.render_field(luma, time, wave=wave, subjects=subjects, targets=targets, shot_id=shot_id, target_static=target_static, object_styles=object_styles)
 
-    def render_field(self, luma, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False):
+    def render_field(self, luma, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False, object_styles=None):
         """Color an existing scalar heat field; useful for matched style galleries."""
         if self.signal.scene_mode == 'source':
             raise ValueError('Source scene mode needs an RGB frame; call Renderer.render(frame, ...)')
@@ -654,7 +676,7 @@ class Renderer:
         # Texture is a display treatment; it must not change the HUD readouts.
         readout_luma = luma
         if self.transfer.levels is not None:
-            return self.render_graded(luma, time, wave, subjects, targets, shot_id, target_static)
+            return self.render_graded(luma, time, wave, subjects, targets, shot_id, target_static, object_styles)
         if self.pixelation or self.grain or self.sensor_texture:
             from .thermal import sensor_size
             size = sensor_size(self.width, self.height, self.pixelation) if self.pixelation else (self.width, self.height)
@@ -673,7 +695,7 @@ class Renderer:
         image = highlight_glow(image, readout_luma, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.colors.palette[-1].mean() < self.colors.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id, static=target_static)
+            self.draw_hud(image, readout_luma, time, wave, subjects, shot_id=shot_id, static=target_static, object_styles=object_styles)
             colors = (self.hud_colors['target'], self.hud_colors['target-flash'])
             image = self.draw_targets(image, time, subjects, targets, colors, shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
@@ -686,7 +708,7 @@ class Renderer:
         self.geometry.draw_targets(self, image, time, static, subjects)
         return image
 
-    def render_source(self, frame, time, wave, subjects, *, targets=None, shot_id=None, target_static=False):
+    def render_source(self, frame, time, wave, subjects, *, targets=None, shot_id=None, target_static=False, object_styles=None):
         if frame.size != (self.width, self.height):
             raise ValueError('Source frame must match renderer dimensions')
         image = self.signal.grade(frame)
@@ -698,7 +720,7 @@ class Renderer:
             rgb = np.asarray(image, np.float32) + rng.normal(0, self.grain * 255, (self.height, self.width, 1))
             image = Image.fromarray(np.uint8(np.clip(rgb, 0, 255)))
         if self.hud:
-            self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects, shot_id=shot_id, static=target_static)
+            self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects, shot_id=shot_id, static=target_static, object_styles=object_styles)
             image = self.draw_targets(image, time, subjects, targets,
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id,
                         static=target_static, neon_gain=self.neon_gain)
@@ -712,7 +734,7 @@ class Renderer:
         tile = self.glyph(index, height)
         return tile.getchannel('A') if tile.mode == 'RGBA' else tile.convert('L')
 
-    def render_graded(self, luma, time, wave, subjects, targets, shot_id, target_static):
+    def render_graded(self, luma, time, wave, subjects, targets, shot_id, target_static, object_styles=None):
         u = self.transfer.normalize(luma)
         if self.pixelation:
             from .thermal import sensor_size
@@ -733,7 +755,7 @@ class Renderer:
         image = highlight_glow(image, u * 255, self.heat_glow, time, self.heat_glow_speed, self.seed,
                                dark=self.palette[-1].mean() < self.palette[0].mean())
         if self.hud:
-            self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id, static=target_static)
+            self.draw_hud(image, luma, time, wave, subjects, shot_id=shot_id, static=target_static, object_styles=object_styles)
             image = self.draw_targets(image, time, subjects, targets,
                         (self.hud_colors['target'], self.hud_colors['target-flash']), shot=shot_id, static=target_static, neon_gain=self.neon_gain)
         return self.display_effects(image, time, shot_id)
@@ -843,7 +865,10 @@ class Renderer:
         self.composite_panel(image, panel, 0, 0)
         return size, stats
 
-    def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None, static=False):
+    def draw_hud(self, image, readout_luma, time, wave=None, subjects=(), *, shot_id=None, static=False, object_styles=None):
+        if object_styles and any(mode not in ('off', 'chunky', 'box') for mode in object_styles.values()):
+            raise ValueError('Object styles must choose one of off, chunky or box per object')
+        self.day.styles = object_styles or {}
         if self.neon:
             self.neon_gain = self.neon_style.noise.gain(time, self.neon_style.flicker)
         # Lay out instruments once, before the background grid, then paint them
@@ -859,6 +884,7 @@ class Renderer:
             clearance = grid_clearance(image.size, [(p, x, y) for p, x, y, _ in panels], self.scale)
             self.geometry.draw_grid(self, image, time, static, clearance=clearance)
         self.signal.draw(self, image, subjects, time, shot_id, static)
+        self.day.draw_objects(self, image, subjects)
         self.analysis.draw(self, image, subjects, time, shot_id, static)
         if panels is not None:
             for panel, x, y, backing in panels:
@@ -906,6 +932,7 @@ class Renderer:
         self.composite_panel(image, panel, max(0, self.width - rw - pad), pad)
         if self.verbose:
             self.annotate(image, subjects, time=time, shot_id=shot_id)
+        self.day.draw_panels(self, image, time, subjects, shot_id)
 
     def display_effects(self, image, time, shot_id=None):
         # Tape/CRT treatments affect the final display, including the HUD.

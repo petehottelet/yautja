@@ -59,8 +59,14 @@ class HudStylingTests(unittest.TestCase):
         mask[130:470, 400:580] = 1
         subjects = [Subject(mask, 'person', .95, track_id=1),
                     Subject(np.roll(mask, -150, axis=1), 'person', .95, track_id=2)]
-        def render(element=None, analysis=False):
+        def render(element=None, analysis=False, day_key=None):
+            day = {'object_outline':'box'} if day_key == 'object-outline' else {}
+            if day_key and day_key.startswith('corner-'):
+                day['hud_' + day_key.removeprefix('corner-').replace('-', '_')] = 'readout'
+            if day:
+                day.update(hud_theme='custom', hud_colors=day_key+'=#ffffff')
             renderer = Renderer(*self.size, show_timecode=True, verbose=True, glow=0,
+                                **day,
                                 analysis=analysis, analysis_target=analysis,
                                 geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
@@ -75,8 +81,9 @@ class HudStylingTests(unittest.TestCase):
         for key in BLUR_ELEMENTS:
             if key != 'target':
                 with self.subTest(element=key):
-                    active = render(analysis=True) if key.startswith('analysis-') else sharp
-                    self.assertGreater(np.count_nonzero(active != render(key, analysis=key.startswith('analysis-'))), 10)
+                    day_key = key if key == 'object-outline' or key.startswith('corner-') else None
+                    active = render(day_key=day_key) if day_key else render(analysis=True) if key.startswith('analysis-') else sharp
+                    self.assertGreater(np.count_nonzero(active != render(key, analysis=key.startswith('analysis-'), day_key=day_key)), 10)
 
     def test_hud_off_suppresses_stroke_and_blur_without_softening_the_scene(self):
         np.testing.assert_array_equal(self.picture(hud=False), self.picture(hud=False, hud_blur=20,

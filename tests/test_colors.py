@@ -62,8 +62,11 @@ class ColorTests(unittest.TestCase):
                        geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING')
         for key in HUD_DEFAULTS:
             with self.subTest(element=key):
-                original = Renderer(640, 360, **options, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'))
-                renderer = Renderer(640, 360, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'),
+                day = {'object_outline':'chunky'} if key == 'object-outline' else {}
+                if key.startswith('corner-'):
+                    day['hud_' + key.removeprefix('corner-').replace('-', '_')] = 'readout'
+                original = Renderer(640, 360, **options, **day, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'))
+                renderer = Renderer(640, 360, **day, analysis=key.startswith('analysis-'), analysis_target=key.startswith('analysis-'),
                                     **{**options, 'hud_colors': ','.join(f'{name}=' + ('#0000ff' if name == key else '#00ff00') for name in HUD_DEFAULTS)})
                 targets = [{'id': 'S001-F001', 'bbox': [.35, .28, .58, .83]}]
                 times = (0, .3, .6, .9, 1.2, 1.4) if key == 'target-flash' else (0, .3, .6, .9)

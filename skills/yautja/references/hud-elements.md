@@ -31,5 +31,10 @@ The target's optional colored stroke follows its opacity. Filled/stroked geometr
 | `target-weak-spots` | yes | yes | yes | Optional decorative holographic scan patches |
 | `analysis-target-fill` | yes | yes | yes | Translucent persistent analysis disk; inactive with `--target-fill stroked` |
 | `analysis-target` | yes | yes | yes | Analysis disk ring and XY marks |
+| `object-outline` | yes | yes | yes | Chunky block contours and full object bounding boxes |
+| `corner-top-left` | yes | yes | yes | Top-left technical instrument, including readout field and halo |
+| `corner-top-right` | yes | yes | yes | Top-right technical instrument |
+| `corner-bottom-left` | yes | yes | yes | Bottom-left technical instrument |
+| `corner-bottom-right` | yes | yes | yes | Bottom-right technical instrument |
 
 The `target-flash` neon entry is not separately accepted: configure `target`. LED backplates and idle cells use waveform opacity/blur/color but never emit light. [Color, blur and opacity example](examples.md#hud-ink) · [Neon example](examples.md#neon).

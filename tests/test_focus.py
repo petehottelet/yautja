@@ -71,7 +71,8 @@ class FocusTests(unittest.TestCase):
                 mask = typography.mask(text, 18)
                 self.assertIs(mask, typography.mask(text, 18))
                 self.assertIsNotNone(mask.getbbox())
-            self.assertEqual(typography.font(20).getname()[0].split()[0], 'Michroma' if face.startswith('michroma') else 'Orbitron')
+            expected = 'Yautja' if face == 'pixel' or face.startswith('crt') else 'Michroma' if face.startswith('michroma') else 'Orbitron'
+            self.assertEqual(typography.font(20).getname()[0].split()[0], expected)
         r = Renderer(*self.size, look_preset='fremont')
         self.assertIn('Bold', r.typography.font(20).getname()[1])
         self.assertEqual(r.analysis.analysis_outline_width, 5)

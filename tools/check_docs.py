@@ -29,6 +29,7 @@ AUTOMATIC_DEFAULTS = {
     'pixelation': 'Off; --sensor-texture uses --sensor-resolution unless explicitly overridden.',
     'scanlines': 'On for the default Yautja thermal palette or --sensor-texture; otherwise off.',
     'figures': 'No figure catalog.', 'target_colors': 'Resolved target and flash HUD colors.',
+    'object_outlines': 'No per-object overrides; every detected object uses --object-outline.',
     'target_stroke_colors': 'Darker shades of the resolved target colors.',
     'wave_display': 'LED for digital-circuit; plain for the other six styles.',
     'wave_width': '0.12 of frame width for non-trace styles; trace has fixed layout.',

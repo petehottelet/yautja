@@ -32,13 +32,14 @@ from .signal import SIGNAL_OPTIONS, SignalStyle
 from .geometry import GEO_OPTIONS, TARGET_OPTIONS, GeometryStyle
 from .typography import FONT_FILES, HUDTypography
 from .analysis import ANALYSIS_OPTIONS, AnalysisHUD
+from .brand_new_day import DAY_OPTIONS, DayHUD, OUTLINE_MODES, PANEL_MODES, READOUT_STYLES, outline_rules
 
 EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_flash_rate', 'target_scale',
                   'motion_blur', 'crt_bleed', 'crt_vertical_lines', 'crt_grid', 'crt_crosshatch', 'crt_strength', 'heat_glow', 'heat_glow_speed',
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_display', 'wave_backlight',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
-                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, 'hud_font', 'hud_font_file')
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, *DAY_OPTIONS, 'hud_font', 'hud_font_file')
 
 
 def target_selection(args, source):
@@ -48,6 +49,23 @@ def target_selection(args, source):
     return TargetSelection(args.figures, source, args.target)
 
 
+def object_selection(args, source):
+    if not args.hud or not args.object_outlines:
+        return None
+    from .figures import OutlineSelection
+    return OutlineSelection(args.figures, source, outline_rules(args.object_outlines))
+
+
+def object_report(selection):
+    if not selection:
+        return {'object_outlines': {}, 'object_outlines_seen': [], 'object_outlines_unseen': []}
+    unseen = sorted(selection.selected - selection.seen)
+    if unseen:
+        print('Object outline IDs not matched in this range: ' + ', '.join(unseen), file=sys.stderr)
+    return {'object_outlines': selection.rules, 'object_outlines_seen': sorted(selection.seen),
+            'object_outlines_unseen': unseen}
+
+
 def extra_report(renderer, selection, *, static=False):
     selected = selection.selected if selection and renderer.hud else set()
     unseen = sorted(selected - renderer.target_overlay.seen)
@@ -55,7 +73,7 @@ def extra_report(renderer, selection, *, static=False):
         print('Selected targets not visible in this range: ' + ', '.join(unseen), file=sys.stderr)
     outline = renderer.target_overlay.stroke_colors or tuple(tuple(round(c * .62) for c in renderer.hud_colors[key])
                                                             for key in ('target', 'target-flash'))
-    return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), **renderer.geometry.report(renderer.hud),
+    return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), **renderer.geometry.report(renderer.hud), **renderer.day.report(renderer.hud),
             **renderer.typography.report(), 'hud_glyphs': renderer.hud_glyphs,
             'look_preset': renderer.look_preset,
             'target_shape': renderer.target_overlay.shape,
@@ -248,7 +266,7 @@ def semantic_tracker(args):
     tracker = SemanticTracker(GroundedSegmenter(warm=args.warm_objects, hot=args.hot_objects,
                               device=args.device, confidence=args.confidence, precision=args.precision,
                               surfaces=not args.list_figures and args.scene_mode == 'thermal' and resolve_thermal(args.thermal) in ('cinematic', 'detailed', 'very-detailed')),
-                              args.detect_interval, mask_stability=args.mask_stability, mask_min_region=args.mask_min_region, refine_masks=args.hud and (args.subject_outline or args.target_outline or args.target_weak_spots or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
+                              args.detect_interval, mask_stability=args.mask_stability, mask_min_region=args.mask_min_region, refine_masks=args.hud and (args.object_outline != 'off' or args.object_outlines or args.subject_outline or args.target_outline or args.target_weak_spots or args.analysis or args.analysis_target or args.subject_code or args.target_mode != 'selected') and not args.list_figures)
     print(f'Semantic device: {tracker.detector.device} ({tracker.detector.device_reason}); '
           f'precision: {tracker.detector.precision}', file=sys.stderr, flush=True)
     return tracker
@@ -280,6 +298,7 @@ def convert_image(args):
     started = time.monotonic()
     source, output = output_paths(args, '.png')
     selection = target_selection(args, source)
+    outlines = object_selection(args, source)
     video_options = {'start': 0., 'duration': None, 'fps': None, 'audio_stream': 0,
                      'mute': False, 'wave_window': .6, 'wave_gain': 1.,
                      'crf': 18, 'preset': 'medium', 'detect_interval': .5}
@@ -305,8 +324,10 @@ def convert_image(args):
                         palette_colors=args.palette_colors, hud_theme=args.hud_theme,
                         hud_colors=args.hud_colors, random_colors=args.random_colors, hud=args.hud,
                         **{key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
-    targets, shot = selection.at(0.) if selection else (None, None)
-    rendered = renderer.render(frame, 0., subjects=subjects, targets=targets, shot_id=shot, target_static=True)
+    targets, shot = selection.at(0.) if selection else (None, 1 if tracker else None)
+    styles = outlines.styles_at(0., subjects) if outlines else None
+    rendered = renderer.render(frame, 0., subjects=subjects, targets=targets,
+                               shot_id=outlines.shot if outlines else shot, target_static=True, object_styles=styles)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -336,6 +357,7 @@ def convert_image(args):
                   'pixelation', 'scanlines', 'vhs', 'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')}}
     report.update(renderer.colors.report())
     report.update(extra_report(renderer, selection, static=True))
+    report.update(object_report(outlines))
     report.update(preset_report(args))
     report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
     report['settings']['target'] = args.target
@@ -358,6 +380,7 @@ def convert_video(args):
     timings = {}
     source, output = output_paths(args, '.mp4')
     selection = target_selection(args, source)
+    outlines = object_selection(args, source)
     ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
     data, video = probe(source, ffprobe)
     audios = [s for s in data['streams'] if s['codec_type'] == 'audio']
@@ -434,8 +457,10 @@ def convert_video(args):
                         wave = analysis.waveform(args.start + t, args.wave_window, args.wave_gain) if mode == 'audio' else None
                         frame = Image.frombytes('RGB', (width, height), raw)
                         subjects = tracker.update(frame, t) if tracker else ()
-                        targets, shot = selection.at(args.start + t) if selection else (None, getattr(tracker, 'scene_cuts', None))
-                        encoded = renderer.render(frame, t, wave, subjects, targets=targets, shot_id=shot)
+                        targets, shot = selection.at(args.start + t) if selection else (None, tracker.scene_cuts + 1 if tracker else None)
+                        styles = outlines.styles_at(args.start + t, subjects) if outlines else None
+                        encoded = renderer.render(frame, t, wave, subjects, targets=targets,
+                                                  shot_id=outlines.shot if outlines else shot, object_styles=styles)
                         encoder.stdin.write(encoded.tobytes())
                         frames += 1
                         if frames % max(1, round(fps * 2)) == 0:
@@ -443,7 +468,8 @@ def convert_video(args):
                     encoder.stdin.close()
                     decode_status, encode_status = decoder.wait(), encoder.wait()
                     if decode_status or encode_status:
-                        dec_log.seek(0); enc_log.seek(0)
+                        dec_log.seek(0)
+                        enc_log.seek(0)
                         raise ConversionError((dec_log.read() + enc_log.read()).decode('utf-8', 'replace')[-6000:])
                 except BrokenPipeError as exc:
                     enc_log.seek(0)
@@ -498,6 +524,7 @@ def convert_video(args):
                               'palette_colors', 'hud_theme', 'hud_colors', 'random_colors', 'hud', 'timecode', 'verbose')})
             report.update(renderer.colors.report())
             report.update(extra_report(renderer, selection))
+            report.update(object_report(outlines))
             report.update(preset_report(args))
             report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
             report['settings']['target'] = args.target
@@ -551,7 +578,7 @@ def parser():
     p.add_argument('--palette', choices=['auto', *PALETTES, 'custom', 'random'], default='yautja', help='Thermal colors, independent of thermal style. Yautja by default; Costa Rica uses a blue-to-red ramp; custom uses --palette-colors; random uses --seed')
     p.add_argument('--palette-colors', help='With --palette custom: quoted string of 2–16 comma/space-separated hex colors, cold to hot, evenly spaced; e.g. "#000000,#0033ff,#ff2200"')
     source = p.add_mutually_exclusive_group()
-    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
+    source.add_argument('--stylepreset', dest='look_preset', type=normalize_preset, choices=LOOK_PRESETS, help='Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, Brand New Day, and a starter for every palette. Explicit options override it; encoder --preset stays separate')
     source.add_argument('--preset-file', type=Path, help='Load a local JSON visual preset; explicit options override its settings')
     management = p.add_mutually_exclusive_group()
     management.add_argument('--list-presets', action='store_true', help='List built-in preset names and settings as JSON, then exit; no media or models needed')
@@ -577,8 +604,23 @@ def parser():
     p.add_argument('--analysis-target', action=argparse.BooleanOptionalAction, default=False, help='Persistent translucent scan target with smooth focus motion and no acquisition zoom; independent of --analysis, shares its subject selection and speed')
     p.add_argument('--analysis-target-size', type=float, default=.36, help='Constant scan target diameter as a fraction of the short frame edge, 0.1-0.8')
     p.add_argument('--analysis-target-response', type=float, default=.6, help='Seconds to cover 95 percent of a focus change, 0-3; 0 follows immediately')
-    p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold; applies to Tech, analysis and target captions')
+    p.add_argument('--hud-font', choices=FONT_FILES, default='michroma', help='Readable HUD font: Michroma Regular or synthesized Medium, Orbitron Light, Medium or Bold, Pixel, serifed CRT, CRT Clean or CRT Wide; applies to Tech, analysis, corner instruments and target captions')
     p.add_argument('--hud-font-file', type=Path, help='Local TTF/OTF overriding the bundled readable font; must cover printable ASCII. Machine-specific path is never saved in presets')
+    p.add_argument('--object-outline', choices=OUTLINE_MODES, default='off', help='All detected objects: choose off, chunky block contour or full rectangular box; one geometry per object; requires segmentation')
+    p.add_argument('--object-outline-width', type=float, default=8., help='Object contour half-thickness and box stroke, 1-32 pixels at a 1080px short edge')
+    p.add_argument('--object-outline-block', type=float, default=14., help='Square contour grid cells, 2-64 pixels at a 1080px short edge; independent of source pixelation')
+    p.add_argument('--object-outline-padding', type=float, default=12., help='Full bounding-box padding, 0-80 pixels at a 1080px short edge')
+    p.add_argument('--object-outline-fill', type=float, default=0., help='Opacity inside each object outline, 0-1; uses its outline color; 0 keeps a transparent interior')
+    p.add_argument('--object-outline-glow', type=float, default=0., help='Object edge bloom and bright core, 0-1; independent of interior fill and global neon')
+    p.add_argument('--object-outlines', help='Per-scene figure styles, e.g. S001-F001=chunky,S001-F002=box; choose one geometry per figure; off hides it. Requires --figures and segmentation; not saved in presets')
+    for corner in ('top-left', 'top-right', 'bottom-left', 'bottom-right'):
+        p.add_argument('--hud-' + corner, choices=PANEL_MODES, default='off', help='Corner instrument: off, technical readout, schematic city-map with simulated coordinates, simulated elevation or telemetry; transparent black ink by default')
+    p.add_argument('--hud-panel-scale', type=float, default=1., help='Corner instrument size multiplier, 0.5-2; bounded to avoid overlap in portrait and landscape frames')
+    p.add_argument('--hud-panel-margin', type=float, default=.035, help='Corner inset as a fraction of the short frame edge, 0.01-0.15')
+    p.add_argument('--readout-style', choices=READOUT_STYLES, default='ink', help='Technical readout treatment: ink on transparency, black or amber reversed highlights with transparent letter cutouts, glowing amber on stepped black backing fitted to every readout row and graphic or individual black bars, or glowing amber border with dim amber fill')
+    p.add_argument('--readout-color', default='#ffbf47', help='RGB hex text and border color for amber readout styles; ink uses its corner HUD color')
+    p.add_argument('--readout-glow', type=float, default=.65, help='Amber readout halo strength, 0-1; independent of global neon, 0 keeps crisp text and border')
+    p.add_argument('--readout-fill', type=float, default=.24, help='Dim amber-glow box fill opacity, 0-0.6; 0 leaves the interior transparent')
     p.add_argument('--outline-style', choices=['solid', 'shimmer', 'holographic'], default='solid', help='Continuous edge, partial shimmer, or textured partial holographic glow; enable with --subject-outline')
     p.add_argument('--outline-shine', type=float, default=.55, help='Moving holographic band brightness, 0-1; affects holographic outlines and optional weak-spot textures')
     p.add_argument('--outline-width', type=float, default=None, help='Subject edge thickness at 1080p, 0.5-20; automatic: solid 2, shimmer 3, holographic 8')
@@ -641,7 +683,7 @@ def parser():
     p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; on by default for Yautja; use --no-crt-lines to disable')
     p.add_argument('--vhs', action=argparse.BooleanOptionalAction, default=False, help='VHS-style color bleed, horizontal wobble, tape noise, and tracking defects; default off')
     p.add_argument('--list-figures', action='store_true', help='Scan shots into a JSON figure catalog and HTML contact sheet; optional output defaults beside the input. Requires the semantic runtime')
-    p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target')
+    p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target or --object-outlines')
     p.add_argument('--target', action='append', default=[], help='Figure ID from the catalog, e.g. S001-F002; repeat or comma-separate for multiple figures/shots')
     p.add_argument('--target-colors', help='Two comma-separated RGB hex colors for landing and flash, overriding HUD target colors; default red,white')
     p.add_argument('--target-shape', type=resolve_target_shape, choices=TARGET_SHAPES, default='triangle', help='Animated reticle geometry; triangle by default. Round-dot is a circular outline with four gaps and three center dots arranged in a triangle, appearing on lock. Hollow-cross has four L-shaped bands with an open center and arm ends; vector-lock and iron-sights are aliases for hollow-cross')
@@ -703,7 +745,7 @@ def main(argv=None):
         p.error('--preset-name requires --save-preset')
     if args.list_presets or args.save_preset:
         if any((args.input, args.output, args.doctor, args.download_models, args.list_figures,
-                args.figures, args.target)):
+                args.figures, args.target, args.object_outlines)):
             p.error('Preset listing/saving is a separate operation; omit media paths and scan/runtime actions')
         allowed = {'list_presets'} if args.list_presets else set(VISUAL_OPTIONS) | {
             'save_preset', 'save_preset_name', 'look_preset', 'preset_file', 'overwrite'}
@@ -729,19 +771,21 @@ def main(argv=None):
         hud_opacities(args.hud_opacity, args.hud_opacity_elements)
         NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed, args.neon_core_whiten)
         SignalStyle(**{key: getattr(args, key) for key in SIGNAL_OPTIONS})
+        DayHUD(**{key: getattr(args, key) for key in DAY_OPTIONS})
+        outline_rules(args.object_outlines)
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
         GeometryStyle(**{key: getattr(args, key) for key in (*GEO_OPTIONS, *TARGET_OPTIONS)})
         HUDTypography(args.hud_font, args.hud_font_file)
-        if args.hud and args.thermal == 'luminance' and (args.subject_outline or args.target_outline or args.target_weak_spots or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
+        if args.hud and args.thermal == 'luminance' and (args.object_outline != 'off' or args.object_outlines or args.subject_outline or args.target_outline or args.target_weak_spots or args.subject_code or args.subject_labels or args.analysis or args.analysis_target or (args.target_mode != 'selected' and not args.target)):
             p.error('Subject outlines, weak-spot highlights, code, titles, analysis, scan targets, and automatic targets require --thermal low-detail, cinematic, detailed, or very-detailed')
         if not args.neon and (args.neon_intensity != 1. or args.neon_spread != .6 or args.neon_flicker or args.neon_elements is not None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:
             print('--glow is ignored while --neon is on.', file=sys.stderr)
-        if args.list_figures and (args.figures or args.target):
+        if args.list_figures and (args.figures or args.target or args.object_outlines):
             p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
-        if args.hud and bool(args.target) != bool(args.figures):
-            p.error('--target and --figures must be used together')
+        if args.hud and bool(args.target or args.object_outlines) != bool(args.figures):
+            p.error('--target or --object-outlines and --figures must be used together')
         if args.doctor:
             from .runtime import environment_info, installation_info, semantic_diagnostics
             from .render import load_glyph_font

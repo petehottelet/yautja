@@ -95,6 +95,8 @@ class NeonTests(unittest.TestCase):
         def render(key=None):
             renderer = Renderer(960, 540, neon=True, neon_flicker=.4, show_timecode=True, verbose=True,
                                 analysis=True, analysis_target=True,
+                                object_outline='box', hud_top_left='readout', hud_top_right='city-map',
+                                hud_bottom_left='elevation', hud_bottom_right='telemetry',
                                 geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
                                 neon_elements=None if key is None else key + '=0')

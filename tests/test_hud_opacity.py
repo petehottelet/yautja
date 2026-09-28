@@ -47,8 +47,12 @@ class HudOpacityTests(unittest.TestCase):
         mask[130:470, 400:580] = 1
         subjects = [Subject(mask, 'person', .95, track_id=1),
                     Subject(np.roll(mask, -150, axis=1), 'person', .95, track_id=2)]
-        def picture(key=None, analysis=False):
+        def picture(key=None, analysis=False, day_key=None):
+            day = {'object_outline':'box'} if day_key == 'object-outline' else {}
+            if day_key and day_key.startswith('corner-'):
+                day['hud_' + day_key.removeprefix('corner-').replace('-', '_')] = 'readout'
             renderer = Renderer(960, 540, show_timecode=True, verbose=True,
+                                **day,
                                 analysis=analysis, analysis_target=analysis,
                                 geo_grid=True, target_outline=True, target_weak_spots=True, target_motif='triangles', target_label='TARGETING',
                                 subject_outline=True, subject_code=True, subject_labels=True,
@@ -60,8 +64,9 @@ class HudOpacityTests(unittest.TestCase):
             if key == 'target-flash':
                 continue  # Its animated state is checked separately below.
             with self.subTest(element=key):
-                hidden = picture(key, analysis=key.startswith('analysis-'))
-                active = picture(analysis=True) if key.startswith('analysis-') else baseline
+                day_key = key if key == 'object-outline' or key.startswith('corner-') else None
+                hidden = picture(key, analysis=key.startswith('analysis-'), day_key=day_key)
+                active = picture(day_key=day_key) if day_key else picture(analysis=True) if key.startswith('analysis-') else baseline
                 self.assertGreater(np.count_nonzero(active != hidden), 10)
                 if key.startswith('waveform'):
                     np.testing.assert_array_equal(baseline[:, 150:], hidden[:, 150:])
