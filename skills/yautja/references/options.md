@@ -94,10 +94,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### stylepreset
 
 - Syntax: `--stylepreset`
-- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `brand-new-day`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
+- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `parker`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
 - Default: No recipe; --thermal luminance with Yautja colors.
-- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, Brand New Day, and a starter for every palette. Explicit options override it; encoder --preset stays separate. Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner; Brand New Day selects brand-new-day.
+- Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, Parker, and a starter for every palette. Explicit options override it; encoder --preset stays separate. Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
 - Requires: Mutually exclusive with --preset-file
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#hero)
@@ -1640,7 +1640,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Default geometry for all recognized humans and other objects: block contour or full rectangular box. Each object uses one geometry at a time.
 - Requires: A segmented thermal mode and enabled HUD.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outline-width
 
@@ -1651,7 +1651,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Half-thickness of the block contour and full box stroke width.
 - Requires: Object outlines enabled globally or for a figure.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outline-block
 
@@ -1662,7 +1662,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Square contour cell size, independent of scene pixelation.
 - Requires: Chunky object outline style.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outline-padding
 
@@ -1673,7 +1673,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Clearance around the full detected object bounding box.
 - Requires: Box object outline style.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outline-fill
 
@@ -1681,10 +1681,10 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: Number from 0 to 1.
 - Units: opacity
 - Default: 0.0
-- Applies: Fill inside each object outline in its outline color; 0 keeps the interior transparent. Brand New Day uses 0.35. Overlapping detections do not accumulate fill opacity.
+- Applies: Fill inside each object outline in its outline color; 0 keeps the interior transparent. Parker uses 0.35. Overlapping detections do not accumulate fill opacity.
 - Requires: Object outlines enabled globally or for a figure.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outline-glow
 
@@ -1692,10 +1692,10 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: Number from 0 to 1.
 - Units: intensity
 - Default: 0.0
-- Applies: Broad bloom, tight fringe and a bright core from object edges. Independent of interior fill and global neon; Brand New Day uses 0.65.
+- Applies: Broad bloom, tight fringe and a bright core from object edges. Independent of interior fill and global neon; Parker uses 0.65.
 - Requires: Object outlines enabled globally or for a figure.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### object-outlines
 
@@ -1717,7 +1717,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Select the top-left technical instrument. Maps, coordinates and terrain are simulated.
 - Requires: Enabled HUD.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### hud-top-right
 
@@ -1728,7 +1728,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Select the top-right technical instrument. Maps, coordinates and terrain are simulated.
 - Requires: Enabled HUD.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### hud-bottom-left
 
@@ -1739,7 +1739,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Select the bottom-left technical instrument. Maps, coordinates and terrain are simulated.
 - Requires: Enabled HUD.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### hud-bottom-right
 
@@ -1750,7 +1750,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Select the bottom-right technical instrument. Maps, coordinates and terrain are simulated.
 - Requires: Enabled HUD.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### hud-panel-scale
 
@@ -1761,7 +1761,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Scale corner instruments within the available frame space; opposite corners cannot overlap.
 - Requires: At least one corner instrument.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### hud-panel-margin
 
@@ -1772,7 +1772,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Inset all corner instruments from the frame edges.
 - Requires: At least one corner instrument.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### readout-style
 
@@ -1783,7 +1783,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Technical text on transparency, black or amber reversed highlights with transparent letter cutouts, glowing amber on stepped black backing fitted to every readout row and graphic or individual black highlight bars, or glowing amber border with dim amber fill. Reversed bars are 15% taller than the lettering, rounded to pixels.
 - Requires: A corner set to readout.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### readout-color
 
@@ -1794,7 +1794,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Text, border and fill hue in amber readout treatments; ink uses the corner HUD color.
 - Requires: Amber readout style.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### readout-glow
 
@@ -1805,7 +1805,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Readout text and border halo strength; zero is crisp, independent of global neon.
 - Requires: Amber readout style.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)
 
 #### readout-fill
 
@@ -1816,4 +1816,4 @@ The fixed fields below are checked against the parser and preset registries by `
 - Applies: Dim colored box fill; zero leaves the interior transparent.
 - Requires: Amber-glow readout style.
 - Persistence: saved
-- Example: [Complete recipe](examples.md#brand-new-day)
+- Example: [Complete recipe](examples.md#parker)

@@ -10,7 +10,7 @@ from .looks import LOOK_PRESETS, PRESET_LABELS, PRESET_DESCRIPTIONS, LEVEL_OPTIO
 from .signal import SIGNAL_OPTIONS
 from .geometry import GEO_OPTIONS, TARGET_OPTIONS
 from .analysis import ANALYSIS_OPTIONS
-from .brand_new_day import DAY_OPTIONS
+from .parker import DAY_OPTIONS
 
 VISUAL_OPTIONS = (
     'thermal', 'palette', 'palette_colors', 'hud_theme', 'hud_colors', 'hud_glyphs', 'random_colors', *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, 'hud_font',
@@ -33,7 +33,8 @@ def catalog():
     return {'schema_version': 1, 'presets': [
         {'id': name, 'name': label, 'kind': 'look' if name in COMPLETE_PRESETS else 'palette',
          'description': PRESET_DESCRIPTIONS.get(name, f'{label} colors with Cinematic detail; HUD and effects remain adjustable.'),
-         'aliases': ['ghost-signal'] if name == 'netrunner' else ['hottropic', 'hot-tropic'] if name == 'yautja' else [],
+         'aliases': ['ghost-signal'] if name == 'netrunner' else ['hottropic', 'hot-tropic'] if name == 'yautja'
+         else [],
          'settings': dict(LOOK_PRESETS[name])} for name, label in PRESET_LABELS.items()]}
 
 

@@ -28,15 +28,15 @@ After `python -m pip install "yautja[semantic]"`, download once. This setup oper
 yautja --download-models
 ```
 
-## Brand New Day
+## Parker
 
-<a id="brand-new-day"></a>
+<a id="parker"></a>
 
 **Segmented.** Preserve source colors, choose outline geometry and place each instrument. Select Pixel or CRT lettering independently of the amber treatment.
 
-<!-- example: {"id": "brand-new-day", "tier": "models", "checks": {"look_preset": "brand-new-day", "readout_style": "amber-black", "hud_font": "crt", "object_outline_fill": 0.35, "object_outline_glow": 0.65, "crt_lines": true}} -->
+<!-- example: {"id": "parker", "tier": "models", "checks": {"look_preset": "parker", "readout_style": "amber-black", "hud_font": "crt", "object_outline_fill": 0.35, "object_outline_glow": 0.65, "crt_lines": true}} -->
 ```bash
-yautja "clip.mov" "brand-new-day.mp4" --stylepreset brand-new-day --object-outline chunky --object-outline-width 5.6 --object-outline-block 33.6 --object-outline-padding 12 --object-outline-fill 0.35 --object-outline-glow 0.65 --crt-lines --crt-strength 0.18 --crt-bleed 0.2 --hud-top-left readout --hud-top-right city-map --hud-bottom-left elevation --hud-bottom-right telemetry --hud-panel-scale 1 --hud-panel-margin 0.035 --readout-style amber-black --readout-color "#ffbf47" --readout-glow 0.65 --readout-fill 0.24 --hud-font crt --duration 4
+yautja "clip.mov" "parker.mp4" --stylepreset parker --object-outline chunky --object-outline-width 5.6 --object-outline-block 33.6 --object-outline-padding 12 --object-outline-fill 0.35 --object-outline-glow 0.65 --crt-lines --crt-strength 0.18 --crt-bleed 0.2 --hud-top-left readout --hud-top-right city-map --hud-bottom-left elevation --hud-bottom-right telemetry --hud-panel-scale 1 --hud-panel-margin 0.035 --readout-style amber-black --readout-color "#ffbf47" --readout-glow 0.65 --readout-fill 0.24 --hud-font crt --duration 4
 ```
 
 <a id="object-outlines"></a>
@@ -46,7 +46,7 @@ Scan the full source, then inspect `figures.html` and substitute its IDs. Each I
 <!-- example: {"id": "object-outlines", "tier": "models", "checks": {}} -->
 ```bash
 yautja "clip.mov" "figures.json" --list-figures
-yautja "clip.mov" "selected-outlines.mp4" --stylepreset brand-new-day --figures "figures.json" --object-outline off --object-outlines "S001-F001=chunky"
+yautja "clip.mov" "selected-outlines.mp4" --stylepreset parker --figures "figures.json" --object-outline off --object-outlines "S001-F001=chunky"
 ```
 
 ## A lightweight still

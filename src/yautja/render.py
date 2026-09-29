@@ -14,7 +14,7 @@ from .thermal import resolve_thermal
 from .colors import resolve_colors
 from .display import DisplayEffects, highlight_glow
 from .target import TargetOverlay, target_colors as parse_target_colors
-from .brand_new_day import DayHUD, DAY_ELEMENTS
+from .parker import DayHUD, DAY_ELEMENTS
 from .neon import NeonStyle
 from .waveform import WAVE_STYLES, waveform_masks, led_device, resolve_display
 from .hud import HudPanel, grid_clearance, hud_blurs, hud_opacities

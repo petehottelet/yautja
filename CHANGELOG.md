@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
-- Show the Brand New Day preview inline beside the other README preset examples and use matching preset-table formatting. Double the sector map, terrain and telemetry line weights for clearer black corner graphics.
+- Name the amber contour preset Parker across the CLI, HUD title, documentation and gallery preview. Select it with `--stylepreset parker`.
 
-- Add [Brand New Day](skills/yautja/references/presets.md#brand-new-day): original scene colors with full-frame CRT scanlines and phosphor bleed, glowing amber object contours with a 33.6-pixel reference grid, 5.6-pixel line width and 35% fill, mutually exclusive chunky or rectangular outlines per object, and independent black corner instruments with simulated map coordinates, elevation profiles and telemetry. Choose styles for individual figures in each scene with [`--object-outlines`](skills/yautja/references/options.md#object-outlines).
+- Show the Parker preview inline beside the other README preset examples and use matching preset-table formatting. Double the sector map, terrain and telemetry line weights for clearer black corner graphics.
+
+- Add [Parker](skills/yautja/references/presets.md#parker): original scene colors with full-frame CRT scanlines and phosphor bleed, glowing amber object contours with a 33.6-pixel reference grid, 5.6-pixel line width and 35% fill, mutually exclusive chunky or rectangular outlines per object, and independent black corner instruments with simulated map coordinates, elevation profiles and telemetry. Choose styles for individual figures in each scene with [`--object-outlines`](skills/yautja/references/options.md#object-outlines).
 - Add selectable Pixel, CRT, CRT Clean and CRT Wide HUD lettering, plus transparent ink, black or glowing amber highlights with transparent letter cutouts, bright amber text with bloom on individual black highlight bars or padded black backing that follows the widths of every readout row, divider and footer strip, and glowing amber border/dim-fill readout treatments. Reversed highlights are 15% taller than their lettering, rounded to pixels. Save visual controls in portable presets; keep source-specific figure assignments on the conversion command.
 
 ## 2.12.1
