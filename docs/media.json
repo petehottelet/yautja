@@ -89,6 +89,12 @@
     "frames": 36,
     "duration_ms": 3000
   },
+  "assets/examples/large/look-brand-new-day.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 72,
+    "duration_ms": 6000
+  },
   "assets/examples/large/look-focus.gif": {
     "width": 960,
     "height": 540,
@@ -430,6 +436,12 @@
     "height": 540,
     "frames": 36,
     "duration_ms": 3000
+  },
+  "assets/examples/look-brand-new-day.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 72,
+    "duration_ms": 6000
   },
   "assets/examples/look-focus.gif": {
     "width": 480,

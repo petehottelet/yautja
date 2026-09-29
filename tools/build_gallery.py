@@ -47,6 +47,7 @@ def variants():
         'look-murphy': {'look_preset': 'murphy'},
         'look-yautja': {'look_preset': 'yautja'},
         'look-ripley': {'look_preset': 'ripley'},
+        'look-brand-new-day': {'look_preset': 'brand-new-day'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},

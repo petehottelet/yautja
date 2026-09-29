@@ -179,6 +179,24 @@ class BrandNewDayTests(unittest.TestCase):
             for b in boxes[i+1:]:
                 self.assertTrue(a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
 
+    def test_corner_lineart_has_bold_strokes_and_unchanged_lettering(self):
+        typography = HUDTypography('crt')
+        panels = {mode: np.asarray(DayHUD().instrument(typography,mode,0,[],1,42))
+                  for mode in ('city-map','elevation','telemetry')}
+        city, terrain, telemetry = (panels[mode][...,3] for mode in panels)
+        # Measure isolated cross-sections of the map compass, street and block,
+        # terrain axis and contour, and the telemetry trace in rendered pixels.
+        for section, expected in ((city[65,260:270], [4,5]), (city[22:36,225], [4,5,6,7,8,9]),
+                                  (city[35,10:20], [4,5]), (terrain[40,10:20], [4,5]),
+                                  (terrain[20:37,160], [8,9]), (telemetry[55:90,160], [24,25,26,27])):
+            self.assertEqual(np.flatnonzero(section).tolist(),expected)
+        for mode, title in (('city-map','SECTOR GRID / SIM'),('elevation','TERRAIN / SIM PROFILE'),
+                            ('telemetry','OPTICAL TELEMETRY')):
+            mask = typography.mask(title,10)
+            np.testing.assert_array_equal(panels[mode][8:18,12:12+mask.width,3],mask)
+            self.assertEqual(panels[mode][...,:3].max(),0)
+            self.assertEqual(panels[mode][0,0,3],0)
+
     def test_pixel_and_crt_fonts_are_portable_and_distinct(self):
         from yautja.crt_font import CLEAN, SERIF, WIDE, font_data
         from fontTools.ttLib import TTFont

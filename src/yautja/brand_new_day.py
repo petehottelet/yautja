@@ -285,14 +285,14 @@ class DayHUD:
                     if rng.random() < .18:
                         continue
                     x, y = 14 + col * 36, 29 + row * 22
-                    draw.rectangle((x, y, x + 26, y + 13), outline=ink, width=1)
+                    draw.rectangle((x, y, x + 26, y + 13), outline=ink, width=2)
                     if rng.random() > .4:
-                        draw.line((x + 3, y + 4, x + 22, y + 4), fill=ink)
-            draw.line((8, 119, 84, 91, 134, 91, 205, 28, 264, 28), fill=ink, width=3)
+                        draw.line((x + 3, y + 4, x + 22, y + 4), fill=ink, width=2)
+            draw.line((8, 119, 84, 91, 134, 91, 205, 28, 264, 28), fill=ink, width=6)
             cx, cy = 142, 82
             draw.polygon(((cx, cy-7), (cx-5, cy+5), (cx, cy+2), (cx+5, cy+5)), fill=ink)
             text('N', 260, 47, 9)
-            draw.line((264, 61, 264, 80), fill=ink)
+            draw.line((264, 61, 264, 80), fill=ink, width=2)
             text(f'X+{1200 + int(time*3):05d} Y+{6400 + int(time):05d}', 12, 133, 10)
             text('SIMULATED COORDINATES', 12, 151, 8)
         elif mode == 'elevation':
@@ -300,17 +300,17 @@ class DayHUD:
             xs = np.linspace(14, 260, 90)
             for row in range(8):
                 ys = 115-row*9 - (17+row*1.5)*np.exp(-((xs-160)/64)**2) + 6*np.sin(xs/28+row*.18)
-                draw.line(list(zip(xs, ys)), fill=ink, width=1)
-            draw.line((14, 34, 14, 128, 265, 128), fill=ink)
+                draw.line(list(zip(xs, ys)), fill=ink, width=2)
+            draw.line((14, 34, 14, 128, 265, 128), fill=ink, width=2)
             for x in range(14, 265, 25):
-                draw.line((x, 128, x, 132), fill=ink)
+                draw.line((x, 128, x, 132), fill=ink, width=2)
             text('0      250      500 M', 14, 144, 10)
         elif mode == 'telemetry':
             text('OPTICAL TELEMETRY', 12, 8)
             text(f'TRACKS {count:02d}   T+{max(0.,time):07.1f}', 12, 30, 10)
             xs = np.linspace(14, 260, 130)
             ys = 75 + np.sin(xs*.09+time)*8 + np.sin(xs*.23-time*2)*3
-            draw.line(list(zip(xs, ys)), fill=ink, width=2)
+            draw.line(list(zip(xs, ys)), fill=ink, width=4)
             for x in range(14, 261, 14):
                 level = 10 + int((math.sin(x*.2+time)+1)*13)
                 draw.rectangle((x, 130-level, x+6, 130), fill=ink)

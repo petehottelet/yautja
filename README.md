@@ -122,11 +122,9 @@ Choose a **complete preset** for a coordinated scene and HUD; a **palette starte
 | `relic` | Focus scene grade | Hot-pink triangles and rising light streams behind each body core |
 | `netrunner` | Dark green source tint | Red edges, upward Cyber code, cyan titles, yellow carets |
 | `ripley` | Near-black, burnt-orange and amber thermal colors | Orange glyphs and callouts, brighter amber waveform |
-| [Brand New Day](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/presets.md#brand-new-day) (`brand-new-day`) | Original source colors | Glowing amber contours with 35% fill, black backing fitted to each readout row and full-frame CRT texture |
+| `brand-new-day` | Original source colors | Glowing amber contours with 35% fill, black backing fitted to each readout row and full-frame CRT texture |
 
 All complete presets need [segmented setup](#segmented-looks). Palettes also work with the base filter. Every preset consists of ordinary options; no effect is reserved for one preset.
-
-**Brand New Day** uses glowing amber block contours with 35% amber fill and glowing amber CRT graphics on black backing that follows each row and decorative rule. CRT scanlines and phosphor bleed cover the footage and all overlays. Choose either chunky contours or rectangular boxes per object, alongside a technical readout, schematic city map, simulated elevation profile and telemetry. Each corner is selectable. Choose `--hud-font pixel`, `crt`, `crt-clean` or `crt-wide`, and `--readout-style ink`, `reversed`, `amber-black`, `amber-bars`, `amber-glow` or `amber-reversed` for transparent black ink, black or glowing amber highlights with transparent letter cutouts, or bright amber text on a black or amber field. Select outline styles per object and scene through `--object-outlines`. [Controls and per-object examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/presets.md#brand-new-day).
 
 <a id="four-thermal-detail-modes"></a>
 <a id="five-thermal-modes"></a>
@@ -217,6 +215,17 @@ yautja "clip.mov" "ripley.mp4" --stylepreset ripley --duration 4
 ```
 
 [![Ripley: burnt-orange thermal colors and glyphs with a brighter amber waveform](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-ripley.gif?v=2.12.1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-ripley.gif)
+
+### Brand New Day style preset
+
+**Brand New Day** uses glowing amber block contours with 35% amber fill and glowing amber CRT graphics on black backing that follows each row and decorative rule. CRT scanlines and phosphor bleed cover the footage and all overlays. Choose either chunky contours or rectangular boxes per object, alongside a technical readout, schematic city map, simulated elevation profile and telemetry. Each corner is selectable. Choose `--hud-font pixel`, `crt`, `crt-clean` or `crt-wide`, and `--readout-style ink`, `reversed`, `amber-black`, `amber-bars`, `amber-glow` or `amber-reversed` for transparent black ink, black or glowing amber highlights with transparent letter cutouts, or bright amber text on a black or amber field. Select outline styles per object and scene through `--object-outlines`. [Controls and per-object examples](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/presets.md#brand-new-day).
+
+<!-- example: {"id": "readme-brand-new-day", "tier": "models", "checks": {"look_preset": "brand-new-day"}} -->
+```bash
+yautja "clip.mov" "brand-new-day.mp4" --stylepreset brand-new-day --duration 6
+```
+
+[![Brand New Day: glowing amber object contours and CRT readout with stepped black backing, sector map, terrain and telemetry](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-brand-new-day.gif?v=1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-brand-new-day.gif)
 
 ### Style presets based on palettes
 
