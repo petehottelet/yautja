@@ -49,4 +49,4 @@ include = ["yautja*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-yautja = ["assets/glyphs.json", "assets/cyber-glyphs.json", "assets/fonts/Michroma-Regular.ttf", "assets/fonts/Michroma-OFL.txt", "assets/fonts/README.md", "assets/fonts/Orbitron-Light.ttf", "assets/fonts/Orbitron-Medium.ttf", "assets/fonts/Orbitron-Bold.ttf", "assets/fonts/Orbitron-OFL.txt"]
+yautja = ["assets/glyphs.json", "assets/cyber-glyphs.json", "assets/noumenon-classic.json", "assets/noumenon-source.json", "assets/fonts/Michroma-Regular.ttf", "assets/fonts/Michroma-OFL.txt", "assets/fonts/README.md", "assets/fonts/Orbitron-Light.ttf", "assets/fonts/Orbitron-Medium.ttf", "assets/fonts/Orbitron-Bold.ttf", "assets/fonts/Orbitron-OFL.txt"]

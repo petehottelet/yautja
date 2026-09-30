@@ -48,6 +48,7 @@ def variants():
         'look-yautja': {'look_preset': 'yautja'},
         'look-ripley': {'look_preset': 'ripley'},
         'look-parker': {'look_preset': 'parker'},
+        'look-noumenon': {'look_preset': 'noumenon'},
         **{f'target-shape-{shape}': {'thermal': 'cinematic', 'target_shape': shape}
            for shape in ('triangle-dots', 'crosshair', 'iron-sights', 'square', 'round-dot', 'square-cross', 'square-mil', 'square-x', 'hexagon', 'frame-box')},
         'hud-off': {'thermal': 'cinematic', 'hud': False},
@@ -156,7 +157,7 @@ def main():
     destination.mkdir(parents=True, exist_ok=True)
     resolved_settings = [resolve_look(options.get('look_preset'), options) for options in settings.values()]
     tracker = SemanticTracker(GroundedSegmenter(device=args.device,
-                              surfaces=any(o.get('scene_mode') != 'source' for o in resolved_settings)),
+                              surfaces=any(o.get('scene_mode', 'thermal') == 'thermal' for o in resolved_settings)),
                               refine_masks=any((o.get('subject_outline') or o.get('analysis') or o.get('analysis_target') or o.get('subject_code') or o.get('target_mode', 'selected') != 'selected' or o.get('target_outline') or o.get('target_weak_spots')) and o.get('hud', True) for o in resolved_settings))
     def gallery_options(options):
         resolved = resolve_look(options.get('look_preset'), options)
@@ -173,7 +174,7 @@ def main():
 
     fields = {field_key(r): Renderer(width, height, thermal=r.thermal, sensor_resolution=r.sensor_resolution,
                                     thermal_levels=None if r.transfer.levels is None else 0).heat_field
-              for r in renderers.values() if r.signal.scene_mode != 'source'}
+              for r in renderers.values() if r.signal.scene_mode == 'thermal'}
     results = {}
     with tempfile.TemporaryDirectory(prefix='.yautja-gallery-', dir=destination) as directory:
         temp = Path(directory)
@@ -213,7 +214,7 @@ def main():
                             # Apply grain, pixels, and scanlines at final GIF size;
                             # downsampling them afterward could erase the effect.
                             targets, shot = selected.at(args.start + time) if selected and (name.removeprefix('large/').startswith('target-') or name.removeprefix('large/') == 'look-murphy') else (None, tracker.scene_cuts + 1)
-                            if renderer.signal.scene_mode == 'source':
+                            if renderer.signal.scene_mode in ('source', 'code'):
                                 image = renderer.render(frame.resize((renderer.width, renderer.height), Image.Resampling.LANCZOS), time,
                                                         wave, subjects, targets=targets, shot_id=shot)
                             else:
@@ -252,6 +253,8 @@ def main():
                                      'settings': settings[name], 'colors': renderers[name].colors.report(),
                                      'thermal_transfer': renderers[name].transfer.report()}
                     results[name]['scene'] = renderers[name].signal.report()
+                    if renderers[name].scene_material:
+                        results[name]['material'] = renderers[name].scene_material.report()
                     results[name]['analysis'] = renderers[name].analysis.report(renderers[name].hud)
                     results[name]['geometry'] = renderers[name].geometry.report(renderers[name].hud)
                     results[name]['hud_glyphs'] = renderers[name].hud_glyphs

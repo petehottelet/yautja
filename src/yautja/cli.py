@@ -29,6 +29,7 @@ from .looks import (LOOK_PRESETS, PRESET_LABELS, LEVEL_OPTIONS, COMPLETE_PRESETS
 from .presets import VISUAL_OPTIONS, catalog, load_preset, validate_settings, save_preset
 from .target import TARGET_SHAPES, resolve_target_shape
 from .signal import SIGNAL_OPTIONS, SignalStyle
+from .noumenon import MATERIAL_OPTIONS, MaterialStyle
 from .geometry import GEO_OPTIONS, TARGET_OPTIONS, GeometryStyle
 from .typography import FONT_FILES, HUDTypography
 from .analysis import ANALYSIS_OPTIONS, AnalysisHUD
@@ -39,7 +40,7 @@ EFFECT_OPTIONS = ('target_colors', 'target_acquire', 'target_flash', 'target_fla
                   'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_display', 'wave_backlight',
                   'target_stroke', 'target_stroke_colors', 'hud_blur', 'hud_blur_elements',
                   'hud_opacity', 'hud_opacity_elements', 'target_shape', 'look_preset',
-                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, *DAY_OPTIONS, 'hud_font', 'hud_font_file')
+                  'neon', 'neon_intensity', 'neon_spread', 'neon_flicker', 'neon_elements', 'neon_core_whiten', 'hud_glyphs', *LEVEL_OPTIONS, *SIGNAL_OPTIONS, *ANALYSIS_OPTIONS, *GEO_OPTIONS, *TARGET_OPTIONS, *DAY_OPTIONS, *MATERIAL_OPTIONS, 'hud_font', 'hud_font_file')
 
 
 def target_selection(args, source):
@@ -54,6 +55,35 @@ def object_selection(args, source):
         return None
     from .figures import OutlineSelection
     return OutlineSelection(args.figures, source, outline_rules(args.object_outlines))
+
+
+def material_subject_ids(values):
+    """None means all; an empty set means luminance only everywhere."""
+    identifiers = {part.strip().upper() for value in values for part in value.split(',') if part.strip()}
+    if not values or identifiers == {'ALL'}:
+        return None
+    if identifiers == {'NONE'}:
+        return set()
+    if not identifiers or identifiers & {'ALL', 'NONE'}:
+        raise ValueError('--material-subjects accepts figure IDs, all, or none; do not mix these modes')
+    return identifiers
+
+
+def material_selection(args, source):
+    identifiers = material_subject_ids(args.material_subjects)
+    if not identifiers:
+        return identifiers, None
+    from .figures import MaterialSelection
+    return identifiers, MaterialSelection(args.figures, source, identifiers)
+
+
+def material_selection_report(identifiers, selection):
+    unseen = sorted(selection.selected - selection.seen) if selection else []
+    if unseen:
+        print('Material silhouette IDs not matched in this range: ' + ', '.join(unseen), file=sys.stderr)
+    return {'material_subjects': 'all' if identifiers is None else sorted(identifiers) if identifiers else 'none',
+            'material_subjects_seen': sorted(selection.seen) if selection else [],
+            'material_subjects_unseen': unseen}
 
 
 def object_report(selection):
@@ -75,6 +105,7 @@ def extra_report(renderer, selection, *, static=False):
                                                             for key in ('target', 'target-flash'))
     return {**renderer.transfer.report(), **renderer.signal.report(), **renderer.analysis.report(renderer.hud), **renderer.geometry.report(renderer.hud), **renderer.day.report(renderer.hud),
             **renderer.typography.report(), 'hud_glyphs': renderer.hud_glyphs,
+            **(renderer.scene_material.report() if renderer.scene_material else renderer.material_style.report()),
             'look_preset': renderer.look_preset,
             'target_shape': renderer.target_overlay.shape,
             'targets': sorted(selected), 'targets_seen': sorted(renderer.target_overlay.seen),
@@ -299,6 +330,7 @@ def convert_image(args):
     source, output = output_paths(args, '.png')
     selection = target_selection(args, source)
     outlines = object_selection(args, source)
+    material_ids, highlights = material_selection(args, source)
     video_options = {'start': 0., 'duration': None, 'fps': None, 'audio_stream': 0,
                      'mute': False, 'wave_window': .6, 'wave_gain': 1.,
                      'crf': 18, 'preset': 'medium', 'detect_interval': .5}
@@ -326,8 +358,10 @@ def convert_image(args):
                         **{key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
     targets, shot = selection.at(0.) if selection else (None, 1 if tracker else None)
     styles = outlines.styles_at(0., subjects) if outlines else None
+    material_tracks = highlights.tracks_at(0., subjects) if highlights else material_ids
     rendered = renderer.render(frame, 0., subjects=subjects, targets=targets,
-                               shot_id=outlines.shot if outlines else shot, target_static=True, object_styles=styles)
+                               shot_id=highlights.shot if highlights else outlines.shot if outlines else shot,
+                               target_static=True, object_styles=styles, material_subjects=material_tracks)
     rendered.info.clear()
     timings['processing_seconds'] = time.monotonic() - processing_started
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -358,9 +392,11 @@ def convert_image(args):
     report.update(renderer.colors.report())
     report.update(extra_report(renderer, selection, static=True))
     report.update(object_report(outlines))
+    report.update(material_selection_report(material_ids, highlights))
     report.update(preset_report(args))
     report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
     report['settings']['target'] = args.target
+    report['settings']['material_subjects'] = report['material_subjects']
     if tracker:
         report['semantic'] = {**tracker.report(), 'backend': 'single-image', 'tracking': 'none'}
         if not subjects:
@@ -381,6 +417,7 @@ def convert_video(args):
     source, output = output_paths(args, '.mp4')
     selection = target_selection(args, source)
     outlines = object_selection(args, source)
+    material_ids, highlights = material_selection(args, source)
     ffmpeg, ffprobe = binary('ffmpeg'), binary('ffprobe')
     data, video = probe(source, ffprobe)
     audios = [s for s in data['streams'] if s['codec_type'] == 'audio']
@@ -459,8 +496,10 @@ def convert_video(args):
                         subjects = tracker.update(frame, t) if tracker else ()
                         targets, shot = selection.at(args.start + t) if selection else (None, tracker.scene_cuts + 1 if tracker else None)
                         styles = outlines.styles_at(args.start + t, subjects) if outlines else None
+                        material_tracks = highlights.tracks_at(args.start + t, subjects) if highlights else material_ids
                         encoded = renderer.render(frame, t, wave, subjects, targets=targets,
-                                                  shot_id=outlines.shot if outlines else shot, object_styles=styles)
+                                                  shot_id=highlights.shot if highlights else outlines.shot if outlines else shot,
+                                                  object_styles=styles, material_subjects=material_tracks)
                         encoder.stdin.write(encoded.tobytes())
                         frames += 1
                         if frames % max(1, round(fps * 2)) == 0:
@@ -525,9 +564,11 @@ def convert_video(args):
             report.update(renderer.colors.report())
             report.update(extra_report(renderer, selection))
             report.update(object_report(outlines))
+            report.update(material_selection_report(material_ids, highlights))
             report.update(preset_report(args))
             report['settings'].update({key: str(getattr(args, key)) if key == 'hud_font_file' and getattr(args, key) else getattr(args, key) for key in EFFECT_OPTIONS})
             report['settings']['target'] = args.target
+            report['settings']['material_subjects'] = report['material_subjects']
             if tracker:
                 report['semantic'] = tracker.report()
                 if not tracker.max_subjects:
@@ -592,7 +633,19 @@ def parser():
     p.add_argument('--thermal-softness', type=float, default=0., help='Scalar Gaussian softness, 0–8 pixels at a 1920px longest edge; separate from band transitions and glow')
     p.add_argument('--hud-theme', choices=HUD_THEMES, default='standard', help='HUD colors: standard red/cyan (white for White Hot, black for Black Hot, muted cyan for Abyss), palette-matched, muted-cyan, custom, or seeded random')
     p.add_argument('--HUDglyphs', dest='hud_glyphs', choices=['yautja', 'cyber', 'tech'], default='yautja', help='HUD glyph set: Yautja, Cyber (192 generated glyphs), or readable Tech letters and numbers. Tech uses --hud-font; timecode stays numeric')
-    p.add_argument('--scene-mode', choices=['thermal', 'source'], default='thermal', help='Color a thermal field (default) or retain the RGB source scene with configurable tint and exposure')
+    p.add_argument('--scene-mode', choices=['thermal', 'source', 'code'], default='thermal', help='Color a thermal field, grade the RGB source scene, or replace all visible surfaces with animated code')
+    p.add_argument('--material-source', choices=['noumenon'], default='noumenon', help='Scene-code engine: pinned Noumenon Classic CPU port; independent of HUD code style')
+    p.add_argument('--material-face', choices=['mixed', 'cyber', 'classic'], default='mixed', help='Scene-code glyph catalog; mixed uses the selected Cyber share plus classic glyphs, independently of HUDglyphs')
+    p.add_argument('--material-mix', type=float, default=.1, help='Cyber selection probability for the mixed material face, 0-1; Noumenon Classic defaults to 0.1')
+    p.add_argument('--material-mapping', type=float, default=1., help='Room mapping strength, 0-1; camera tracking applies only to supported room planes. Otherwise rain falls vertically in a fixed screen grid')
+    p.add_argument('--material-structure', type=float, default=.65, help='Local contrast in luminance-shaded glyphs, 0-1; 0 retains plain luminance shading, without source RGB')
+    p.add_argument('--material-foreground', type=float, default=2.1, help='Linear-light code gain for selected silhouettes, 0-3; 1 is neutral')
+    p.add_argument('--material-background', type=float, default=.385, help='Linear-light code gain for the environment and unselected silhouettes, 0-3; 1 is neutral')
+    p.add_argument('--material-glow', type=float, default=.18, help='Composed scene-code optical glow, 0-1; independent of HUD glow and neon')
+    p.add_argument('--material-subject-density', type=float, default=2., help='Independent silhouette rain density multiplier, 0-3; default 2 doubles the columns without shrinking glyphs. Multiplies code density, capped at 3')
+    p.add_argument('--material-subject-trail', type=float, default=1.2, help='Silhouette trail length multiplier, 1-2; default 1.2 extends fading tails by 20 percent while preserving glyph size, speed and rain heads')
+    p.add_argument('--material-edge-glow', type=float, default=0., help='Optional soft green inner-edge glow on highlighted silhouettes, 0-1; default 0 disables. Width scales with glyph size; respects visible ownership')
+    p.add_argument('--material-edge-shade', type=float, default=.4, help='Local background dimming around highlighted silhouettes, 0-1; 0 disables. Soft falloff scales with glyph size and does not darken other figures')
     p.add_argument('--scene-tint', default='#548568', help='RGB hex tint for source scene mode; default muted green #548568')
     p.add_argument('--scene-tint-strength', type=float, default=.8, help='Source tint blend, 0-1; 0 preserves source colors')
     p.add_argument('--scene-exposure', type=float, default=.65, help='Source scene brightness multiplier, 0.1-2; default 0.65')
@@ -662,8 +715,8 @@ def parser():
     p.add_argument('--subject-head-gap', type=float, default=24., help='Head-to-caret clearance, 0-120 reference pixels at a 1080px short edge; default 24')
     p.add_argument('--subject-title-gap', type=float, default=18., help='Caret-to-title clearance, 0-80 reference pixels at a 1080px short edge; default 18')
     p.add_argument('--subject-caret-scale', type=float, default=1., help='Subject caret size multiplier, 0.25-3; Netrunner uses 1.35')
-    p.add_argument('--code-size', type=float, default=22., help='Glyph size or light-stream spacing/width, 8-80 reference pixels at a 1080px short edge')
-    p.add_argument('--code-speed', type=float, default=1., help='Upward code speed multiplier, 0-5; 0 freezes code motion')
+    p.add_argument('--code-size', type=float, default=22., help='Glyph size or light-stream spacing/width, 8-80 reference pixels; HUD uses a 1080px short edge, scene-code rain a 1920px long edge')
+    p.add_argument('--code-speed', type=float, default=1., help='Code speed multiplier, 0-5; HUD streams rise, Noumenon scene rain descends; 0 freezes material motion and symbols')
     p.add_argument('--code-density', type=float, default=.65, help='Code stream density, 0-3; 0 hides code, 0-1 selects a fraction of columns, above 1 adds columns without shrinking glyphs')
     p.add_argument('--hud', action=argparse.BooleanOptionalAction, default=True, help='Show the HUD (default); --no-hud hides all waveform, scale, glyph, timecode, callout, leader, and marker overlays while retaining thermal coloring, textures, and sound')
     p.add_argument('--hud-colors', help='With --hud-theme custom: quoted comma-separated element=#RRGGBB assignments. Elements: ' + ', '.join(OPACITY_ELEMENTS) + '. Unspecified elements keep standard colors')
@@ -683,7 +736,8 @@ def parser():
     p.add_argument('--crt-lines', '--scanlines', dest='scanlines', action=argparse.BooleanOptionalAction, default=None, help='Horizontal CRT lines across the final image and HUD; on by default for Yautja; use --no-crt-lines to disable')
     p.add_argument('--vhs', action=argparse.BooleanOptionalAction, default=False, help='VHS-style color bleed, horizontal wobble, tape noise, and tracking defects; default off')
     p.add_argument('--list-figures', action='store_true', help='Scan shots into a JSON figure catalog and HTML contact sheet; optional output defaults beside the input. Requires the semantic runtime')
-    p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target or --object-outlines')
+    p.add_argument('--figures', type=Path, help='Saved figure catalog from the same source, used with --target, --object-outlines or --material-subjects')
+    p.add_argument('--material-subjects', action='append', default=[], help='Brighter glyphs inside these silhouettes in code mode: all (default), none, or catalog figure IDs; repeat or comma-separate IDs. Works with HUD off')
     p.add_argument('--target', action='append', default=[], help='Figure ID from the catalog, e.g. S001-F002; repeat or comma-separate for multiple figures/shots')
     p.add_argument('--target-colors', help='Two comma-separated RGB hex colors for landing and flash, overriding HUD target colors; default red,white')
     p.add_argument('--target-shape', type=resolve_target_shape, choices=TARGET_SHAPES, default='triangle', help='Animated reticle geometry; triangle by default. Round-dot is a circular outline with four gaps and three center dots arranged in a triangle, appearing on lock. Hollow-cross has four L-shaped bands with an open center and arm ends; vector-lock and iron-sights are aliases for hollow-cross')
@@ -745,7 +799,7 @@ def main(argv=None):
         p.error('--preset-name requires --save-preset')
     if args.list_presets or args.save_preset:
         if any((args.input, args.output, args.doctor, args.download_models, args.list_figures,
-                args.figures, args.target, args.object_outlines)):
+                args.figures, args.target, args.object_outlines, args.material_subjects)):
             p.error('Preset listing/saving is a separate operation; omit media paths and scan/runtime actions')
         allowed = {'list_presets'} if args.list_presets else set(VISUAL_OPTIONS) | {
             'save_preset', 'save_preset_name', 'look_preset', 'preset_file', 'overwrite'}
@@ -771,6 +825,12 @@ def main(argv=None):
         hud_opacities(args.hud_opacity, args.hud_opacity_elements)
         NeonStyle(args.neon_intensity, args.neon_spread, args.neon_flicker, args.neon_elements, args.seed, args.neon_core_whiten)
         SignalStyle(**{key: getattr(args, key) for key in SIGNAL_OPTIONS})
+        MaterialStyle(**{key: getattr(args, key) for key in MATERIAL_OPTIONS})
+        material_ids = material_subject_ids(args.material_subjects)
+        if args.material_subjects and args.scene_mode != 'code':
+            p.error('--material-subjects requires --scene-mode code or --stylepreset noumenon')
+        if material_ids and args.thermal == 'luminance':
+            p.error('Selected material silhouettes require a segmented thermal mode, such as --thermal low-detail')
         DayHUD(**{key: getattr(args, key) for key in DAY_OPTIONS})
         outline_rules(args.object_outlines)
         AnalysisHUD(**{key: getattr(args, key) for key in ANALYSIS_OPTIONS})
@@ -782,10 +842,11 @@ def main(argv=None):
             print('--neon-* options need --neon; saved tuning is inactive.', file=sys.stderr)
         if args.neon and args.glow != .65:
             print('--glow is ignored while --neon is on.', file=sys.stderr)
-        if args.list_figures and (args.figures or args.target or args.object_outlines):
+        if args.list_figures and (args.figures or args.target or args.object_outlines or args.material_subjects):
             p.error('--list-figures scans a new catalog; use --figures/--target on a later render')
-        if args.hud and bool(args.target or args.object_outlines) != bool(args.figures):
-            p.error('--target or --object-outlines and --figures must be used together')
+        needs_figures = bool(material_ids or (args.hud and (args.target or args.object_outlines)))
+        if (needs_figures and not args.figures) or (args.hud and args.figures and not needs_figures):
+            p.error('--target, --object-outlines or material silhouette IDs and --figures must be used together')
         if args.doctor:
             from .runtime import environment_info, installation_info, semantic_diagnostics
             from .render import load_glyph_font

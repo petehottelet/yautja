@@ -126,8 +126,22 @@ LOOK_PRESETS['parker'] = {
     'neon': False, 'glow': 0., 'grain': 0., 'pixelation': 0, 'sensor_texture': False,
     'scanlines': True, 'crt_strength': .18, 'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': .2,
 }
-COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'ripley', 'parker'}
+LOOK_PRESETS['noumenon'] = {
+    'thermal': 'low-detail', 'scene_mode': 'code', 'material_source': 'noumenon',
+    'material_face': 'mixed', 'material_mix': .1, 'material_mapping': 1., 'material_structure': .65,
+    'material_foreground': 2.1, 'material_background': .385, 'material_glow': .18,
+    'material_subject_density': 2., 'material_subject_trail': 1.2,
+    'material_edge_glow': 0., 'material_edge_shade': .4,
+    'code_size': 24., 'code_speed': 1., 'code_density': 1., 'seed': 42,
+    'hud': False, 'subject_outline': False, 'subject_code': False, 'subject_labels': False,
+    'verbose': False, 'timecode': False, 'neon': False, 'glow': 0.,
+    'grain': 0., 'pixelation': 0, 'sensor_texture': False, 'scanlines': False,
+    'vhs': False, 'heat_glow': 0., 'motion_blur': 0., 'crt_bleed': 0.,
+    'crt_vertical_lines': False, 'crt_grid': False, 'crt_crosshatch': False,
+}
+COMPLETE_PRESETS = {'yautja', 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'ripley', 'parker', 'noumenon'}
 PRESET_DESCRIPTIONS = {
+    'noumenon': 'Complete green code scene with descending Noumenon Classic rain, mint heads, brighter subjects and conservative room-plane mapping; HUD off.',
     'yautja': 'Eleven colors, 12 soft thermal levels, red HUD, cyan annotations and CRT lines.',
     'netrunner': 'Green source scene, warm-red neon outlines, rising Cyber code and overhead glyph titles with yellow carets.',
     'fremont': 'Detailed red/burgundy scene, bold white analysis and blinking outlines, with a persistent translucent target gliding between subjects.',
@@ -146,6 +160,7 @@ PRESET_LABELS = {
     'netrunner': 'Netrunner',
     'focus': 'Focus', 'relic': 'Relic', 'murphy': 'Murphy',
     'parker': 'Parker',
+    'noumenon': 'Noumenon',
     'fremont': 'Fremont',
 }
 LOOK_PRESETS.update({name: {'thermal': 'cinematic', 'palette': name}

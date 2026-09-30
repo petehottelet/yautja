@@ -67,7 +67,7 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(report['presets'][-1]['id'], 'fremont')
         self.assertEqual(presets['netrunner']['name'], 'Netrunner')
         self.assertEqual(presets['netrunner']['aliases'], ['ghost-signal'])
-        self.assertEqual(set(presets) - { 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'parker'}, set(PALETTES))
+        self.assertEqual(set(presets) - { 'netrunner', 'fremont', 'focus', 'relic', 'murphy', 'parker', 'noumenon'}, set(PALETTES))
         for name in PALETTES:
             args = parser().parse_args(['--stylepreset', name])
             self.assertEqual((args.thermal, args.palette, args.preset_kind), ('cinematic', name, 'look' if name in COMPLETE_PRESETS else 'palette'))

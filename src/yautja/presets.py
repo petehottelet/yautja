@@ -8,6 +8,7 @@ import tempfile
 
 from .looks import LOOK_PRESETS, PRESET_LABELS, PRESET_DESCRIPTIONS, LEVEL_OPTIONS, COMPLETE_PRESETS, normalize_preset
 from .signal import SIGNAL_OPTIONS
+from .noumenon import MATERIAL_OPTIONS
 from .geometry import GEO_OPTIONS, TARGET_OPTIONS
 from .analysis import ANALYSIS_OPTIONS
 from .parker import DAY_OPTIONS
@@ -21,7 +22,7 @@ VISUAL_OPTIONS = (
     'heat_glow', 'heat_glow_speed', 'verbose', 'timecode', 'timecode_start',
     'waveform', 'wave_style', 'wave_width', 'wave_height', 'wave_detail', 'wave_display', 'wave_backlight', 'wave_window', 'wave_gain',
     'target_colors', 'target_shape', 'target_acquire', 'target_flash', 'target_flash_rate',
-    'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS, *DAY_OPTIONS,
+    'target_scale', 'target_stroke', 'target_stroke_colors', *LEVEL_OPTIONS, *DAY_OPTIONS, *MATERIAL_OPTIONS,
 )
 NULLABLE = {'wave_display', 'outline_width', 'target_label', 'palette_colors', 'hud_colors', 'hud_blur_elements', 'hud_opacity_elements', 'neon_elements',
             'grain', 'pixelation', 'scanlines', 'wave_width', 'wave_height', 'target_colors',

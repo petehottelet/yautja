@@ -89,12 +89,6 @@
     "frames": 36,
     "duration_ms": 3000
   },
-  "assets/examples/large/look-parker.gif": {
-    "width": 960,
-    "height": 540,
-    "frames": 72,
-    "duration_ms": 6000
-  },
   "assets/examples/large/look-focus.gif": {
     "width": 960,
     "height": 540,
@@ -118,6 +112,18 @@
     "height": 540,
     "frames": 96,
     "duration_ms": 4000
+  },
+  "assets/examples/large/look-noumenon.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/large/look-parker.gif": {
+    "width": 960,
+    "height": 540,
+    "frames": 72,
+    "duration_ms": 6000
   },
   "assets/examples/large/look-relic.gif": {
     "width": 960,
@@ -437,12 +443,6 @@
     "frames": 36,
     "duration_ms": 3000
   },
-  "assets/examples/look-parker.gif": {
-    "width": 480,
-    "height": 270,
-    "frames": 72,
-    "duration_ms": 6000
-  },
   "assets/examples/look-focus.gif": {
     "width": 480,
     "height": 270,
@@ -466,6 +466,18 @@
     "height": 270,
     "frames": 96,
     "duration_ms": 4000
+  },
+  "assets/examples/look-noumenon.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 96,
+    "duration_ms": 4000
+  },
+  "assets/examples/look-parker.gif": {
+    "width": 480,
+    "height": 270,
+    "frames": 72,
+    "duration_ms": 6000
   },
   "assets/examples/look-relic.gif": {
     "width": 480,

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Give each Noumenon silhouette an independent rain instance, composited in front of the background with twice as many columns by default and no glyph shrinkage. Preserve dark gaps and Classic's 80-cell long-edge scale. Add portable `--material-subject-density` and `--material-subject-trail` multipliers. Extend silhouette tails by 20% by default and lower background emission by 30% for clearer figure separation.
+- Add softly feathered background dimming around selected Noumenon figures, with optional inner-edge glow disabled by default. Respect visible ownership, preserve other foreground layers and expose portable `--material-edge-glow` and `--material-edge-shade` controls.
+- Keep background rain vertical in screen coordinates without confirmed room geometry and reliable tracking. Require a supported closed wall boundary and recheck it during the shot, avoiding false corridor layouts from trees and branches.
+- Select brighter Noumenon silhouettes from the figure catalog with `--material-subjects`, independently of the HUD. Give selected glyph strokes a brightness floor over dark clothing and shade all other areas, including unselected silhouettes, by source luminance. Support all/none selections and report matched and unmatched figure IDs.
+- Add [Noumenon](skills/yautja/references/noumenon.md), a complete animated green-code scene with mint heads, brighter segmented subjects, residual environment coverage, conservative room-plane mapping and independent HUD controls. Add portable [`--material-source`](skills/yautja/references/options.md#material-source), face/mix, mapping, structure, foreground/background and glow settings, fixed-tick seeking, source notices and filtered glyph sampling. Include a README GIF with a linked larger preview.
 - Name the amber contour preset Parker across the CLI, HUD title, documentation and gallery preview. Select it with `--stylepreset parker`.
 
 - Show the Parker preview inline beside the other README preset examples and use matching preset-table formatting. Double the sector map, terrain and telemetry line weights for clearer black corner graphics.

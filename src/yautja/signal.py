@@ -135,8 +135,8 @@ class SignalStyle:
             raise ValueError('--outline-arcs must be an integer between 1 and 12')
         self.outline_style, self.outline_coverage = outline_style, outline_coverage
         self.outline_arcs, self.outline_speed, self.code_layer = outline_arcs, outline_speed, code_layer
-        if scene_mode not in ('thermal', 'source'):
-            raise ValueError('--scene-mode must be thermal or source')
+        if scene_mode not in ('thermal', 'source', 'code'):
+            raise ValueError('--scene-mode must be thermal, source, or code')
         self.tint = parse_hex(scene_tint)
         for key, value, low, high in (
             ('scene-tint-strength', scene_tint_strength, 0, 1), ('scene-exposure', scene_exposure, .1, 2),

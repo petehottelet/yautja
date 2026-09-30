@@ -359,3 +359,14 @@ Supply your own printable-ASCII TTF or OTF as my-font.ttf. The path is machine-s
 ```bash
 yautja "photo.jpg" "font.png" --HUDglyphs tech --hud-font-file "my-font.ttf"
 ```
+
+## Noumenon scene material
+
+<a id="noumenon-material"></a>
+
+The base-runtime example shades all glyphs by source luminance without model downloads. Use the default preset without the luminance override for tracked, brighter foreground subjects after segmented setup. Choose individual silhouettes from the [figure list](noumenon.md#choose-brighter-silhouettes) with `--figures figures.json --material-subjects S001-F001,S001-F003`. Each silhouette gets independent rain with twice as many columns and 20% longer trails at the same glyph size. The dimmer environment and local background shading keep selected figures distinct; inner-edge glow is off. `--material-mapping 0` provides a flat-grid comparison; unknown room geometry otherwise falls back to vertical screen rain.
+
+<!-- example: {"id": "noumenon-material", "tier": "base", "checks": {"scene_mode": "code", "hud": false, "material_face": "mixed", "material_subject_density": 2.0, "material_subject_trail": 1.2, "material_background": 0.385, "material_edge_glow": 0.0, "material_edge_shade": 0.4}} -->
+```bash
+yautja "photo.jpg" "noumenon.png" --stylepreset noumenon --thermal luminance --scene-mode code --material-source noumenon --material-face mixed --material-mix 0.1 --material-mapping 1 --material-structure 0.65 --material-foreground 2.1 --material-background 0.385 --material-glow 0.18 --material-subject-density 2 --material-subject-trail 1.2 --material-edge-glow 0 --material-edge-shade 0.4 --material-subjects none --code-size 24 --code-speed 1 --code-density 1 --no-hud
+```

@@ -20,6 +20,8 @@ from .waveform import WAVE_STYLES, waveform_masks, led_device, resolve_display
 from .hud import HudPanel, grid_clearance, hud_blurs, hud_opacities
 from .looks import SPECTRUM, ThermalTransfer, resolve_look
 from .signal import SignalStyle, SUBJECT_ELEMENTS, code_glyph
+from .noumenon import MaterialStyle
+from .scene_material import SceneMaterial
 from .analysis import AnalysisHUD, ANALYSIS_ELEMENTS
 from .geometry import GeometryStyle, GEOMETRY_ELEMENTS
 from .typography import HUDTypography
@@ -246,8 +248,18 @@ class Renderer:
                  object_outline='off', object_outline_width=8., object_outline_block=14., object_outline_padding=12., object_outline_fill=0., object_outline_glow=0.,
                  hud_top_left='off', hud_top_right='off', hud_bottom_left='off', hud_bottom_right='off',
                  hud_panel_scale=1., hud_panel_margin=.035, readout_style='ink', readout_color='#ffbf47',
-                 readout_glow=.65, readout_fill=.24):
+                 readout_glow=.65, readout_fill=.24,
+                 material_source='noumenon', material_face='mixed', material_mix=.1, material_mapping=1.,
+                 material_structure=.65, material_foreground=2.1, material_background=.385, material_glow=.18,
+                 material_subject_density=2., material_subject_trail=1.2,
+                 material_edge_glow=0., material_edge_shade=.4):
         self.width, self.height = width, height
+        self.material_style = MaterialStyle(material_source, material_face, material_mix, material_mapping,
+                                             material_structure, material_foreground, material_background, material_glow,
+                                             material_subject_density, material_subject_trail,
+                                             material_edge_glow, material_edge_shade)
+        self.scene_material = (SceneMaterial((width, height), seed, code_size, code_speed, code_density,
+                                              **self.material_style.report()) if scene_mode == 'code' else None)
         self.day = DayHUD(object_outline=object_outline, object_outline_width=object_outline_width,
                           object_outline_block=object_outline_block, object_outline_padding=object_outline_padding,
                           object_outline_fill=object_outline_fill,
@@ -646,7 +658,7 @@ class Renderer:
                 layer.paste(tile, (x + i * step, y))
         self.composite_panel(image, panel, 0, 0)
 
-    def render(self, frame, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False, object_styles=None):
+    def render(self, frame, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False, object_styles=None, material_subjects=None):
         if self.display.motion_blur:
             coarse = np.asarray(frame.convert('L').resize((32, 18)), np.float32)
             if self.previous_source is not None and np.abs(coarse - self.previous_source).mean() > 38:
@@ -654,6 +666,15 @@ class Renderer:
             self.previous_source = coarse
         if self.signal.scene_mode == 'source':
             return self.render_source(frame, time, wave, subjects, targets=targets, shot_id=shot_id, target_static=target_static, object_styles=object_styles)
+        if self.signal.scene_mode == 'code':
+            image = self.scene_material.render(frame, time, subjects, shot_id, material_subjects=material_subjects)
+            if self.hud:
+                self.draw_hud(image, np.asarray(frame.convert('L')), time, wave, subjects,
+                              shot_id=shot_id, static=target_static, object_styles=object_styles)
+                image = self.draw_targets(image, time, subjects, targets,
+                                          (self.hud_colors['target'], self.hud_colors['target-flash']),
+                                          shot=shot_id, static=target_static, neon_gain=self.neon_gain)
+            return self.display_effects(image, time, shot_id)
         # All modes are artistic effects, not actual heat measurement.
         if self.thermal != 'luminance':
             luma = self.heat_field.build(frame, subjects)
@@ -667,8 +688,8 @@ class Renderer:
 
     def render_field(self, luma, time, wave=None, subjects=(), *, targets=None, shot_id=None, target_static=False, object_styles=None):
         """Color an existing scalar heat field; useful for matched style galleries."""
-        if self.signal.scene_mode == 'source':
-            raise ValueError('Source scene mode needs an RGB frame; call Renderer.render(frame, ...)')
+        if self.signal.scene_mode in ('source', 'code'):
+            raise ValueError('Source/code scene mode needs an RGB frame; call Renderer.render(frame, ...)')
         if (luma.shape != (self.height, self.width) or
             (luma.dtype != np.uint8 and (self.transfer.levels is None or luma.dtype.kind != 'f')) or
             not np.isfinite(luma).all() or luma.min() < 0 or luma.max() > 255):

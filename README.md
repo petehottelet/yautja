@@ -30,12 +30,14 @@ Use the CLI directly, or let Claude or Codex operate it. Videos use FFmpeg. [yau
 | [![Fremont: burgundy scene and persistent scan target](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-fremont.gif?v=2.12.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-fremont.gif) | [![Murphy: green targeting and thinking cursor](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-murphy.gif?v=2.12.1-michroma)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-murphy.gif) |
 | Netrunner | Focus |
 | [![Netrunner: red outlines and upward Cyber code](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-netrunner.gif?v=2.12.0)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-netrunner.gif) | [![Focus: neon-purple HUD, blue geodesic sphere and one moving hexagon](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-focus.gif?v=2.12.1-clearance)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-focus.gif) |
+| Noumenon | Parker |
+| [![Noumenon: independent bright green code rain inside every detected figure over a darker falling-code background](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-noumenon.gif?v=1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-noumenon.gif) | [![Parker: glowing amber object contours and CRT readout with stepped black backing, sector map, terrain and telemetry](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-parker.gif?v=1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-parker.gif) |
 
-The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The smaller previews show four alternative styles. The waveform follows the source audio. [View a still frame](https://github.com/petehottelet/yautja/blob/main/assets/examples/poster.png).
+The large hero uses **`--stylepreset yautja`**: Cinematic detail, 12 soft thermal levels, red HUD, cyan annotations, and CRT lines. The smaller previews show six alternative styles. The waveform follows the source audio. [View a still frame](https://github.com/petehottelet/yautja/blob/main/assets/examples/poster.png).
 
 <!-- media: {"file":"assets/examples/hero.gif","width":960,"height":540} -->
 <!-- media: {"file":"assets/examples/look-focus.gif","width":480,"height":270,"duration_ms":4000} -->
-Previews are 480×270; click one to open its **960×540 version on GitHub**. The hero is also 960×540. The four preset previews below the hero play at normal source speed, 24 fps for four seconds. [Comparison recipes and preview details](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#exact-comparison-recipes).
+Previews are 480×270; click one to open its **960×540 version on GitHub**. The hero is also 960×540. All six preset previews below the hero play at normal source speed: Parker shows six seconds at 12 fps; the other five show four seconds at 24 fps. [Comparison recipes and preview details](https://github.com/petehottelet/yautja/blob/main/docs/GALLERY.md#exact-comparison-recipes).
 
 **Start here:** [Install and convert](#quick-start) · [Choose a look](#choose-a-look) · [Customize](#customize) · [Save a style](#save-load-and-share) · [Export controls](#control-the-output) · [Troubleshooting](#troubleshooting) · [Agent skill](#install-the-agent-skill) · [Every option](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/options.md)
 
@@ -121,6 +123,7 @@ Choose a **complete preset** for a coordinated scene and HUD; a **palette starte
 | `focus` | Dark, cool source detail | Neon-purple HUD, blue grid and waveform, thin holographic edges, one gliding hexagon |
 | `relic` | Focus scene grade | Hot-pink triangles and rising light streams behind each body core |
 | `netrunner` | Dark green source tint | Red edges, upward Cyber code, cyan titles, yellow carets |
+| `noumenon` | Animated green-code surfaces, mint heads, selectable brighter silhouettes, luminance shading and qualified room perspective | Off by default; independent overlays remain available |
 | `ripley` | Near-black, burnt-orange and amber thermal colors | Orange glyphs and callouts, brighter amber waveform |
 | `parker` | Original source colors | Glowing amber contours with 35% fill, black backing fitted to each readout row and full-frame CRT texture |
 
@@ -226,6 +229,17 @@ yautja "clip.mov" "parker.mp4" --stylepreset parker --duration 6
 ```
 
 [![Parker: glowing amber object contours and CRT readout with stepped black backing, sector map, terrain and telemetry](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-parker.gif?v=1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-parker.gif)
+
+### Noumenon style preset
+
+**Noumenon** turns the scene into falling green code with mint-colored heads. All detected figures get independent, brighter rain at 2× density with slightly longer trails. Source luminance shapes the darker background, with soft dimming around each figure and no inner-edge glow. Rain falls straight down unless clear room geometry supports perspective mapping. The HUD defaults off. [Silhouette selection and material controls](https://github.com/petehottelet/yautja/blob/main/skills/yautja/references/noumenon.md).
+
+<!-- example: {"id": "readme-noumenon", "tier": "models", "checks": {"look_preset": "noumenon", "scene_mode": "code", "material_subjects": "all", "material_subject_density": 2.0, "material_subject_trail": 1.2, "material_edge_glow": 0.0, "hud": false}} -->
+```bash
+yautja "clip.mov" "noumenon.mp4" --stylepreset noumenon --duration 4
+```
+
+[![Noumenon: independent bright green code rain inside every detected figure over a darker falling-code background](https://raw.githubusercontent.com/petehottelet/yautja/main/assets/examples/look-noumenon.gif?v=1)](https://github.com/petehottelet/yautja/blob/main/assets/examples/large/look-noumenon.gif)
 
 ### Style presets based on palettes
 

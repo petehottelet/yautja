@@ -39,9 +39,11 @@ The shared comparison base is `yautja "clip.mov" "comparison.mp4" --thermal cine
 
 Thermal detail comparisons use `yautja "clip.mov" "detail.mp4" --palette costa-rica --verbose --timecode --grain 0 --pixelation 0 --no-crt-lines`, with one of the pictured `--thermal` settings. This isolates the change in detail from changes in palette or texture.
 
-All comparisons use the same local source footage, with ranges chosen for each effect. Embedded previews are 480×270; their GitHub links open the corresponding 960×540 file page. The large versions render HUD artwork and textures at that resolution. The hero is also 960×540. GIFs compare styling choices rather than model accuracy; the source footage stays local.
+All comparisons use the same local source footage, with ranges chosen for each effect. Embedded previews are 480×270; their GitHub links open the corresponding 960×540 file page. The large HUD previews render artwork and textures at that resolution. The hero is also 960×540. GIFs compare styling choices rather than model accuracy; the source footage stays local.
 
-Focus, Relic, Ripley and the four presets below the hero play four seconds at normal source speed and 24 fps. The two lock-dot reticles also play at normal source speed and 24 fps. Target acquisition, neon, reticle stroke/blur and transparency examples show seconds 0–3.25 with matching target selections, callouts and timecode. These selections follow the foreground explorer separately in the first two shots. Parker plays six seconds at normal source speed and 12 fps. The checked media manifest records each file's frame count and duration.
+Fremont, Murphy, Netrunner, Focus, Noumenon, Relic and Ripley play four seconds at normal source speed and 24 fps. The two lock-dot reticles also play at normal source speed and 24 fps. Target acquisition, neon, reticle stroke/blur and transparency examples show seconds 0–3.25 with matching target selections, callouts and timecode. These selections follow the foreground explorer separately in the first two shots. Parker plays six seconds at normal source speed and 12 fps. The checked media manifest records each file's frame count and duration.
+
+Both Noumenon previews use the first four seconds of the 720p complete-preset render, scaled to their display sizes. All detected figures receive independent rain at 2× density with longer trails; the background dims around each figure and inner-edge glow is off. The opening shot includes three highlighted figures.
 
 ### LED waveform
 

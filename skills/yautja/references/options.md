@@ -8,7 +8,7 @@ The fixed fields below are checked against the parser and preset registries by `
 
 ## Index
 
-[-h](#h) · [--version](#version) · [--media](#media) · [--doctor](#doctor) · [--thermal](#thermal) · [--palette](#palette) · [--palette-colors](#palette-colors) · [--stylepreset](#stylepreset) · [--preset-file](#preset-file) · [--list-presets](#list-presets) · [--save-preset](#save-preset) · [--preset-name](#preset-name) · [--thermal-levels](#thermal-levels) · [--thermal-band-softness](#thermal-band-softness) · [--thermal-black-point](#thermal-black-point) · [--thermal-white-point](#thermal-white-point) · [--thermal-gamma](#thermal-gamma) · [--thermal-softness](#thermal-softness) · [--hud-theme](#hud-theme) · [--HUDglyphs](#hudglyphs) · [--scene-mode](#scene-mode) · [--scene-tint](#scene-tint) · [--scene-tint-strength](#scene-tint-strength) · [--scene-exposure](#scene-exposure) · [--scene-highlights](#scene-highlights) · [--analysis](#analysis) · [--analysis-speed](#analysis-speed) · [--analysis-blink-rate](#analysis-blink-rate) · [--analysis-margin](#analysis-margin) · [--analysis-target](#analysis-target) · [--analysis-target-size](#analysis-target-size) · [--analysis-target-response](#analysis-target-response) · [--hud-font](#hud-font) · [--hud-font-file](#hud-font-file) · [--outline-style](#outline-style) · [--outline-shine](#outline-shine) · [--outline-width](#outline-width) · [--outline-coverage](#outline-coverage) · [--outline-arcs](#outline-arcs) · [--outline-speed](#outline-speed) · [--code-layer](#code-layer) · [--geo-grid](#geo-grid) · [--geo-grid-rotation](#geo-grid-rotation) · [--geo-grid-scale](#geo-grid-scale) · [--geo-grid-jitter](#geo-grid-jitter) · [--geo-grid-speed](#geo-grid-speed) · [--geo-grid-center-fade](#geo-grid-center-fade) · [--geo-grid-width](#geo-grid-width) · [--geo-grid-breaks](#geo-grid-breaks) · [--geo-grid-details](#geo-grid-details) · [--target-mode](#target-mode) · [--target-motion](#target-motion) · [--target-hold](#target-hold) · [--target-response](#target-response) · [--target-fill](#target-fill) · [--target-outline](#target-outline) · [--target-weak-spots](#target-weak-spots) · [--target-label-scale](#target-label-scale) · [--target-cursor](#target-cursor) · [--geo-grid-projection](#geo-grid-projection) · [--target-motif](#target-motif) · [--target-motif-count](#target-motif-count) · [--target-motif-scale](#target-motif-scale) · [--target-motif-speed](#target-motif-speed) · [--target-motif-breaks](#target-motif-breaks) · [--target-label](#target-label) · [--analysis-outline-width](#analysis-outline-width) · [--subject-outline](#subject-outline) · [--subject-code](#subject-code) · [--subject-labels](#subject-labels) · [--subject-head-gap](#subject-head-gap) · [--subject-title-gap](#subject-title-gap) · [--subject-caret-scale](#subject-caret-scale) · [--code-size](#code-size) · [--code-speed](#code-speed) · [--code-density](#code-density) · [--hud](#hud) · [--hud-colors](#hud-colors) · [--neon](#neon) · [--neon-intensity](#neon-intensity) · [--neon-spread](#neon-spread) · [--neon-core-whiten](#neon-core-whiten) · [--neon-flicker](#neon-flicker) · [--neon-elements](#neon-elements) · [--hud-blur](#hud-blur) · [--hud-blur-elements](#hud-blur-elements) · [--hud-opacity](#hud-opacity) · [--hud-opacity-elements](#hud-opacity-elements) · [--random-colors](#random-colors) · [--sensor-texture](#sensor-texture) · [--pixelation](#pixelation) · [--crt-lines](#crt-lines) · [--vhs](#vhs) · [--list-figures](#list-figures) · [--figures](#figures) · [--target](#target) · [--target-colors](#target-colors) · [--target-shape](#target-shape) · [--target-acquire](#target-acquire) · [--target-flash](#target-flash) · [--target-flash-rate](#target-flash-rate) · [--target-scale](#target-scale) · [--target-stroke](#target-stroke) · [--target-stroke-colors](#target-stroke-colors) · [--motion-blur](#motion-blur) · [--crt-bleed](#crt-bleed) · [--crt-vertical-lines](#crt-vertical-lines) · [--crt-grid](#crt-grid) · [--crt-crosshatch](#crt-crosshatch) · [--crt-strength](#crt-strength) · [--heat-glow](#heat-glow) · [--heat-glow-speed](#heat-glow-speed) · [--download-models](#download-models) · [--device](#device) · [--precision](#precision) · [--warm-objects](#warm-objects) · [--hot-objects](#hot-objects) · [--confidence](#confidence) · [--mask-stability](#mask-stability) · [--mask-min-region](#mask-min-region) · [--detect-interval](#detect-interval) · [--sensor-resolution](#sensor-resolution) · [--verbose](#verbose) · [--timecode](#timecode) · [--timecode-start](#timecode-start) · [--waveform](#waveform) · [--wave-display](#wave-display) · [--wave-backlight](#wave-backlight) · [--wave-style](#wave-style) · [--wave-width](#wave-width) · [--wave-height](#wave-height) · [--wave-detail](#wave-detail) · [--wave-window](#wave-window) · [--wave-gain](#wave-gain) · [--audio-stream](#audio-stream) · [--mute](#mute) · [--start](#start) · [--duration](#duration) · [--fps](#fps) · [--max-size](#max-size) · [--crf](#crf) · [--preset](#preset) · [--grain](#grain) · [--glow](#glow) · [--seed](#seed) · [--overwrite](#overwrite)
+[--material-edge-glow](#material-edge-glow) · [--material-edge-shade](#material-edge-shade) · [--material-subject-trail](#material-subject-trail) · [--material-subject-density](#material-subject-density) · [--material-subjects](#material-subjects) · [--material-source](#material-source) · [--material-face](#material-face) · [--material-mix](#material-mix) · [--material-mapping](#material-mapping) · [--material-structure](#material-structure) · [--material-foreground](#material-foreground) · [--material-background](#material-background) · [--material-glow](#material-glow) · [-h](#h) · [--version](#version) · [--media](#media) · [--doctor](#doctor) · [--thermal](#thermal) · [--palette](#palette) · [--palette-colors](#palette-colors) · [--stylepreset](#stylepreset) · [--preset-file](#preset-file) · [--list-presets](#list-presets) · [--save-preset](#save-preset) · [--preset-name](#preset-name) · [--thermal-levels](#thermal-levels) · [--thermal-band-softness](#thermal-band-softness) · [--thermal-black-point](#thermal-black-point) · [--thermal-white-point](#thermal-white-point) · [--thermal-gamma](#thermal-gamma) · [--thermal-softness](#thermal-softness) · [--hud-theme](#hud-theme) · [--HUDglyphs](#hudglyphs) · [--scene-mode](#scene-mode) · [--scene-tint](#scene-tint) · [--scene-tint-strength](#scene-tint-strength) · [--scene-exposure](#scene-exposure) · [--scene-highlights](#scene-highlights) · [--analysis](#analysis) · [--analysis-speed](#analysis-speed) · [--analysis-blink-rate](#analysis-blink-rate) · [--analysis-margin](#analysis-margin) · [--analysis-target](#analysis-target) · [--analysis-target-size](#analysis-target-size) · [--analysis-target-response](#analysis-target-response) · [--hud-font](#hud-font) · [--hud-font-file](#hud-font-file) · [--outline-style](#outline-style) · [--outline-shine](#outline-shine) · [--outline-width](#outline-width) · [--outline-coverage](#outline-coverage) · [--outline-arcs](#outline-arcs) · [--outline-speed](#outline-speed) · [--code-layer](#code-layer) · [--geo-grid](#geo-grid) · [--geo-grid-rotation](#geo-grid-rotation) · [--geo-grid-scale](#geo-grid-scale) · [--geo-grid-jitter](#geo-grid-jitter) · [--geo-grid-speed](#geo-grid-speed) · [--geo-grid-center-fade](#geo-grid-center-fade) · [--geo-grid-width](#geo-grid-width) · [--geo-grid-breaks](#geo-grid-breaks) · [--geo-grid-details](#geo-grid-details) · [--target-mode](#target-mode) · [--target-motion](#target-motion) · [--target-hold](#target-hold) · [--target-response](#target-response) · [--target-fill](#target-fill) · [--target-outline](#target-outline) · [--target-weak-spots](#target-weak-spots) · [--target-label-scale](#target-label-scale) · [--target-cursor](#target-cursor) · [--geo-grid-projection](#geo-grid-projection) · [--target-motif](#target-motif) · [--target-motif-count](#target-motif-count) · [--target-motif-scale](#target-motif-scale) · [--target-motif-speed](#target-motif-speed) · [--target-motif-breaks](#target-motif-breaks) · [--target-label](#target-label) · [--analysis-outline-width](#analysis-outline-width) · [--subject-outline](#subject-outline) · [--subject-code](#subject-code) · [--subject-labels](#subject-labels) · [--subject-head-gap](#subject-head-gap) · [--subject-title-gap](#subject-title-gap) · [--subject-caret-scale](#subject-caret-scale) · [--code-size](#code-size) · [--code-speed](#code-speed) · [--code-density](#code-density) · [--hud](#hud) · [--hud-colors](#hud-colors) · [--neon](#neon) · [--neon-intensity](#neon-intensity) · [--neon-spread](#neon-spread) · [--neon-core-whiten](#neon-core-whiten) · [--neon-flicker](#neon-flicker) · [--neon-elements](#neon-elements) · [--hud-blur](#hud-blur) · [--hud-blur-elements](#hud-blur-elements) · [--hud-opacity](#hud-opacity) · [--hud-opacity-elements](#hud-opacity-elements) · [--random-colors](#random-colors) · [--sensor-texture](#sensor-texture) · [--pixelation](#pixelation) · [--crt-lines](#crt-lines) · [--vhs](#vhs) · [--list-figures](#list-figures) · [--figures](#figures) · [--target](#target) · [--target-colors](#target-colors) · [--target-shape](#target-shape) · [--target-acquire](#target-acquire) · [--target-flash](#target-flash) · [--target-flash-rate](#target-flash-rate) · [--target-scale](#target-scale) · [--target-stroke](#target-stroke) · [--target-stroke-colors](#target-stroke-colors) · [--motion-blur](#motion-blur) · [--crt-bleed](#crt-bleed) · [--crt-vertical-lines](#crt-vertical-lines) · [--crt-grid](#crt-grid) · [--crt-crosshatch](#crt-crosshatch) · [--crt-strength](#crt-strength) · [--heat-glow](#heat-glow) · [--heat-glow-speed](#heat-glow-speed) · [--download-models](#download-models) · [--device](#device) · [--precision](#precision) · [--warm-objects](#warm-objects) · [--hot-objects](#hot-objects) · [--confidence](#confidence) · [--mask-stability](#mask-stability) · [--mask-min-region](#mask-min-region) · [--detect-interval](#detect-interval) · [--sensor-resolution](#sensor-resolution) · [--verbose](#verbose) · [--timecode](#timecode) · [--timecode-start](#timecode-start) · [--waveform](#waveform) · [--wave-display](#wave-display) · [--wave-backlight](#wave-backlight) · [--wave-style](#wave-style) · [--wave-width](#wave-width) · [--wave-height](#wave-height) · [--wave-detail](#wave-detail) · [--wave-window](#wave-window) · [--wave-gain](#wave-gain) · [--audio-stream](#audio-stream) · [--mute](#mute) · [--start](#start) · [--duration](#duration) · [--fps](#fps) · [--max-size](#max-size) · [--crf](#crf) · [--preset](#preset) · [--grain](#grain) · [--glow](#glow) · [--seed](#seed) · [--overwrite](#overwrite)
 
 [--object-outline](#object-outline) · [--object-outline-width](#object-outline-width) · [--object-outline-block](#object-outline-block) · [--object-outline-padding](#object-outline-padding) · [--object-outline-fill](#object-outline-fill) · [--object-outline-glow](#object-outline-glow) · [--object-outlines](#object-outlines) · [--hud-top-left](#hud-top-left) · [--hud-top-right](#hud-top-right) · [--hud-bottom-left](#hud-bottom-left) · [--hud-bottom-right](#hud-bottom-right) · [--hud-panel-scale](#hud-panel-scale) · [--hud-panel-margin](#hud-panel-margin) · [--readout-style](#readout-style) · [--readout-color](#readout-color) · [--readout-glow](#readout-glow) · [--readout-fill](#readout-fill)
 
@@ -94,7 +94,7 @@ The fixed fields below are checked against the parser and preset registries by `
 #### stylepreset
 
 - Syntax: `--stylepreset`
-- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `parker`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
+- Values: `yautja`, `netrunner`, `fremont`, `focus`, `relic`, `murphy`, `ripley`, `parker`, `noumenon`, `costa-rica`, `ironbow`, `abyss`, `redline`, `virtualboy`, `green-phosphor`, `amber-phosphor`, `white-hot`, `black-hot`, `thermal-spectrum`
 - Units: not applicable
 - Default: No recipe; --thermal luminance with Yautja colors.
 - Applies: Built-in visual preset, including Yautja, Costa Rica, Netrunner, Focus, Relic, Murphy, Fremont, Ripley, Parker, and a starter for every palette. Explicit options override it; encoder --preset stays separate. Aliases: hottropic and hot-tropic select yautja; ghost-signal selects netrunner.
@@ -237,10 +237,10 @@ The fixed fields below are checked against the parser and preset registries by `
 #### scene-mode
 
 - Syntax: `--scene-mode`
-- Values: `thermal`, `source`
+- Values: `thermal`, `source`, `code`
 - Units: not applicable
 - Default: "thermal"
-- Applies: Color a thermal field (default) or retain the RGB source scene with configurable tint and exposure
+- Applies: Color a thermal field, grade the RGB source scene, or replace all visible surfaces with animated code
 - Requires: No additional enabling flag.
 - Persistence: saved
 - Example: [Complete recipe](examples.md#source-grade)
@@ -832,9 +832,9 @@ The fixed fields below are checked against the parser and preset registries by `
 
 - Syntax: `--code-size`
 - Values: 8–80
-- Units: reference pixels at a 1080px short edge
+- Units: reference pixels at a 1080px short edge for HUD code; 1920px long edge for scene-code rain
 - Default: 22.0
-- Applies: Glyph size or light-stream spacing and width, 8-80 reference pixels at a 1080px short edge
+- Applies: Glyph size or light-stream spacing and width, 8-80; Noumenon uses 24 for Classic's 80 cells along the long dimension
 - Requires: --subject-code, --hud and a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#netrunner)
@@ -845,7 +845,7 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: 0–5
 - Units: unitless
 - Default: 1.0
-- Applies: Upward code speed multiplier, 0-5; 0 freezes code motion
+- Applies: Code speed multiplier, 0-5; HUD streams rise, Noumenon scene rain descends; 0 freezes material motion and symbols
 - Requires: --subject-code, --hud and a segmented mode
 - Persistence: saved
 - Example: [Complete recipe](examples.md#netrunner)
@@ -1065,8 +1065,8 @@ The fixed fields below are checked against the parser and preset registries by `
 - Values: Local filesystem path.
 - Units: not applicable
 - Default: No figure catalog.
-- Applies: Saved figure catalog from the same source, used with --target or --object-outlines
-- Requires: --target or --object-outlines
+- Applies: Saved figure catalog from the same source, used with --target, --object-outlines or --material-subjects
+- Requires: --target, --object-outlines or selected figure IDs in --material-subjects
 - Persistence: runtime-only
 - Example: [Complete recipe](examples.md#catalog-target)
 
@@ -1817,3 +1817,148 @@ The fixed fields below are checked against the parser and preset registries by `
 - Requires: Amber-glow readout style.
 - Persistence: saved
 - Example: [Complete recipe](examples.md#parker)
+
+## Scene code material
+
+#### material-source
+
+- Syntax: `--material-source`
+- Values: `noumenon`
+- Units: not applicable
+- Default: "noumenon"
+- Applies: Scene-code engine: pinned Noumenon Classic CPU port; independent of HUD code style
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-face
+
+- Syntax: `--material-face`
+- Values: `mixed`, `cyber`, `classic`
+- Units: not applicable
+- Default: "mixed"
+- Applies: Scene-code glyph catalog; mixed uses the selected Cyber share plus classic glyphs, independently of HUDglyphs
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-mix
+
+- Syntax: `--material-mix`
+- Values: 0-1
+- Units: probability, 0-1
+- Default: 0.1
+- Applies: Cyber selection probability for the mixed material face, 0-1; Noumenon Classic defaults to 0.1
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-mapping
+
+- Syntax: `--material-mapping`
+- Values: 0-1
+- Units: normalized strength, 0-1
+- Default: 1.0
+- Applies: Room mapping strength, 0-1; camera tracking applies only to supported room planes. Otherwise rain falls vertically in a fixed screen grid
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-structure
+
+- Syntax: `--material-structure`
+- Values: 0-1
+- Units: normalized strength, 0-1
+- Default: 0.65
+- Applies: Local contrast in luminance-shaded glyphs, 0-1; 0 retains plain luminance shading, without source RGB
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-foreground
+
+- Syntax: `--material-foreground`
+- Values: 0-3
+- Units: linear-light multiplier, 0-3
+- Default: 2.1
+- Applies: Linear-light code gain for selected silhouettes, 0-3; 1 is neutral
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-background
+
+- Syntax: `--material-background`
+- Values: 0-3
+- Units: linear-light multiplier, 0-3
+- Default: 0.385
+- Applies: Linear-light code gain for the environment and unselected silhouettes, 0-3; 1 is neutral
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-glow
+
+- Syntax: `--material-glow`
+- Values: 0-1
+- Units: normalized glow strength, 0-1
+- Default: 0.18
+- Applies: Composed scene-code optical glow, 0-1; independent of HUD glow and neon
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-subject-density
+
+- Syntax: `--material-subject-density`
+- Values: 0-3
+- Units: multiplier, 0-3
+- Default: 2.0
+- Applies: Independent silhouette rain density multiplier; multiplies code density, capped at 3. The default doubles the columns without shrinking glyphs
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-subject-trail
+
+- Syntax: `--material-subject-trail`
+- Values: 1-2
+- Units: multiplier, 1-2
+- Default: 1.2
+- Applies: Silhouette tail length; extends fading trails by 20 percent by default, preserving glyph size, speed and rain heads. Background trails retain Classic length
+- Requires: --scene-mode code
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-edge-glow
+
+- Syntax: `--material-edge-glow`
+- Values: 0-1
+- Units: linear-light strength, 0-1
+- Default: 0.0
+- Applies: Optional soft green inner-edge glow on highlighted silhouettes; 0 disables. Width scales with glyph size, brightness follows foreground gain, and visible ownership clips the rim
+- Requires: --scene-mode code; follows --material-subjects
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-edge-shade
+
+- Syntax: `--material-edge-shade`
+- Values: 0-1
+- Units: local dimming strength, 0-1
+- Default: 0.4
+- Applies: Soft background dimming immediately around visible highlighted silhouettes; 0 disables. Falloff scales with glyph size and does not darken other figures
+- Requires: --scene-mode code; follows --material-subjects
+- Persistence: saved
+- Example: [Complete recipe](examples.md#noumenon-material)
+
+#### material-subjects
+
+- Syntax: `--material-subjects`
+- Values: all, none, or figure IDs; repeat or comma-separate IDs
+- Units: selection
+- Default: []
+- Applies: Brighter glyphs inside chosen silhouettes in code mode; omitted means all detected silhouettes. Other areas follow source luminance.
+- Requires: --scene-mode code. Figure IDs also require segmentation and --figures from the same source. Independent of HUD.
+- Persistence: runtime-only
+- Example: [Complete recipe](examples.md#noumenon-material)

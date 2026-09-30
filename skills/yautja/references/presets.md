@@ -111,3 +111,7 @@ Conversion reports retain `look_preset` and add `preset_name`, `preset_kind` (`l
 These complete presets and their independent geometry, shimmer, code placement, and readable-font controls are independently configurable. See [focus.md](focus.md). Schema version 1 remains appropriate: visual settings are flat, additive options; local custom-font paths and source-specific target IDs are excluded.
 
 The persistent Fremont scan target’s enablement is independent of readable analysis, while both share subject selection and cycle speed. Motion state and current track/position are report data, never saved settings. Schema version 1 remains unchanged.
+
+## Noumenon
+
+Select `--stylepreset noumenon` for a complete animated code scene. All detected figures receive independent, brighter rain at 2× density with 20% longer trails. The background follows source luminance and dims softly around figures; inner-edge glow is off. Use `--material-subjects` to choose which figures receive the brighter effect. See [material controls, mapping and deterministic time](noumenon.md). The environment remains animated without detections; the HUD defaults off.

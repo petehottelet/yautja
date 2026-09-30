@@ -86,6 +86,17 @@ def check_runtime(python, env, cwd, prefix):
     assert still['thermal'] == 'luminance'
     explicit = json.loads(run(['yautja', 'photo.jpg', 'luminance.png', '--thermal', 'luminance'], cwd, image_env))
     assert explicit['thermal'] == 'luminance'
+    noumenon = json.loads(run(['yautja', 'photo.jpg', 'noumenon.png', '--stylepreset', 'noumenon',
+                               '--thermal', 'luminance'], cwd, image_env))
+    assert noumenon['scene_mode'] == 'code' and not noumenon['hud']
+    assert noumenon['material_face'] == 'mixed' and noumenon['material_frames'] == 1
+    # Both licensed glyph catalogs must be available outside the source checkout.
+    run([python, '-c', "from PIL import Image; im=Image.open('noumenon.png'); assert im.size==(320,180); assert im.getbbox()"], cwd, image_env)
+    material_video = json.loads(run(['yautja', 'input.mov', 'noumenon.mp4', '--stylepreset', 'noumenon',
+                                     '--thermal', 'luminance'], cwd, env))
+    assert material_video['frames'] == 6 and material_video['audio_preserved']
+    assert material_video['material_frames'] == 6
+    run(['ffmpeg', '-v', 'error', '-xerror', '-i', 'noumenon.mp4', '-f', 'null', '-'], cwd, env)
     run([python, '-c', "from PIL import Image; assert Image.open('photo-yautja.png').tobytes() == Image.open('luminance.png').tobytes()"], cwd, image_env)
     run([python, '-c', "from PIL import Image; im=Image.open('photo-yautja.png'); assert im.size==(320,180); im.verify()"], cwd, env)
     effects = json.loads(run(['yautja', 'photo.jpg', 'effects.png', '--palette', 'abyss', '--heat-glow', '.6',

@@ -94,7 +94,9 @@ class FigureCatalog:
                 '<title>Yautja figure selection</title><style>body{background:#0e1118;color:#edf2ff;font:16px system-ui;margin:32px;max-width:1200px}'
                 'h1{color:#ff4349}section{margin:36px 0}section>div{display:flex;gap:16px;flex-wrap:wrap}article{background:#1a202c;padding:16px;border-radius:8px}'
                 'img{width:240px;height:200px;object-fit:contain}h3{margin-bottom:4px}p{color:#bac4d4}</style>'
-                '<h1>Choose a figure</h1><p>Use a figure ID with <code>--target</code>. IDs are local to each detected shot; a reappearing figure can receive a new ID.</p>'
+                '<h1>Choose a figure</h1><p>Use figure IDs with <code>--target</code> for reticles or '
+                '<code>--material-subjects S001-F001,S001-F003</code> for brighter Noumenon silhouettes. '
+                'Choose IDs shown below. IDs are local to each detected shot; a reappearing figure can receive a new ID.</p>'
                 + ''.join(sections) + '</html>')
 
 
@@ -218,6 +220,15 @@ class OutlineSelection(TargetSelection):
         styles = {track: self.rules[identifier] for track, identifier in matches.items() if identifier in self.rules}
         self.seen.update(identifier for identifier in matches.values() if identifier in self.rules)
         return styles
+
+
+class MaterialSelection(OutlineSelection):
+    """Resolve selected catalog figures to live tracks independently of the HUD."""
+    def __init__(self, path, source, identifiers):
+        super().__init__(path, source, dict.fromkeys(identifiers, True))
+
+    def tracks_at(self, time, subjects):
+        return set(self.styles_at(time, subjects))
 
 
 def scan(args):
