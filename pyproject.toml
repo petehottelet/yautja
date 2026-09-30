@@ -23,10 +23,10 @@ classifiers = [
 dependencies = ["numpy>=1.26,<3", "Pillow>=10.4,<13", "fonttools>=4.55,<5"]
 
 [project.optional-dependencies]
-tracking = ["opencv-python-headless>=4.10,<5"]
+tracking = ["opencv-python-headless>=4.10,<6"]
 semantic = [
   "torch>=2.6,<3", "torchvision>=0.21,<1", "transformers==4.57.6",
-  "opencv-python-headless>=4.10,<5", "scipy>=1.11,<2",
+  "opencv-python-headless>=4.10,<6", "scipy>=1.11,<2",
 ]
 all = ["yautja[tracking,semantic]"]
 dev = [
